@@ -20,8 +20,11 @@ namespace procom_tagger
     /// </summary>
     public partial class MainWindow : Window
     {
+        public List<GitLog.LogGraphNode> Commits { get; set; }
         public MainWindow()
         {
+            Commits = GitLog.LogGraph.CreateGraph("G:\\Projects\\libgit2sharp");
+            DataContext = this;
             InitializeComponent();
         }
     }

@@ -4,9 +4,77 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:procom_tagger"
+        xmlns:custom="clr-namespace:procom_tagger.Wpf"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <custom:LogGraphNodeDrawing x:Key="graphConverter" />
+    </Window.Resources>
     <Grid>
-
+        <ListView ItemsSource="{Binding Commits}" Margin="50" SelectionMode="Single" Foreground="{StaticResource br_black}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <Border BorderThickness="0" 
+                                        SnapsToDevicePixels="True"
+                                        BorderBrush="{x:Null}"
+                                        Background="{TemplateBinding Background}"
+                                        Name="InnerBorder">
+                                    <GridViewRowPresenter 
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource br_blue}" />
+                                        <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="120" Header="Graph" x:Name="Row">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <custom:LogGraphNodeDrawing
+                                                Width="{Binding ElementName=Row, Path=ActualWidth}"
+                                                GraphNode="{Binding}" 
+                                                custom:BoundsClipper.ClippingEnabled="Horizontal" 
+                                                StrokeThickness="1"
+                                                Fill="{StaticResource br_lightblue}"
+                                                HighlightFill="{StaticResource br_red}"
+                                                VerticalDistance="{Binding ElementName=InnerBorder, Path=ActualHeight}" >
+                                    <custom:LogGraphNodeDrawing.Style>
+                                        <Style TargetType="custom:LogGraphNodeDrawing">
+                                            <Style.Setters>
+                                                <Setter Property="Stroke" Value="{StaticResource br_black}" />
+                                            </Style.Setters>
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    Binding="{Binding
+                                                        RelativeSource={RelativeSource
+                                                            Mode=FindAncestor,
+                                                            AncestorType={x:Type ListViewItem}},
+                                                            Path=IsSelected}"
+                                                    Value="True">
+                                                    <Setter Property="Stroke" Value="{StaticResource br_light}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </custom:LogGraphNodeDrawing.Style>
+                                </custom:LogGraphNodeDrawing>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="300" Header="Message" DisplayMemberBinding="{Binding Message}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
     </Grid>
 </Window>

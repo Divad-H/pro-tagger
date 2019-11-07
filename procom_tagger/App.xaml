@@ -4,6 +4,12 @@
              xmlns:local="clr-namespace:procom_tagger"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="br_blue" Color="#566E8D" />
+        <SolidColorBrush x:Key="br_lightblue" Color="#FF9CBBE4" />
+        <SolidColorBrush x:Key="br_light" Color="#FBFBF6" />
+        <SolidColorBrush x:Key="br_gray" Color="#FFD5D3CD" />
+        <SolidColorBrush x:Key="br_darkgray" Color="#FFAEACA6" />
+        <SolidColorBrush x:Key="br_red" Color="#FA766E" />
+        <SolidColorBrush x:Key="br_black" Color="#000000" />
     </Application.Resources>
 </Application>

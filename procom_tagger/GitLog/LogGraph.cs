@@ -15,18 +15,28 @@ namespace procom_tagger.GitLog
             public List<int> From;
             public List<int> To;
         }
-        public LogGraphNode(int graphPosition, List<FromTo> directions, string message, bool isMerge)
+        public LogGraphNode(int graphPosition, List<FromTo> directions, Commit commit, bool isMerge)
         {
             GraphPosition = graphPosition;
             Directions = directions;
-            Message = message;
+            MessageShort = commit.MessageShort;
+            Message = commit.Message;
             IsMerge = isMerge;
+            Sha = commit.Sha;
+            ShortSha = Sha.Substring(0, 6);
+            Author = commit.Author;
+            Committer = commit.Committer;
         }
 
         public int GraphPosition { get; }
         public List<FromTo> Directions { get; }
+        public string MessageShort { get; }
         public string Message { get; }
         public bool IsMerge { get; }
+        public string Sha { get; }
+        public string ShortSha { get; }
+        public Signature Author { get; }
+        public Signature Committer { get; }
     }
 
     class LogGraph
@@ -109,14 +119,14 @@ namespace procom_tagger.GitLog
                     }
 
                     if (lastPosition.HasValue && lastCommit != null)
-                      result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, currentDirections), lastCommit.MessageShort, lastMerge));
+                      result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, currentDirections), lastCommit, lastMerge));
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
                     lastCommit = c;
                     lastMerge = parents.Count > 1;
                 }
                 if (lastPosition.HasValue && lastCommit != null)
-                    result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, new List<List<int>>()), lastCommit.MessageShort, false));
+                    result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, new List<List<int>>()), lastCommit, false));
             }
             return result;
         }

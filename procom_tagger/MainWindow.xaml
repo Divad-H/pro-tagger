@@ -16,8 +16,8 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=LostFocus}"/>
-            <Button Content="Refresh" Command="{Binding RefreshCommand}" Grid.Column="1"/>
+            <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Content="Refresh" Command="{Binding RefreshCommand}" CommandParameter="Ratte" Grid.Column="1"/>
         </Grid>
         <repo:RepositoryView DataContext="{Binding Repository}" />
     </DockPanel>

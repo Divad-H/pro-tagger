@@ -1,14 +1,20 @@
-﻿using System;
+﻿using ReactiveMvvm;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace procom_tagger
 {
-    public class ProcomTagger : INotifyPropertyChanged
+    public class ProcomTagger : INotifyPropertyChanged, IDisposable
     {
-        private string _repositoryPath = @"G:\projects\libgit2sharp";
+        private string _repositoryPath = @"C:\Users\david\dev\procom_tagger";
         public string RepositoryPath
         {
             get { return _repositoryPath; }
@@ -34,15 +40,45 @@ namespace procom_tagger
             }
         }
 
+        public ICommand RefreshCommand { get; }
+
         public ProcomTagger()
         {
             _repository = new RepositoryViewModel(_repositoryPath);
+
+            var repositoryPath = this.FromProperty(vm => vm.RepositoryPath);
+
+            var refreshCommand = ReactiveCommand.Create<object, object>(
+                    canExecute: repositoryPath
+                        .Select(path => !string.IsNullOrWhiteSpace(path)),
+                    execute: (param) =>
+                    {
+                        return param;
+                    },
+                    scheduler: DispatcherScheduler.Current)
+                .DisposeWith(_disposable);
+
+            refreshCommand
+                .ObserveOnDispatcher()
+                .SelectMany(_ => repositoryPath.Take(1))
+                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, path)))
+                .Switch()
+                .Subscribe(repository => { if (repository != null) Repository = repository; })
+                .DisposeWith(_disposable);
+
+            RefreshCommand = refreshCommand;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private readonly CompositeDisposable _disposable = new CompositeDisposable();
+        public void Dispose()
+        {
+            _disposable.Dispose();
         }
     }
 }

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace procom_tagger
 {
@@ -20,6 +22,14 @@ namespace procom_tagger
                 _graph = value;
                 NotifyPropertyChanged();
             }
+        }
+
+        public static async Task<RepositoryViewModel?> Create(CancellationToken ct, string path)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            if (ct.IsCancellationRequested)
+                return null;
+            return new RepositoryViewModel(path);
         }
 
         public RepositoryViewModel(string path)

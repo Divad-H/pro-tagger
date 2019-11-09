@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-namespace procom_tagger.GitLog
+namespace procom_tagger.Repo.GitLog
 {
     public class LogGraphNode
     {
@@ -39,9 +41,39 @@ namespace procom_tagger.GitLog
         public Signature Committer { get; }
     }
 
-    class LogGraph
+    //public class BranchInfo
+    //{
+    //    public bool IsHead { get; }
+    //    public 
+    //}
+
+    public class LogGraph : INotifyPropertyChanged
     {
-        public static List<LogGraphNode> CreateGraph(string path)
+        private List<LogGraphNode> _logGraphNodes;
+        public List<LogGraphNode> LogGraphNodes
+        {
+            get { return _logGraphNodes; }
+            set
+            {
+                if (_logGraphNodes == value)
+                    return;
+                _logGraphNodes = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public LogGraph(string path)
+        {
+            _logGraphNodes = LogGraph.CreateGraph(path);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private static List<LogGraphNode> CreateGraph(string path)
         {
             var result = new List<LogGraphNode>();
             using (var repo = new Repository(path))

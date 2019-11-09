@@ -1,4 +1,4 @@
-﻿using procom_tagger.GitLog;
+﻿using procom_tagger.Repo.GitLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;

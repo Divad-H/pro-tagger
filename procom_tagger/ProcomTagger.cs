@@ -1,4 +1,5 @@
-﻿using ReactiveMvvm;
+﻿using static ReactiveMvvm.DisposableExtensions;
+using static ReacitveMvvm.ObservableExtensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ReactiveMvvm;
 
 namespace procom_tagger
 {
@@ -35,12 +37,15 @@ namespace procom_tagger
             {
                 if (_repository == value)
                     return;
+                _repository.Dispose();
                 _repository = value;
                 NotifyPropertyChanged();
             }
         }
 
         public ICommand RefreshCommand { get; }
+
+        public IObservable<RepositoryViewModel> RepositoryObservable { get; }
 
         public ProcomTagger()
         {
@@ -58,11 +63,16 @@ namespace procom_tagger
                     scheduler: DispatcherScheduler.Current)
                 .DisposeWith(_disposable);
 
-            refreshCommand
+            var repository = refreshCommand
                 .ObserveOnDispatcher()
                 .SelectMany(_ => repositoryPath.Take(1))
                 .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, path)))
                 .Switch()
+                .SkipNull();
+
+            RepositoryObservable = repository;
+
+            repository
                 .Subscribe(repository => { if (repository != null) Repository = repository; })
                 .DisposeWith(_disposable);
 
@@ -78,6 +88,7 @@ namespace procom_tagger
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()
         {
+            _repository?.Dispose();
             _disposable.Dispose();
         }
     }

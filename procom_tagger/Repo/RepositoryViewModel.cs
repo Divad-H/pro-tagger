@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace procom_tagger
 {
-    public class RepositoryViewModel : INotifyPropertyChanged
+    public class RepositoryViewModel : INotifyPropertyChanged, IDisposable
     {
         private LogGraph _graph;
         public LogGraph Graph
@@ -41,6 +42,12 @@ namespace procom_tagger
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private CompositeDisposable _disposables = new CompositeDisposable();
+        public void Dispose()
+        {
+            _disposables.Dispose();
         }
     }
 }

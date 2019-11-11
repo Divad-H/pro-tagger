@@ -45,6 +45,8 @@ namespace procom_tagger
             return _value;
         }
 
+        public object Value => _value;
+
         public bool Is<T>()
         {
             return _value is T;
@@ -61,5 +63,7 @@ namespace procom_tagger
             _value = value;
             return this;
         }
+
+        public int VariantIndex => _value is T1 ? 0 : 1;
     }
 }

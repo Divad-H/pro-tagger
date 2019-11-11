@@ -5,6 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:procom_tagger.Repo.GitLog"
       xmlns:custom="clr-namespace:procom_tagger.Wpf"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -111,123 +113,143 @@
         </Style>
     </UserControl.Resources>
 
-    <ListView ItemsSource="{Binding LogGraphNodes}" SelectionMode="Single" Foreground="{StaticResource br_black}" custom:GridColumnLayout.Enabled="True">
-        <ListView.Style>
-            <Style TargetType="ListView">
-                <Setter Property="SnapsToDevicePixels" Value="true" />
-                <Setter Property="OverridesDefaultStyle" Value="true" />
-                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
-                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-                <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
-                <Setter Property="VerticalContentAlignment" Value="Center" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ListView">
-                            <Border Name="Border"
-                                        BorderThickness="0" Background="White" BorderBrush="{StaticResource br_gray}">
-                                <ScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsGrouping" Value="true">
-                                    <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="false">
-                                    <Setter TargetName="Border" Property="Background">
-                                        <Setter.Value>
-                                            <SolidColorBrush Color="{DynamicResource DisabledBorderLightColor}" />
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-        </ListView.Style>
-        <ListView.ItemContainerStyle>
-            <Style TargetType="ListViewItem">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ListViewItem">
-                            <Border BorderThickness="0" 
-                                        SnapsToDevicePixels="True"
-                                        BorderBrush="{x:Null}"
-                                        Background="{TemplateBinding Background}"
-                                        Name="InnerBorder">
-                                <GridViewRowPresenter 
-                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
-                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource br_blue}" />
-                                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                <Setter Property="ListViewItem.FocusVisualStyle" Value="{x:Null}" />
-            </Style>
-        </ListView.ItemContainerStyle>
-        <ListView.View>
-            <GridView ColumnHeaderContainerStyle="{StaticResource CustomGridViewColumnHeaderStyle}">
-                <GridViewColumn Width="120" Header="Graph" x:Name="message_col">
-                    <GridViewColumn.CellTemplate>
-                        <DataTemplate>
-                            <custom:LogGraphNodeDrawing
-                                                Width="{Binding ElementName=message_col, Path=ActualWidth}"
-                                                GraphNode="{Binding}" 
-                                                custom:BoundsClipper.ClippingEnabled="Horizontal" 
-                                                StrokeThickness="1"
-                                                Fill="{StaticResource br_lightblue}"
-                                                HighlightFill="{StaticResource br_red}"
-                                                VerticalDistance="{Binding ElementName=InnerBorder, Path=ActualHeight}" >
-                                <custom:LogGraphNodeDrawing.Style>
-                                    <Style TargetType="custom:LogGraphNodeDrawing">
-                                        <Style.Setters>
-                                            <Setter Property="Stroke" Value="{StaticResource br_black}" />
-                                        </Style.Setters>
-                                        <Style.Triggers>
-                                            <DataTrigger
-                                                    Binding="{Binding
-                                                        RelativeSource={RelativeSource
-                                                            Mode=FindAncestor,
-                                                            AncestorType={x:Type ListViewItem}},
-                                                            Path=IsSelected}"
-                                                    Value="True">
-                                                <Setter Property="Stroke" Value="{StaticResource br_light}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
+    <ContentPresenter>
+        <ContentPresenter.Style>
+            <Style TargetType="ContentPresenter">
+                <Style.Setters>
+                    <Setter Property="Content">
+                        <Setter.Value>
+                            <ListView ItemsSource="{Binding LogGraphNodes.Value}" SelectionMode="Single" Foreground="{StaticResource br_black}" custom:GridColumnLayout.Enabled="True">
+                                <ListView.Style>
+                                    <Style TargetType="ListView">
+                                        <Setter Property="SnapsToDevicePixels" Value="true" />
+                                        <Setter Property="OverridesDefaultStyle" Value="true" />
+                                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+                                        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+                                        <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListView">
+                                                    <Border Name="Border"
+                                                            BorderThickness="0" Background="White" BorderBrush="{StaticResource br_gray}">
+                                                        <ScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}">
+                                                            <ItemsPresenter />
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsGrouping" Value="true">
+                                                            <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="false">
+                                                            <Setter TargetName="Border" Property="Background">
+                                                                <Setter.Value>
+                                                                    <SolidColorBrush Color="{DynamicResource DisabledBorderLightColor}" />
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
-                                </custom:LogGraphNodeDrawing.Style>
-                            </custom:LogGraphNodeDrawing>
-                        </DataTemplate>
-                    </GridViewColumn.CellTemplate>
-                </GridViewColumn>
-                <GridViewColumn Header="Message" DisplayMemberBinding="{Binding MessageShort}" custom:FillColumn.Enabled="True"/>
-                <GridViewColumn Width="200" Header="Author" DisplayMemberBinding="{Binding Author}">
-                    <GridViewColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Name}"/>
-                                <TextBlock Text="{Binding Email}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </GridViewColumn.CellTemplate>
-                </GridViewColumn>
-                <GridViewColumn Width="200" Header="Author Date" DisplayMemberBinding="{Binding Author.When}"/>
-                <GridViewColumn Width="55" Header="Sha" >
-                    <GridViewColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding ShortSha}" FontFamily="Consolas" HorizontalAlignment="Center"/>
-                        </DataTemplate>
-                    </GridViewColumn.CellTemplate>
-                </GridViewColumn>
-            </GridView>
-        </ListView.View>
-    </ListView>
+                                </ListView.Style>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListViewItem">
+                                                    <Border BorderThickness="0" 
+                                                            SnapsToDevicePixels="True"
+                                                            BorderBrush="{x:Null}"
+                                                            Background="{TemplateBinding Background}"
+                                                            Name="InnerBorder">
+                                                        <GridViewRowPresenter 
+                                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource br_blue}" />
+                                                            <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="ListViewItem.FocusVisualStyle" Value="{x:Null}" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.View>
+                                    <GridView ColumnHeaderContainerStyle="{StaticResource CustomGridViewColumnHeaderStyle}">
+                                        <GridViewColumn Width="120" Header="Graph">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <custom:LogGraphNodeDrawing
+                                                    GraphNode="{Binding}" 
+                                                    custom:BoundsClipper.ClippingEnabled="Horizontal" 
+                                                    StrokeThickness="1"
+                                                    Fill="{StaticResource br_lightblue}"
+                                                    HighlightFill="{StaticResource br_red}"
+                                                    VerticalDistance="{Binding ElementName=InnerBorder, Path=ActualHeight}" >
+                                                        <custom:LogGraphNodeDrawing.Style>
+                                                            <Style TargetType="custom:LogGraphNodeDrawing">
+                                                                <Style.Setters>
+                                                                    <Setter Property="Stroke" Value="{StaticResource br_black}" />
+                                                                </Style.Setters>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger
+                                                                        Binding="{Binding
+                                                                            RelativeSource={RelativeSource
+                                                                                Mode=FindAncestor,
+                                                                                AncestorType={x:Type ListViewItem}},
+                                                                                Path=IsSelected}"
+                                                                        Value="True">       
+                                                                        <Setter Property="Stroke" Value="{StaticResource br_light}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </custom:LogGraphNodeDrawing.Style>
+                                                    </custom:LogGraphNodeDrawing>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Message" DisplayMemberBinding="{Binding MessageShort}" custom:FillColumn.Enabled="True"/>
+                                        <GridViewColumn Width="200" Header="Author" DisplayMemberBinding="{Binding Author}">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Name}"/>
+                                                        <TextBlock Text="{Binding Email}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="200" Header="Author Date" DisplayMemberBinding="{Binding Author.When}"/>
+                                        <GridViewColumn Width="55" Header="Sha" >
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ShortSha}" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Setter.Value>
+                    </Setter>
+                </Style.Setters>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding LogGraphNodes.VariantIndex}" Value="1">
+                        <Setter Property="Content">
+                            <Setter.Value>
+                                <TextBlock Text="{Binding LogGraphNodes.Value}" />
+                            </Setter.Value>
+                        </Setter>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ContentPresenter.Style>
+    </ContentPresenter>
 </UserControl>

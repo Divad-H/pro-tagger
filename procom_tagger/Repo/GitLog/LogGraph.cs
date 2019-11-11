@@ -9,9 +9,11 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ReactiveMvvm;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 
 namespace procom_tagger.Repo.GitLog
 {
+    using GraphType = List<LogGraphNode>;
     public class LogGraphNode
     {
         public struct FromTo
@@ -51,8 +53,8 @@ namespace procom_tagger.Repo.GitLog
 
     public class LogGraph : INotifyPropertyChanged, IDisposable
     {
-        private List<LogGraphNode> _logGraphNodes;
-        public List<LogGraphNode> LogGraphNodes
+        private Variant<GraphType, string> _logGraphNodes;
+        public Variant<GraphType, string> LogGraphNodes
         {
             get { return _logGraphNodes; }
             set
@@ -66,10 +68,14 @@ namespace procom_tagger.Repo.GitLog
 
         public LogGraph(string path, IObservable<IEnumerable<string>> selectedBranchNames)
         {
-            _logGraphNodes = new List<LogGraphNode>();
+            _logGraphNodes = new Variant<GraphType, string>(new GraphType());
 
-            selectedBranchNames
-                .Subscribe(branchNames => LogGraphNodes = CreateGraph(path, branchNames))
+            var logGraphNodes = selectedBranchNames
+                .Select(branchNames => CreateGraph(path, branchNames))
+                .Retry();
+
+            logGraphNodes
+                .Subscribe(graphNodes => LogGraphNodes = graphNodes)
                 .DisposeWith(_disposable);
         }
 
@@ -85,100 +91,107 @@ namespace procom_tagger.Repo.GitLog
             _disposable.Dispose();
         }
 
-        private static List<LogGraphNode> CreateGraph(string path, IEnumerable<string> branches)
+        private static Variant<GraphType, string> CreateGraph(string path, IEnumerable<string> branches)
         {
-            var result = new List<LogGraphNode>();
-            using (var repo = new Repository(path))
+            try
             {
-                var expectedIds = new List<ObjectId?>();
-                var directions = new List<List<int>>();
-                var lastDirections = new List<List<int>>();
-
-                int? lastPosition = null;
-                Commit? lastCommit = null;
-                bool lastMerge = false;
-
-                var commitFilter = new CommitFilter()
+                using (var repo = new Repository(path))
                 {
-                    SortBy = CommitSortStrategies.Topological,
-                    IncludeReachableFrom = branches.Select(name => repo.Branches[name])
-                };
+                    var result = new GraphType();
+                    var expectedIds = new List<ObjectId?>();
+                    var directions = new List<List<int>>();
+                    var lastDirections = new List<List<int>>();
 
-                foreach (Commit c in repo.Commits.QueryBy(commitFilter).Take(1000))
-                {
-                    var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
-                    if (nextPosition == -1)
+                    int? lastPosition = null;
+                    Commit? lastCommit = null;
+                    bool lastMerge = false;
+
+                    var commitFilter = new CommitFilter()
                     {
-                        // commit without visible children
-                        nextPosition = expectedIds.FindIndex((id) => id == null);
+                        SortBy = CommitSortStrategies.Topological,
+                        IncludeReachableFrom = branches.Select(name => repo.Branches[name])
+                    };
+
+                    foreach (Commit c in repo.Commits.QueryBy(commitFilter).Take(1000))
+                    {
+                        var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
                         if (nextPosition == -1)
                         {
-                            nextPosition = expectedIds.Count;
-                            expectedIds.Add(null);
-                            directions.Add(new List<int>());
-                        }
-                    }
-
-                    var currentDirections = directions;
-                    directions = currentDirections.Select((dir) => dir.Take(0).ToList()).ToList();
-                    for (int i = 0; i < directions.Count; ++i)
-                        if (expectedIds[i] != null)
-                            directions[i].Add(i);
-                    for (int i = 0; i < currentDirections.Count; ++i)
-                    {
-                        if (expectedIds[i] == c.Id && i != nextPosition)
-                        {
-                            foreach (var direction in currentDirections)
-                                if (direction.Remove(i))
-                                    direction.Add(nextPosition);
-                            directions[i].Clear();
-                        }
-                    }
-
-                    var parents = c.Parents.ToList();
-                    int parentIndex = 0;
-
-                    for (int i = 0; i < expectedIds.Count; ++i)
-                    {
-                        if (expectedIds[i] == c.Id || expectedIds[i] == null)
-                        {
-                            if (parents.Count > parentIndex)
+                            // commit without visible children
+                            nextPosition = expectedIds.FindIndex((id) => id == null);
+                            if (nextPosition == -1)
                             {
-                                int indexToChange = i;
-                                if (expectedIds[i] == null && expectedIds[nextPosition] == c.Id)
+                                nextPosition = expectedIds.Count;
+                                expectedIds.Add(null);
+                                directions.Add(new List<int>());
+                            }
+                        }
+
+                        var currentDirections = directions;
+                        directions = currentDirections.Select((dir) => dir.Take(0).ToList()).ToList();
+                        for (int i = 0; i < directions.Count; ++i)
+                            if (expectedIds[i] != null)
+                                directions[i].Add(i);
+                        for (int i = 0; i < currentDirections.Count; ++i)
+                        {
+                            if (expectedIds[i] == c.Id && i != nextPosition)
+                            {
+                                foreach (var direction in currentDirections)
+                                    if (direction.Remove(i))
+                                        direction.Add(nextPosition);
+                                directions[i].Clear();
+                            }
+                        }
+
+                        var parents = c.Parents.ToList();
+                        int parentIndex = 0;
+
+                        for (int i = 0; i < expectedIds.Count; ++i)
+                        {
+                            if (expectedIds[i] == c.Id || expectedIds[i] == null)
+                            {
+                                if (parents.Count > parentIndex)
                                 {
-                                    indexToChange = nextPosition;
-                                    --i;
+                                    int indexToChange = i;
+                                    if (expectedIds[i] == null && expectedIds[nextPosition] == c.Id)
+                                    {
+                                        indexToChange = nextPosition;
+                                        --i;
+                                    }
+                                    expectedIds[indexToChange] = parents[parentIndex++].Id;
+                                    if (!directions[nextPosition].Contains(indexToChange))
+                                        directions[nextPosition].Add(indexToChange);
                                 }
-                                expectedIds[indexToChange] = parents[parentIndex++].Id;
-                                if (!directions[nextPosition].Contains(indexToChange))
-                                    directions[nextPosition].Add(indexToChange);
-                            }
-                            else
-                            {
-                                expectedIds[i] = null;
+                                else
+                                {
+                                    expectedIds[i] = null;
+                                }
                             }
                         }
-                    }
 
-                    for (; parentIndex < parents.Count; ++parentIndex)
-                    {
-                        expectedIds.Add(parents[parentIndex].Id);
-                        directions.Add(new List<int>());
-                        directions[nextPosition].Add(directions.Count - 1);
-                    }
+                        for (; parentIndex < parents.Count; ++parentIndex)
+                        {
+                            expectedIds.Add(parents[parentIndex].Id);
+                            directions.Add(new List<int>());
+                            directions[nextPosition].Add(directions.Count - 1);
+                        }
 
+                        if (lastPosition.HasValue && lastCommit != null)
+                            result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, currentDirections), lastCommit, lastMerge));
+                        lastDirections = currentDirections;
+                        lastPosition = nextPosition;
+                        lastCommit = c;
+                        lastMerge = parents.Count > 1;
+                    }
                     if (lastPosition.HasValue && lastCommit != null)
-                      result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, currentDirections), lastCommit, lastMerge));
-                    lastDirections = currentDirections;
-                    lastPosition = nextPosition;
-                    lastCommit = c;
-                    lastMerge = parents.Count > 1;
+                        result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, new List<List<int>>()), lastCommit, false));
+                    return new Variant<GraphType, string>(result);
                 }
-                if (lastPosition.HasValue && lastCommit != null)
-                    result.Add(new LogGraphNode(lastPosition.Value, createGraphDirections(lastDirections, new List<List<int>>()), lastCommit, false));
             }
-            return result;
+            catch (Exception e)
+            {
+                return new Variant<GraphType, string>(e.Message);
+            }
         }
 
         private static List<LogGraphNode.FromTo> createGraphDirections(IEnumerable<List<int>> lastDirections, IEnumerable<List<int>> nextDirections)

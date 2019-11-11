@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ReactiveMvvm;
+using System.Reactive.Disposables;
 
 namespace procom_tagger.Repo.GitLog
 {
@@ -47,7 +49,7 @@ namespace procom_tagger.Repo.GitLog
     //    public 
     //}
 
-    public class LogGraph : INotifyPropertyChanged
+    public class LogGraph : INotifyPropertyChanged, IDisposable
     {
         private List<LogGraphNode> _logGraphNodes;
         public List<LogGraphNode> LogGraphNodes
@@ -62,9 +64,13 @@ namespace procom_tagger.Repo.GitLog
             }
         }
 
-        public LogGraph(string path)
+        public LogGraph(string path, IObservable<IEnumerable<string>> selectedBranchNames)
         {
-            _logGraphNodes = LogGraph.CreateGraph(path);
+            _logGraphNodes = new List<LogGraphNode>();
+
+            selectedBranchNames
+                .Subscribe(branchNames => LogGraphNodes = CreateGraph(path, branchNames))
+                .DisposeWith(_disposable);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -73,7 +79,13 @@ namespace procom_tagger.Repo.GitLog
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private static List<LogGraphNode> CreateGraph(string path)
+        private readonly CompositeDisposable _disposable = new CompositeDisposable();
+        public void Dispose()
+        {
+            _disposable.Dispose();
+        }
+
+        private static List<LogGraphNode> CreateGraph(string path, IEnumerable<string> branches)
         {
             var result = new List<LogGraphNode>();
             using (var repo = new Repository(path))
@@ -85,8 +97,14 @@ namespace procom_tagger.Repo.GitLog
                 int? lastPosition = null;
                 Commit? lastCommit = null;
                 bool lastMerge = false;
-                
-                foreach (Commit c in repo.Commits.QueryBy(new CommitFilter() { SortBy = CommitSortStrategies.Topological, IncludeReachableFrom = new List<Branch>() { repo.Branches["master"], repo.Branches["origin/maint/v0.24"] } }).Take(1000))
+
+                var commitFilter = new CommitFilter()
+                {
+                    SortBy = CommitSortStrategies.Topological,
+                    IncludeReachableFrom = branches.Select(name => repo.Branches[name])
+                };
+
+                foreach (Commit c in repo.Commits.QueryBy(commitFilter).Take(1000))
                 {
                     var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
                     if (nextPosition == -1)

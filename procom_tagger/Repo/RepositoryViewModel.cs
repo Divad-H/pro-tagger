@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -35,8 +36,14 @@ namespace procom_tagger
 
         public RepositoryViewModel(string path)
         {
-            _graph = new LogGraph(path);
+            var selectedBranches = Observable
+                .Return(new List<string>() { "master" });
+            SelectedBranches = selectedBranches;
+
+            _graph = new LogGraph(path, selectedBranches);
         }
+
+        public IObservable<IEnumerable<string>> SelectedBranches { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")

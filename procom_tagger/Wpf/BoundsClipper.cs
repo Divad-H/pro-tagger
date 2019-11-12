@@ -29,8 +29,7 @@ namespace procom_tagger.Wpf
 
         private static void ClippingEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var element = d as FrameworkElement;
-            if (element != null)
+            if (d is FrameworkElement element)
             {
                 element.Loaded += (s, evt) => ClipElement(element);
                 element.SizeChanged += (s, evt) => ClipElement(element);

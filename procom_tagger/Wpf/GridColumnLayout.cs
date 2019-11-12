@@ -132,7 +132,7 @@ namespace procom_tagger.Wpf
             ResizeColumn();
         }
 
-        List<GridViewColumnHeader> _columnHeaders = new List<GridViewColumnHeader>();
+        readonly List<GridViewColumnHeader> _columnHeaders = new List<GridViewColumnHeader>();
         private void RegisterColumnEvents(DependencyObject recursiveObject)
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(recursiveObject); i++)

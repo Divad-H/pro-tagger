@@ -2,10 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -13,9 +11,8 @@ namespace procom_tagger.Wpf
 {
     public class LogGraphNodeDrawing : Canvas
     {
-
-        Path _lines = new Path();
-        Path _circle = new Path();
+        readonly Path _lines = new Path();
+        readonly Path _circle = new Path();
         
         public LogGraphNodeDrawing()
         {
@@ -33,9 +30,9 @@ namespace procom_tagger.Wpf
             set { SetValue(StrokeProperty, value); }
         }
         public static readonly DependencyProperty StrokeProperty = DependencyProperty.Register(
-          nameof(Stroke), typeof(Brush), typeof(LogGraphNodeDrawing), new PropertyMetadata(new SolidColorBrush(Colors.Black), strokeChanged));
+          nameof(Stroke), typeof(Brush), typeof(LogGraphNodeDrawing), new PropertyMetadata(new SolidColorBrush(Colors.Black), StrokeChanged));
 
-        private static void strokeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void StrokeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (!(d is LogGraphNodeDrawing logGraphNodeDrawing))
                 throw new ArgumentException("Invalid Type", nameof(d));
@@ -162,9 +159,6 @@ namespace procom_tagger.Wpf
         {
             if (!(d is LogGraphNodeDrawing logGraphNodeDrawing))
                 throw new ArgumentException("Invalid Type", nameof(d));
-            LogGraphNode? graphNode = null;
-            if (e.NewValue != null)
-                graphNode = (LogGraphNode)e.NewValue;
             logGraphNodeDrawing.GraphChanged();
         }
 
@@ -190,32 +184,34 @@ namespace procom_tagger.Wpf
             var figures = directions.SelectMany((subDirection, i) => MapDirections(subDirection.From, i))
                                     .Select((direction) =>
             {
-                PathFigure pathFigure = new PathFigure();
-                pathFigure.StartPoint = new Point(0.5 * (1 + direction.Item1 + direction.Item2) * HorizontalDistance, -VerticalDistance / 2 - 0.5);
-
-                PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
-                pathSegmentCollection.Add(new LineSegment() { Point = new Point((0.5 + direction.Item1) * HorizontalDistance, -VerticalDistance / 2.5) });
-                pathSegmentCollection.Add(new LineSegment() { Point = new Point((0.5 + direction.Item1) * HorizontalDistance, 0) });
-
-                pathFigure.Segments = pathSegmentCollection;
-                return pathFigure;
+                PathSegmentCollection pathSegmentCollection = new PathSegmentCollection
+                {
+                    new LineSegment() { Point = new Point((0.5 + direction.Item1) * HorizontalDistance, -VerticalDistance / 2.5) },
+                    new LineSegment() { Point = new Point((0.5 + direction.Item1) * HorizontalDistance, 0) }
+                };
+                return new PathFigure
+                {
+                    StartPoint = new Point(0.5 * (1 + direction.Item1 + direction.Item2) * HorizontalDistance, -VerticalDistance / 2 - 0.5),
+                    Segments = pathSegmentCollection
+                };
             }).Concat(
                 directions.SelectMany((subDirection, i) => MapDirections(subDirection.To, i))
                                     .Select((direction) =>
                                     {
-                                        PathFigure pathFigure = new PathFigure();
-                                        pathFigure.StartPoint = new Point(0.5 * (1 + direction.Item1 + direction.Item2) * HorizontalDistance, VerticalDistance / 2 + 0.5);
-
-                                        PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
-                                        pathSegmentCollection.Add(new LineSegment() { Point = new Point((0.5 + direction.Item2) * HorizontalDistance, VerticalDistance / 2.5) });
-                                        pathSegmentCollection.Add(new LineSegment() { Point = new Point((0.5 + direction.Item2) * HorizontalDistance, 0) });
-
-                                        pathFigure.Segments = pathSegmentCollection;
-                                        return pathFigure;
+                                        PathSegmentCollection pathSegmentCollection = new PathSegmentCollection
+                                        {
+                                            new LineSegment() { Point = new Point((0.5 + direction.Item2) * HorizontalDistance, VerticalDistance / 2.5) },
+                                            new LineSegment() { Point = new Point((0.5 + direction.Item2) * HorizontalDistance, 0) }
+                                        };
+                                        return new PathFigure
+                                        {
+                                            StartPoint = new Point(0.5 * (1 + direction.Item1 + direction.Item2) * HorizontalDistance, VerticalDistance / 2 + 0.5),
+                                            Segments = pathSegmentCollection
+                                        };
                                     }
                 ));
             
-            PathFigureCollection pathFigureCollection = new PathFigureCollection();
+            var pathFigureCollection = new PathFigureCollection();
             foreach (var figure in figures)
                 pathFigureCollection.Add(figure);
             return new PathGeometry() { Figures = pathFigureCollection };

@@ -17,7 +17,7 @@ namespace procom_tagger
 {
     public class ProcomTagger : INotifyPropertyChanged, IDisposable
     {
-        private ISchedulers _schedulers;
+        private readonly ISchedulers _schedulers;
 
         private string _repositoryPath = @"G:\Projects\procom_tagger";
         public string RepositoryPath

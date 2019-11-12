@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace ReactiveMvvm
 {

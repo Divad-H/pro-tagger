@@ -122,7 +122,7 @@
                             <ListView ItemsSource="{Binding LogGraphNodes.Value}" SelectionMode="Single" Foreground="{StaticResource br_black}" custom:GridColumnLayout.Enabled="True">
                                 <ListView.Style>
                                     <Style TargetType="ListView">
-                                        <Setter Property="SnapsToDevicePixels" Value="true" />
+                                        <Setter Property="SnapsToDevicePixels" Value="false" />
                                         <Setter Property="OverridesDefaultStyle" Value="true" />
                                         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
                                         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />

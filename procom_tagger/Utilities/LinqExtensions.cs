@@ -18,5 +18,10 @@ namespace procom_tagger.Utilities
                 secondValid = it2.MoveNext();
             }
         }
+
+        public static IEnumerable<T> Yield<T>(this T item)
+        {
+            yield return item;
+        }
     }
 }

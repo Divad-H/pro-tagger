@@ -1,8 +1,10 @@
 ﻿using procom_tagger.Utilities;
 using ReacitveMvvm;
 using System.Reactive.Concurrency;
+using System.Runtime.CompilerServices;
 using System.Windows;
 
+[assembly: InternalsVisibleTo("procom_tagger_test")]
 namespace procom_tagger
 {
     /// <summary>

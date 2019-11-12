@@ -89,7 +89,7 @@ namespace procom_tagger.Repo.GitLog
             _disposable.Dispose();
         }
 
-        private static Variant<GraphType, string> CreateGraph(IRepositoryFactory repositoryFactory, string path, IEnumerable<string> branches)
+        internal static Variant<GraphType, string> CreateGraph(IRepositoryFactory repositoryFactory, string path, IEnumerable<string> branches)
         {
             try
             {

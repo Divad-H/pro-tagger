@@ -11,12 +11,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveMvvm;
+using ReacitveMvvm;
 
 namespace procom_tagger
 {
     public class ProcomTagger : INotifyPropertyChanged, IDisposable
     {
-        private string _repositoryPath = @"C:\Users\david\dev\procom_tagger";
+        private ISchedulers _schedulers;
+
+        private string _repositoryPath = @"G:\Projects\procom_tagger";
         public string RepositoryPath
         {
             get { return _repositoryPath; }
@@ -29,15 +32,15 @@ namespace procom_tagger
             }
         }
 
-        private RepositoryViewModel _repository;
-        public RepositoryViewModel Repository
+        private RepositoryViewModel? _repository;
+        public RepositoryViewModel? Repository
         {
             get { return _repository; }
             set
             {
                 if (_repository == value)
                     return;
-                _repository.Dispose();
+                _repository?.Dispose();
                 _repository = value;
                 NotifyPropertyChanged();
             }
@@ -47,9 +50,9 @@ namespace procom_tagger
 
         public IObservable<RepositoryViewModel> RepositoryObservable { get; }
 
-        public ProcomTagger()
+        public ProcomTagger(ISchedulers schedulers)
         {
-            _repository = new RepositoryViewModel(_repositoryPath);
+            _schedulers = schedulers;
 
             var repositoryPath = this.FromProperty(vm => vm.RepositoryPath);
 
@@ -60,12 +63,15 @@ namespace procom_tagger
                     {
                         return param;
                     },
-                    scheduler: DispatcherScheduler.Current)
+                    scheduler: schedulers.Dispatcher)
                 .DisposeWith(_disposable);
 
-            var repository = refreshCommand
-                .ObserveOnDispatcher()
-                .SelectMany(_ => repositoryPath.Take(1))
+            var repository = Observable
+                .Return(_repositoryPath)
+                .Concat(refreshCommand
+                    .ObserveOn(schedulers.Dispatcher)
+                    .SelectMany(_ => repositoryPath.Take(1))
+                    )
                 .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, path)))
                 .Switch()
                 .SkipNull();

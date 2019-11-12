@@ -28,7 +28,7 @@ namespace procom_tagger
 
         public static async Task<RepositoryViewModel?> Create(CancellationToken ct, string path)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            await Task.Delay(TimeSpan.FromSeconds(1));
             if (ct.IsCancellationRequested)
                 return null;
             return new RepositoryViewModel(path);

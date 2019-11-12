@@ -1,6 +1,8 @@
-﻿using System;
+﻿using ReacitveMvvm;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,9 +22,14 @@ namespace procom_tagger
     /// </summary>
     public partial class MainWindow : Window
     {
+        private class Schedulers : ISchedulers
+        {
+            public IScheduler Dispatcher => DispatcherScheduler.Current;
+        }
+
         public MainWindow()
         {
-            DataContext = new ProcomTagger();
+            DataContext = new ProcomTagger(new Schedulers());
             InitializeComponent();
         }
     }

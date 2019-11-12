@@ -64,12 +64,12 @@ namespace procom_tagger.Repo.GitLog
             }
         }
 
-        public LogGraph(string path, IObservable<IEnumerable<string>> selectedBranchNames)
+        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IEnumerable<string>> selectedBranchNames)
         {
             _logGraphNodes = new Variant<GraphType, string>(new GraphType());
 
             var logGraphNodes = selectedBranchNames
-                .Select(branchNames => CreateGraph(path, branchNames))
+                .Select(branchNames => CreateGraph(repositoryFactory, path, branchNames))
                 .Retry();
 
             logGraphNodes
@@ -89,11 +89,11 @@ namespace procom_tagger.Repo.GitLog
             _disposable.Dispose();
         }
 
-        private static Variant<GraphType, string> CreateGraph(string path, IEnumerable<string> branches)
+        private static Variant<GraphType, string> CreateGraph(IRepositoryFactory repositoryFactory, string path, IEnumerable<string> branches)
         {
             try
             {
-                using var repo = new Repository(path);
+                using var repo = repositoryFactory.CreateRepository(path);
                 var result = new GraphType();
                 var expectedIds = new List<ObjectId?>();
                 var directions = new List<List<int>>();
@@ -109,7 +109,7 @@ namespace procom_tagger.Repo.GitLog
                     IncludeReachableFrom = branches.Select(name => repo.Branches[name])
                 };
 
-                foreach (Commit c in repo.Commits.QueryBy(commitFilter).Take(1000))
+                foreach (Commit c in repo.QueryCommits(commitFilter).Take(1000))
                 {
                     var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
                     if (nextPosition == -1)

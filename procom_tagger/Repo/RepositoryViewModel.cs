@@ -1,4 +1,5 @@
 ﻿using procom_tagger.Repo.GitLog;
+using procom_tagger.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,21 +26,21 @@ namespace procom_tagger
             }
         }
 
-        public static async Task<RepositoryViewModel?> Create(CancellationToken ct, string path)
+        public static async Task<RepositoryViewModel?> Create(CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
             if (ct.IsCancellationRequested)
                 return null;
-            return new RepositoryViewModel(path);
+            return new RepositoryViewModel(repositoryFactory, path);
         }
 
-        public RepositoryViewModel(string path)
+        public RepositoryViewModel(IRepositoryFactory repositoryFactory, string path)
         {
             var selectedBranches = Observable
                 .Return(new List<string>() { "master" });
             SelectedBranches = selectedBranches;
 
-            _graph = new LogGraph(path, selectedBranches);
+            _graph = new LogGraph(repositoryFactory, path, selectedBranches);
         }
 
         public IObservable<IEnumerable<string>> SelectedBranches { get; }

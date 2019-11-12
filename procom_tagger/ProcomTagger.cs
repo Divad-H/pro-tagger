@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveMvvm;
 using ReacitveMvvm;
+using procom_tagger.Utilities;
 
 namespace procom_tagger
 {
@@ -50,7 +51,7 @@ namespace procom_tagger
 
         public IObservable<RepositoryViewModel> RepositoryObservable { get; }
 
-        public ProcomTagger(ISchedulers schedulers)
+        public ProcomTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers)
         {
             _schedulers = schedulers;
 
@@ -72,7 +73,7 @@ namespace procom_tagger
                     .ObserveOn(schedulers.Dispatcher)
                     .SelectMany(_ => repositoryPath.Take(1))
                     )
-                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, path)))
+                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, repositoryFactory, path)))
                 .Switch()
                 .SkipNull();
 

@@ -14,12 +14,23 @@ namespace procom_tagger.Repo.GitLog
     using GraphType = List<LogGraphNode>;
     public class LogGraphNode
     {
-        public struct FromTo
+        /// <summary>
+        /// Contains two lists that describe where the edges point to (pointing to parent commits)
+        /// 
+        /// Note that the starting point of the edges is not described here.
+        /// </summary>
+        public struct DownwardDirections
         {
-            public List<int> From;
-            public List<int> To;
+            /// <summary>
+            /// Directions of the previous LogGraphNode
+            /// </summary>
+            public List<int> Previous;
+            /// <summary>
+            /// Directions of the current LogGraphNode
+            /// </summary>
+            public List<int> Next;
         }
-        public LogGraphNode(int graphPosition, List<FromTo> directions, Commit commit, bool isMerge)
+        public LogGraphNode(int graphPosition, List<DownwardDirections> directions, Commit commit, bool isMerge)
         {
             GraphPosition = graphPosition;
             Directions = directions;
@@ -33,7 +44,7 @@ namespace procom_tagger.Repo.GitLog
         }
 
         public int GraphPosition { get; }
-        public List<FromTo> Directions { get; }
+        public List<DownwardDirections> Directions { get; }
         public string MessageShort { get; }
         public string Message { get; }
         public bool IsMerge { get; }
@@ -190,10 +201,10 @@ namespace procom_tagger.Repo.GitLog
             }
         }
 
-        private static List<LogGraphNode.FromTo> CreateGraphDirections(IEnumerable<List<int>> lastDirections, IEnumerable<List<int>> nextDirections)
+        private static List<LogGraphNode.DownwardDirections> CreateGraphDirections(IEnumerable<List<int>> lastDirections, IEnumerable<List<int>> nextDirections)
         {
             return lastDirections.GreaterZip(nextDirections,
-                                             (first, second) => new LogGraphNode.FromTo() { From = first, To = second }, new List<int>(), new List<int>())
+                                             (first, second) => new LogGraphNode.DownwardDirections() { Previous = first, Next = second }, new List<int>(), new List<int>())
                                  .ToList();
         }
     }

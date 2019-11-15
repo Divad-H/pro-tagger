@@ -179,9 +179,9 @@ namespace procom_tagger.Wpf
                 yield return Tuple.Create(direction, i);
         }
 
-        private PathGeometry CreateGraph(List<LogGraphNode.FromTo> directions)
+        private PathGeometry CreateGraph(List<LogGraphNode.DownwardDirections> directions)
         {
-            var figures = directions.SelectMany((subDirection, i) => MapDirections(subDirection.From, i))
+            var figures = directions.SelectMany((subDirection, i) => MapDirections(subDirection.Previous, i))
                                     .Select((direction) =>
             {
                 PathSegmentCollection pathSegmentCollection = new PathSegmentCollection
@@ -195,7 +195,7 @@ namespace procom_tagger.Wpf
                     Segments = pathSegmentCollection
                 };
             }).Concat(
-                directions.SelectMany((subDirection, i) => MapDirections(subDirection.To, i))
+                directions.SelectMany((subDirection, i) => MapDirections(subDirection.Next, i))
                                     .Select((direction) =>
                                     {
                                         PathSegmentCollection pathSegmentCollection = new PathSegmentCollection

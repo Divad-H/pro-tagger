@@ -173,6 +173,8 @@ namespace procom_tagger.Repo.GitLog
                             else
                             {
                                 expectedIds[i] = null;
+                                if (parents.Count == 0)
+                                    directions[nextPosition].Clear();
                             }
                         }
                     }

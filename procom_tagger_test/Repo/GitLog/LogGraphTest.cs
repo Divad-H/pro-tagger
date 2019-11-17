@@ -288,6 +288,223 @@ namespace procom_tagger_test.Repo.GitLog
             AssertGraphConsistency(g);
         }
 
+        class ReusedColumnRepositoryMock : IRepositoryFactory
+        {
+            /// <summary>
+            /// Expected Graph:
+            /// X     8
+            /// |
+            /// X     7
+            /// |\
+            /// | X   6
+            /// | |\ 
+            /// | | X 5
+            /// | | |
+            /// | X | 4
+            /// |/  |
+            /// X   | 3
+            /// |\  |
+            /// | X | 2
+            /// | | |
+            /// X─┼─╯ 1
+            /// |/
+            /// X     0
+            /// </summary>
+            /// <param name="path"></param>
+            /// <returns></returns>
+            public IRepositoryWrapper CreateRepository(string path)
+            {
+                var shaGenerator = new PseudoShaGenerator();
+
+                var commits = new List<CommitMock>();
+                commits.Add(GenerateCommit(shaGenerator, null, 0));
+                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 1));
+                commits.Add(GenerateCommit(shaGenerator, commits.Take(1).ToList(), 2));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 4));
+                commits.Add(GenerateCommit(shaGenerator, commits.Skip(1).Take(1).ToList(), 5));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 6));
+                commits.Add(GenerateCommit(shaGenerator, commits.Skip(3).Take(1).Concat(commits.TakeLast(1)).ToList(), 7));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 8));
+
+                var branches = new Dictionary<string, BranchMock>();
+                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
+
+                return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
+            }
+        }
+
+        [TestMethod]
+        public void CreateGraphReusedColumnTest()
+        {
+            var graph = LogGraph.CreateGraph(new ReusedColumnRepositoryMock(),
+                                             "./",
+                                             new List<string>() { "master" });
+            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
+            var g = graph.Get<List<LogGraphNode>>();
+            Assert.AreEqual(9, g.Count);
+
+            var node = g[0];
+            Assert.AreEqual("MessageShort 8", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 7", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 1, 2);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[0].Next.Contains(1));
+
+            node = g[2];
+            Assert.AreEqual("MessageShort 6", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 2, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+            Assert.IsTrue(node.Directions[1].Next.Contains(2));
+
+            node = g[3];
+            Assert.AreEqual("MessageShort 5", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+            Assert.IsTrue(node.Directions[2].Next.Contains(2));
+
+            node = g[4];
+            Assert.AreEqual("MessageShort 4", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(0));
+            Assert.IsTrue(node.Directions[2].Next.Contains(2));
+
+            node = g[5];
+            Assert.AreEqual("MessageShort 3", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[0].Next.Contains(1));
+            Assert.IsTrue(node.Directions[2].Next.Contains(2));
+
+            node = g[6];
+            Assert.AreEqual("MessageShort 2", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+            Assert.IsTrue(node.Directions[2].Next.Contains(0));
+
+            node = g[7];
+            Assert.AreEqual("MessageShort 1", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 3, 2);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(0));
+
+            node = g[8];
+            Assert.AreEqual("MessageShort 0", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 2, 0);
+
+            AssertGraphConsistency(g);
+        }
+
+        class SwitchingParentOrderRepositoryMock : IRepositoryFactory
+        {
+            /// <summary>
+            /// Expected Graph:
+            /// X    5
+            /// |\
+            /// | X  4
+            /// |/|
+            /// X |  3
+            /// |\|
+            /// | X  2
+            /// |/|
+            /// X |  1
+            /// |/
+            /// X    0
+            /// </summary>
+            /// <param name="path"></param>
+            /// <returns></returns>
+            public IRepositoryWrapper CreateRepository(string path)
+            {
+                var shaGenerator = new PseudoShaGenerator();
+
+                var commits = new List<CommitMock>();
+                commits.Add(GenerateCommit(shaGenerator, null, 0));
+                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 1));
+                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 2));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 4));
+                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 5));
+
+                var branches = new Dictionary<string, BranchMock>();
+                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
+
+                return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
+            }
+        }
+
+        [TestMethod]
+        public void CreateGraphSwitchingParentOrderTest()
+        {
+            var graph = LogGraph.CreateGraph(new SwitchingParentOrderRepositoryMock(),
+                                             "./",
+                                             new List<string>() { "master" });
+            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
+            var g = graph.Get<List<LogGraphNode>>();
+            Assert.AreEqual(6, g.Count);
+
+            var node = g[0];
+            Assert.AreEqual("MessageShort 5", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 0, 2);
+            Assert.IsTrue(node.Directions.First().Next.Contains(0));
+            Assert.IsTrue(node.Directions.First().Next.Contains(1));
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 4", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 2, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+
+            node = g[2];
+            Assert.AreEqual("MessageShort 3", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[0].Next.Contains(1));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+
+            node = g[3];
+            Assert.AreEqual("MessageShort 2", node.MessageShort);
+            Assert.IsTrue(node.IsMerge);
+            AssertFromToCount(node, 3, 3);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(1));
+
+            node = g[4];
+            Assert.AreEqual("MessageShort 1", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 3, 2);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.IsTrue(node.Directions[1].Next.Contains(0));
+
+            node = g[5];
+            Assert.AreEqual("MessageShort 0", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 2, 0);
+
+            AssertGraphConsistency(g);
+        }
+
         private void AssertGraphConsistency(List<LogGraphNode> graph)
         {
             graph

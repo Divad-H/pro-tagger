@@ -15,7 +15,7 @@ namespace procom_tagger.Repo.GitLog
     public class LogGraphNode
     {
         /// <summary>
-        /// Contains two lists that describe where the edges point to (pointing to parent commits)
+        /// Contains two lists that describe the column the edges point to (column of the parent commit)
         /// 
         /// Note that the starting point of the edges is not described here.
         /// </summary>

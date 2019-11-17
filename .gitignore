@@ -1,7 +1,7 @@
 .vs/
-procom_tagger/obj/
-procom_tagger/bin/
+ProTagger/obj/
+ProTagger/bin/
 ReacitveMvvm/bin/
 ReacitveMvvm/obj/
-procom_tagger_test/bin/
-procom_tagger_test/obj/
+ProTaggerTest/bin/
+ProTaggerTest/obj/

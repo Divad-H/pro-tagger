@@ -8,6 +8,40 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <logview:GitLogView DataContext="{Binding Graph}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <ToggleButton x:Name="PopupButton"
+                      Content="Select Branches ⯆"
+                      IsChecked="{Binding ElementName=Popup, Path=IsOpen}"
+                      Width="200">
+            <ToggleButton.Style>
+                <Style TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsOpen, ElementName=Popup}" Value="True">
+                            <Setter Property="IsEnabled" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ToggleButton.Style>
+        </ToggleButton>
+
+        <Popup x:Name="Popup" 
+               StaysOpen="False"
+               PlacementTarget="{Binding ElementName=PopupButton}" 
+               Placement="Bottom"
+               Width="200">
+            <ItemsControl ItemsSource="{Binding Branches}" Background="{StaticResource br_light}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="{Binding PrettyName}" 
+                                  IsChecked="{Binding Selected}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Popup>
+        
+        <logview:GitLogView Grid.Row="1" DataContext="{Binding Graph}"/>
     </Grid>
 </UserControl>

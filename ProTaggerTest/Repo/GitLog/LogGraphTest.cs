@@ -1,5 +1,6 @@
 ﻿using LibGit2Sharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ProTagger;
 using ProTagger.Repo.GitLog;
 using ProTagger.Utilities;
 using ProTaggerTest.LibGit2Mocks;
@@ -62,7 +63,11 @@ namespace ProTaggerTest.Repo.GitLog
         {
             var graph = LogGraph.CreateGraph(new SimpleRepositoryFactoryMock(),
                                              "./",
-                                             new List<string>() { "master", "work" });
+                                             new List<BranchSelection> 
+                                             { 
+                                                 new BranchSelection("master", "master", true),
+                                                 new BranchSelection("work", "work", true)
+                                             });
             Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
             var g = graph.Get<List<LogGraphNode>>();
             Assert.AreEqual(6, g.Count);
@@ -156,7 +161,10 @@ namespace ProTaggerTest.Repo.GitLog
         {
             var graph = LogGraph.CreateGraph(new UnrelatedHistoryRepositoryMock(),
                                              "./",
-                                             new List<string>() { "master" });
+                                             new List<BranchSelection>
+                                             {
+                                                 new BranchSelection("master", "master", true),
+                                             });
             Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
             var g = graph.Get<List<LogGraphNode>>();
             Assert.AreEqual(4, g.Count);
@@ -233,7 +241,12 @@ namespace ProTaggerTest.Repo.GitLog
         {
             var graph = LogGraph.CreateGraph(new ThreeParentRepositoryFactoryMock(),
                                              "./",
-                                             new List<string>() { "master", "branch1", "branch2" });
+                                             new List<BranchSelection>
+                                             {
+                                                 new BranchSelection("master", "master", true),
+                                                 new BranchSelection("branch1", "branch1", true),
+                                                 new BranchSelection("branch2", "branch2", true),
+                                             });
             Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
             var g = graph.Get<List<LogGraphNode>>();
             Assert.AreEqual(7, g.Count);
@@ -339,7 +352,10 @@ namespace ProTaggerTest.Repo.GitLog
         {
             var graph = LogGraph.CreateGraph(new ReusedColumnRepositoryMock(),
                                              "./",
-                                             new List<string>() { "master" });
+                                             new List<BranchSelection>
+                                             {
+                                                 new BranchSelection("master", "master", true),
+                                             });
             Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
             var g = graph.Get<List<LogGraphNode>>();
             Assert.AreEqual(9, g.Count);
@@ -454,7 +470,10 @@ namespace ProTaggerTest.Repo.GitLog
         {
             var graph = LogGraph.CreateGraph(new SwitchingParentOrderRepositoryMock(),
                                              "./",
-                                             new List<string>() { "master" });
+                                             new List<BranchSelection>
+                                             {
+                                                 new BranchSelection("master", "master", true),
+                                             });
             Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
             var g = graph.Get<List<LogGraphNode>>();
             Assert.AreEqual(6, g.Count);

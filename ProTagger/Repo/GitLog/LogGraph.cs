@@ -75,12 +75,13 @@ namespace ProTagger.Repo.GitLog
             }
         }
 
-        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IEnumerable<string>> selectedBranchNames)
+        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IEnumerable<BranchSelection>> selectedBranches)
         {
             _logGraphNodes = new Variant<GraphType, string>(new GraphType());
 
-            var logGraphNodes = selectedBranchNames
-                .Select(branchNames => CreateGraph(repositoryFactory, path, branchNames))
+            var logGraphNodes = selectedBranches
+                .Select(branches => branches.Where(branch => branch.Selected))
+                .Select(branches => CreateGraph(repositoryFactory, path, branches))
                 .Retry();
 
             logGraphNodes
@@ -100,7 +101,10 @@ namespace ProTagger.Repo.GitLog
             _disposable.Dispose();
         }
 
-        internal static Variant<GraphType, string> CreateGraph(IRepositoryFactory repositoryFactory, string path, IEnumerable<string> branches)
+        internal static Variant<GraphType, string> CreateGraph(
+            IRepositoryFactory repositoryFactory, 
+            string path, 
+            IEnumerable<BranchSelection> branches)
         {
             try
             {
@@ -117,7 +121,7 @@ namespace ProTagger.Repo.GitLog
                 var commitFilter = new CommitFilter()
                 {
                     SortBy = CommitSortStrategies.Topological,
-                    IncludeReachableFrom = branches.Select(name => repo.Branches[name])
+                    IncludeReachableFrom = branches.Select(branch => repo.Branches[branch.LongName])
                 };
 
                 foreach (Commit c in repo.QueryCommits(commitFilter).Take(1000))

@@ -38,7 +38,7 @@ namespace procom_tagger.Repo.GitLog
             Message = commit.Message;
             IsMerge = isMerge;
             Sha = commit.Sha;
-            ShortSha = Sha.Substring(0, 6);
+            ShortSha = Sha.Substring(0, 7);
             Author = commit.Author;
             Committer = commit.Committer;
         }

@@ -227,7 +227,7 @@
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
                                         <GridViewColumn Width="200" Header="Author Date" DisplayMemberBinding="{Binding Author.When}"/>
-                                        <GridViewColumn Width="55" Header="Sha" >
+                                        <GridViewColumn Width="60" Header="Sha" >
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding ShortSha}" FontFamily="Consolas" HorizontalAlignment="Center"/>

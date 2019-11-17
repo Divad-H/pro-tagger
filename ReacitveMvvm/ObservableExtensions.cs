@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 
 namespace ReacitveMvvm
@@ -8,9 +9,9 @@ namespace ReacitveMvvm
         public static IObservable<T> SkipNull<T>(this IObservable<T?> o)
             where T : class
         {
-            return o
-                .Where(v => v != null)
-                .Select(v => v ?? throw new InvalidOperationException("Unreachable code reached."));
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+            return o.Where(v => v != null);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
     }
 }

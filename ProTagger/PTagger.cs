@@ -69,7 +69,7 @@ namespace ProTagger
                     .ObserveOn(schedulers.Dispatcher)
                     .SelectMany(_ => repositoryPath.Take(1))
                     )
-                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(ct, repositoryFactory, path)))
+                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, path)))
                 .Switch()
                 .SkipNull();
 

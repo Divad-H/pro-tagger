@@ -1,6 +1,7 @@
 ﻿using LibGit2Sharp;
 using ProTagger.Repo.GitLog;
 using ProTagger.Utilities;
+using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
@@ -46,11 +47,12 @@ namespace ProTagger
 
         public IObservable<BranchSelection> BranchSelectionObservable { get; }
 
-        public BranchSelectionViewModel(Branch branch, bool selected)
+        public BranchSelectionViewModel(ISchedulers schedulers, Branch branch, bool selected)
         {
             _branchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
             BranchSelectionObservable = this
                     .FromProperty(vm => vm.Selected)
+                    .ObserveOn(schedulers.Dispatcher)
                     .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, Selected));
         }
 
@@ -79,22 +81,22 @@ namespace ProTagger
         public List<BranchSelectionViewModel> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
 
-        public static async Task<RepositoryViewModel?> Create(CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
+        public static async Task<RepositoryViewModel?> Create(ISchedulers schedulers, CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path));
             if (ct.IsCancellationRequested)
                 return null;
-            return new RepositoryViewModel(repositoryFactory, path);
+            return repositoryViewModel;
         }
 
-        public RepositoryViewModel(IRepositoryFactory repositoryFactory, string path)
+        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path)
         {
             var branches = new List<BranchSelectionViewModel>();
             try
             {
                 using var repo = repositoryFactory.CreateRepository(path);
                 foreach (var branch in repo.Branches)
-                    branches.Add(new BranchSelectionViewModel(branch, branch.IsCurrentRepositoryHead));
+                    branches.Add(new BranchSelectionViewModel(schedulers, branch, branch.IsCurrentRepositoryHead));
             }
             catch (Exception)
             { }

@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using ReactiveMvvm;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using ReacitveMvvm;
+using System.Threading.Tasks;
 
 namespace ProTagger.Repo.GitLog
 {
@@ -100,7 +102,15 @@ namespace ProTagger.Repo.GitLog
 
             var logGraphNodes = selectedBranches
                 .Select(branches => branches.Where(branch => branch.Selected))
-                .Select(branches => CreateGraph(repositoryFactory, path, branches))
+                .Select(branches => Observable.FromAsync(async ct =>
+                    {
+                        var res = await Task.Run(() => CreateGraph(repositoryFactory, path, branches));
+                        if (ct.IsCancellationRequested)
+                            return null;
+                        return res;
+                    }))
+                .Switch()
+                .SkipNull()
                 .Retry();
 
             logGraphNodes

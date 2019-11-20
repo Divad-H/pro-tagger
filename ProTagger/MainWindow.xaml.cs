@@ -14,7 +14,13 @@ namespace ProTagger
     {
         private class Schedulers : ISchedulers
         {
-            public IScheduler Dispatcher => DispatcherScheduler.Current;
+            public Schedulers(DispatcherScheduler dispatcher)
+            {
+                _dispatcher = dispatcher;
+            }
+
+            private readonly DispatcherScheduler _dispatcher;
+            public IScheduler Dispatcher => _dispatcher;
         }
 
         private class RepositoryFactory : IRepositoryFactory
@@ -27,7 +33,7 @@ namespace ProTagger
 
         public MainWindow()
         {
-            DataContext = new PTagger(new RepositoryFactory(), new Schedulers());
+            DataContext = new PTagger(new RepositoryFactory(), new Schedulers(DispatcherScheduler.Current));
             InitializeComponent();
         }
     }

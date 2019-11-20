@@ -33,9 +33,18 @@ namespace ProTagger.Repo.GitLog
 
         public struct BranchInfo
         {
-            public string LongName;
-            public string ShortName;
-            public bool IsRemote;
+            public BranchInfo(string longName, string shortName, bool isRemote, bool isHead)
+            {
+                LongName = longName;
+                ShortName = shortName;
+                IsRemote = isRemote;
+                IsHead = isHead;
+            }
+
+            public string LongName { get; }
+            public string ShortName { get; }
+            public bool IsRemote { get; }
+            public bool IsHead { get; }
         }
 
         public LogGraphNode(int graphPosition, IList<DownwardDirections> directions, Commit commit, bool isMerge, IList<BranchInfo> branches)
@@ -243,12 +252,12 @@ namespace ProTagger.Repo.GitLog
 
         private static LogGraphNode.BranchInfo CreateBranchInfo(Branch branch)
         {
-            return new LogGraphNode.BranchInfo()
-            {
-                LongName = branch.CanonicalName,
-                ShortName = branch.FriendlyName,
-                IsRemote = branch.IsRemote,
-            };
+            return new LogGraphNode.BranchInfo(
+                branch.CanonicalName,
+                branch.FriendlyName,
+                branch.IsRemote,
+                branch.IsCurrentRepositoryHead
+            );
         }
     }
 }

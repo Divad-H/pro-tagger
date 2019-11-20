@@ -112,7 +112,6 @@
             <Setter Property="FontSize" Value="12" />
         </Style>
     </UserControl.Resources>
-
     <ContentPresenter>
         <ContentPresenter.Style>
             <Style TargetType="ContentPresenter">
@@ -187,12 +186,12 @@
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <custom:LogGraphNodeDrawing
-                                                    GraphNode="{Binding}" 
-                                                    custom:BoundsClipper.ClippingEnabled="Horizontal" 
-                                                    StrokeThickness="1"
-                                                    Fill="{StaticResource br_lightblue}"
-                                                    HighlightFill="{StaticResource br_red}"
-                                                    VerticalDistance="{Binding ElementName=InnerBorder, Path=ActualHeight}" >
+                                                        GraphNode="{Binding}" 
+                                                        custom:BoundsClipper.ClippingEnabled="Horizontal" 
+                                                        StrokeThickness="1"
+                                                        Fill="{StaticResource br_lightblue}"
+                                                        HighlightFill="{StaticResource br_red}"
+                                                        VerticalDistance="{Binding ElementName=InnerBorder, Path=ActualHeight}" >
                                                         <custom:LogGraphNodeDrawing.Style>
                                                             <Style TargetType="custom:LogGraphNodeDrawing">
                                                                 <Style.Setters>
@@ -205,7 +204,7 @@
                                                                                 Mode=FindAncestor,
                                                                                 AncestorType={x:Type ListViewItem}},
                                                                                 Path=IsSelected}"
-                                                                        Value="True">       
+                                                                        Value="True">
                                                                         <Setter Property="Stroke" Value="{StaticResource br_light}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
@@ -215,7 +214,48 @@
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
-                                        <GridViewColumn Header="Message" DisplayMemberBinding="{Binding MessageShort}" custom:FillColumn.Enabled="True"/>
+                                        <GridViewColumn Header="Message" custom:FillColumn.Enabled="True">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ItemsControl ItemsSource="{Binding Branches}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Margin="0,0,5,0" >
+                                                                        <Border.Style>
+                                                                            <Style TargetType="Border">
+                                                                                <Style.Setters>
+                                                                                    <Setter Property="Background" Value="{StaticResource br_blue}"/>
+                                                                                </Style.Setters>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsHead}" Value="True">
+                                                                                        <Setter Property="Background" Value="{StaticResource br_darkred}"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition/>
+                                                                                <ColumnDefinition/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Text="⟨⟨" FontWeight="Bold" Foreground="{StaticResource br_light}" Margin="5,-2,5,0" />
+                                                                            <TextBlock Text="{Binding ShortName}" Foreground="{StaticResource br_light}" Margin="5,-1,5,0" Grid.Column="1"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <TextBlock Text="{Binding MessageShort}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
                                         <GridViewColumn Width="200" Header="Author" DisplayMemberBinding="{Binding Author}">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>

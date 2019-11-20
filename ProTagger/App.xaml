@@ -19,6 +19,8 @@
         <SolidColorBrush x:Key="br_darkgray" Color="{StaticResource col_darkgray}" />
         <Color x:Key="col_red">#FA766E</Color>
         <SolidColorBrush x:Key="br_red" Color="{StaticResource col_red}" />
+        <Color x:Key="col_darkred">#b0403a</Color>
+        <SolidColorBrush x:Key="br_darkred" Color="{StaticResource col_darkred}" />
         <Color x:Key="col_black">#000000</Color>
         <SolidColorBrush x:Key="br_black" Color="{StaticResource col_black}" />
 

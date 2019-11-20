@@ -5,17 +5,19 @@ namespace ProTaggerTest.LibGit2Mocks
 {
     class BranchMock : Branch
     {
-        public BranchMock(bool isCurrentRepositoryHead, bool isRemote, string? remoteName, CommitMock tip)
+        public BranchMock(bool isCurrentRepositoryHead, bool isRemote, string? remoteName, CommitMock tip, string canonicalName)
         {
             _isCurrentRepositoryHead = isCurrentRepositoryHead;
             _isRemote = isRemote;
             _remoteName = remoteName;
             _tip = tip;
+            _canonicalName = canonicalName;
         }
 
-        public override string CanonicalName => throw new NotImplementedException();
+        private readonly string _canonicalName;
+        public override string CanonicalName => _canonicalName;
         public override ICommitLog Commits => throw new NotImplementedException();
-        public override string FriendlyName => throw new NotImplementedException();
+        public override string FriendlyName => _canonicalName;
 
         private readonly bool _isCurrentRepositoryHead;
         public override bool IsCurrentRepositoryHead => _isCurrentRepositoryHead;

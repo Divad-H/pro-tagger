@@ -1,14 +1,10 @@
 ﻿using static ReactiveMvvm.DisposableExtensions;
 using static ReacitveMvvm.ObservableExtensions;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveMvvm;
 using ReacitveMvvm;

@@ -179,7 +179,7 @@ namespace ProTagger.Wpf
                 yield return Tuple.Create(direction, i);
         }
 
-        private PathGeometry CreateGraph(List<LogGraphNode.DownwardDirections> directions)
+        private PathGeometry CreateGraph(IList<LogGraphNode.DownwardDirections> directions)
         {
             var figures = directions.SelectMany((subDirection, i) => MapDirections(subDirection.Previous, i))
                                     .Select((direction) =>

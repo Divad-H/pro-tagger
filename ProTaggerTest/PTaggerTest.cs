@@ -25,7 +25,7 @@ namespace ProTaggerTest
         {
             public IRepositoryWrapper CreateRepository(string path)
             {
-                return new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new Dictionary<string, BranchMock>()));
+                return new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()));
             }
         }
 

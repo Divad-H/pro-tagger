@@ -8,9 +8,9 @@ namespace ProTaggerTest.LibGit2Mocks
 {
     class BranchCollectionMock : BranchCollection
     {
-        public BranchCollectionMock(IDictionary<string, BranchMock> branches)
+        public BranchCollectionMock(IList<BranchMock> branches)
         {
-            _branches = branches;
+            _branches = branches.ToDictionary(b => b.CanonicalName);
         }
         private readonly IDictionary<string, BranchMock> _branches;
         public override IEnumerator<Branch> GetEnumerator()

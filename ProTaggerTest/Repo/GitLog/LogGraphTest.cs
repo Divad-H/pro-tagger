@@ -50,9 +50,9 @@ namespace ProTaggerTest.Repo.GitLog
                 commits.Add(GenerateCommit(shaGenerator, commits.Last().Yield().ToList(), 4));
                 commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
 
-                var branches = new Dictionary<string, BranchMock>();
-                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
-                branches.Add("work", new BranchMock(false, false, "origin", commits.SkipLast(1).Last()));
+                var branches = new List<BranchMock>();
+                branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
+                branches.Add(new BranchMock(false, false, "origin", commits.SkipLast(1).Last(), "work"));
 
                 return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
             }
@@ -77,6 +77,8 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("master", node.Branches.First().LongName);
 
             node = g[1];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
@@ -84,6 +86,8 @@ namespace ProTaggerTest.Repo.GitLog
             AssertFromToCount(node, 1, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("work", node.Branches.First().LongName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
@@ -149,8 +153,8 @@ namespace ProTaggerTest.Repo.GitLog
                 commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 2));
                 commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 3));
 
-                var branches = new Dictionary<string, BranchMock>();
-                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
+                var branches = new List<BranchMock>();
+                branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
 
                 return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
             }
@@ -174,6 +178,8 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("master", node.Branches.First().LongName);
 
             node = g[1];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
@@ -227,10 +233,10 @@ namespace ProTaggerTest.Repo.GitLog
                 commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
                 commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(2).TakeLast(1).ToList(), 6));
 
-                var branches = new Dictionary<string, BranchMock>();
-                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
-                branches.Add("branch1", new BranchMock(false, false, "origin", commits.SkipLast(1).Last()));
-                branches.Add("branch2", new BranchMock(false, false, "origin", commits.SkipLast(2).Last()));
+                var branches = new List<BranchMock>();
+                branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
+                branches.Add(new BranchMock(false, false, "origin", commits.SkipLast(1).Last(), "branch1"));
+                branches.Add(new BranchMock(false, false, "origin", commits.SkipLast(2).Last(), "branch2"));
 
                 return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
             }
@@ -256,6 +262,8 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("master", node.Branches.First().LongName);
 
             node = g[1];
             Assert.AreEqual("MessageShort 5", node.MessageShort);
@@ -263,6 +271,8 @@ namespace ProTaggerTest.Repo.GitLog
             AssertFromToCount(node, 1, 2);
             Assert.AreEqual(0, node.Directions[0].Next.First());
             Assert.AreEqual(1, node.Directions[1].Next.First());
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("branch1", node.Branches.First().LongName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
@@ -271,6 +281,8 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.AreEqual(0, node.Directions[0].Next.First());
             Assert.AreEqual(0, node.Directions[1].Next.First());
             Assert.AreEqual(0, node.Directions[2].Next.First());
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("branch2", node.Branches.First().LongName);
 
             node = g[3];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
@@ -340,8 +352,8 @@ namespace ProTaggerTest.Repo.GitLog
                 commits.Add(GenerateCommit(shaGenerator, commits.Skip(3).Take(1).Concat(commits.TakeLast(1)).ToList(), 7));
                 commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 8));
 
-                var branches = new Dictionary<string, BranchMock>();
-                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
+                var branches = new List<BranchMock>();
+                branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
 
                 return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
             }
@@ -365,6 +377,8 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("master", node.Branches.First().LongName);
 
             node = g[1];
             Assert.AreEqual("MessageShort 7", node.MessageShort);
@@ -458,8 +472,8 @@ namespace ProTaggerTest.Repo.GitLog
                 commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 4));
                 commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 5));
 
-                var branches = new Dictionary<string, BranchMock>();
-                branches.Add("master", new BranchMock(true, false, "origin", commits.Last()));
+                var branches = new List<BranchMock>();
+                branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
 
                 return new RepositoryMock(commits.AsEnumerable().Reverse(), new BranchCollectionMock(branches));
             }
@@ -484,6 +498,8 @@ namespace ProTaggerTest.Repo.GitLog
             AssertFromToCount(node, 0, 2);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.IsTrue(node.Directions.First().Next.Contains(1));
+            Assert.AreEqual(1, node.Branches.Count);
+            Assert.AreEqual("master", node.Branches.First().LongName);
 
             node = g[1];
             Assert.AreEqual("MessageShort 4", node.MessageShort);

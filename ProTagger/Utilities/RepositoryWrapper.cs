@@ -18,6 +18,8 @@ namespace ProTagger.Utilities
 
         public BranchCollection Branches => _repository.Branches;
 
+        public TagCollection Tags => _repository.Tags;
+
         public void Dispose()
         {
             _repository.Dispose();

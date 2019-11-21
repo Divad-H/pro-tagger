@@ -118,7 +118,11 @@
                 <Style.Setters>
                     <Setter Property="Content">
                         <Setter.Value>
-                            <ListView ItemsSource="{Binding LogGraphNodes.Value}" SelectionMode="Single" Foreground="{StaticResource br_black}" custom:GridColumnLayout.Enabled="True">
+                            <ListView ItemsSource="{Binding LogGraphNodes.Value}" 
+                                      SelectionMode="Single" 
+                                      Foreground="{StaticResource br_black}" 
+                                      custom:GridColumnLayout.Enabled="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling">
                                 <ListView.Style>
                                     <Style TargetType="ListView">
                                         <Setter Property="SnapsToDevicePixels" Value="false" />
@@ -155,6 +159,7 @@
                                 </ListView.Style>
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
+                                        <Setter Property="Height" Value="16"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListViewItem">
@@ -198,13 +203,11 @@
                                                                     <Setter Property="Stroke" Value="{StaticResource br_black}" />
                                                                 </Style.Setters>
                                                                 <Style.Triggers>
-                                                                    <DataTrigger
-                                                                        Binding="{Binding
-                                                                            RelativeSource={RelativeSource
-                                                                                Mode=FindAncestor,
-                                                                                AncestorType={x:Type ListViewItem}},
-                                                                                Path=IsSelected}"
-                                                                        Value="True">
+                                                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource
+                                                                                          Mode=FindAncestor,
+                                                                                          AncestorType={x:Type ListViewItem}},
+                                                                                          Path=IsSelected}"
+                                                                                 Value="True">
                                                                         <Setter Property="Stroke" Value="{StaticResource br_light}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
@@ -226,9 +229,9 @@
                                                             </ItemsControl.ItemsPanel>
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Border Margin="0,0,5,0" >
-                                                                        <Border.Style>
-                                                                            <Style TargetType="Border">
+                                                                    <Grid Margin="0,0,5,0" >
+                                                                        <Grid.Style>
+                                                                            <Style TargetType="Grid">
                                                                                 <Style.Setters>
                                                                                     <Setter Property="Background" Value="{StaticResource br_blue}"/>
                                                                                 </Style.Setters>
@@ -238,16 +241,33 @@
                                                                                     </DataTrigger>
                                                                                 </Style.Triggers>
                                                                             </Style>
-                                                                        </Border.Style>
-                                                                        <Grid>
-                                                                            <Grid.ColumnDefinitions>
+                                                                        </Grid.Style>
+                                                                        <Grid.ColumnDefinitions>
                                                                                 <ColumnDefinition/>
                                                                                 <ColumnDefinition/>
-                                                                            </Grid.ColumnDefinitions>
-                                                                            <TextBlock Text="⟨⟨" FontWeight="Bold" Foreground="{StaticResource br_light}" Margin="5,-2,5,0" />
-                                                                            <TextBlock Text="{Binding ShortName}" Foreground="{StaticResource br_light}" Margin="5,-1,5,0" Grid.Column="1"/>
-                                                                        </Grid>
-                                                                    </Border>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Text="⟨⟨" FontWeight="Bold" Foreground="{StaticResource br_light}" Margin="5,-2,5,0" />
+                                                                        <TextBlock Text="{Binding ShortName}" Foreground="{StaticResource br_light}" Margin="5,-1,5,0" Grid.Column="1" />
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <ItemsControl ItemsSource="{Binding Tags}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Margin="0,0,5,0" Background="{StaticResource br_darkred}">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition/>
+                                                                            <ColumnDefinition/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Text="🏷️" Foreground="{StaticResource br_light}" Margin="3,-1,3,0" />
+                                                                        <TextBlock Text="{Binding ShortName}" Foreground="{StaticResource br_light}" Margin="5,-1,5,0" Grid.Column="1" />
+                                                                    </Grid>
                                                                 </DataTemplate>
                                                             </ItemsControl.ItemTemplate>
                                                         </ItemsControl>

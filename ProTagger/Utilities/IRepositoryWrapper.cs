@@ -8,5 +8,6 @@ namespace ProTagger.Utilities
         public ICommitLog QueryCommits(CommitFilter filter);
 
         public BranchCollection Branches { get; }
+        public TagCollection Tags { get; }
     }
 }

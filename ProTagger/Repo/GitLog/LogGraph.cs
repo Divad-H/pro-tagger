@@ -49,7 +49,25 @@ namespace ProTagger.Repo.GitLog
             public bool IsHead { get; }
         }
 
-        public LogGraphNode(int graphPosition, IList<DownwardDirections> directions, Commit commit, bool isMerge, IList<BranchInfo> branches)
+        public struct TagInfo
+        {
+            public TagInfo(string longName, string shortName)
+            {
+                LongName = longName;
+                ShortName = shortName;
+            }
+
+            public string LongName { get; }
+            public string ShortName { get; }
+        }
+
+        public LogGraphNode(
+            int graphPosition, 
+            IList<DownwardDirections> directions, 
+            Commit commit, 
+            bool isMerge, 
+            IList<BranchInfo> branches,
+            IList<TagInfo> tags)
         {
             GraphPosition = graphPosition;
             Directions = directions;
@@ -61,6 +79,7 @@ namespace ProTagger.Repo.GitLog
             Author = commit.Author;
             Committer = commit.Committer;
             Branches = branches;
+            Tags = tags;
         }
 
         public int GraphPosition { get; }
@@ -73,13 +92,8 @@ namespace ProTagger.Repo.GitLog
         public Signature Author { get; }
         public Signature Committer { get; }
         public IList<BranchInfo> Branches { get; }
+        public IList<TagInfo> Tags { get; }
     }
-
-    //public class BranchInfo
-    //{
-    //    public bool IsHead { get; }
-    //    public 
-    //}
 
     public class LogGraph : INotifyPropertyChanged, IDisposable
     {
@@ -139,6 +153,7 @@ namespace ProTagger.Repo.GitLog
             {
                 using var repo = repositoryFactory.CreateRepository(path);
                 var selectedBranches = branches.Select(branch => repo.Branches[branch.LongName]).ToList();
+                var tags = repo.Tags.ToList();
                 var result = new GraphType();
                 var expectedIds = new List<ObjectId?>();
                 var directions = new List<List<int>>();
@@ -154,7 +169,7 @@ namespace ProTagger.Repo.GitLog
                     IncludeReachableFrom = selectedBranches
                 };
 
-                foreach (Commit c in repo.QueryCommits(commitFilter).Take(1000))
+                foreach (Commit c in repo.QueryCommits(commitFilter)/*.Take(1000)*/)
                 {
                     var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
                     if (nextPosition == -1)
@@ -229,6 +244,10 @@ namespace ProTagger.Repo.GitLog
                             selectedBranches
                                 .Where(branch => branch.Tip == lastCommit)
                                 .Select(branch => CreateBranchInfo(branch))
+                                .ToList(),
+                            tags
+                                .Where(tag => tag.Target == lastCommit)
+                                .Select(tag => CreateTagInfo(tag))
                                 .ToList()));
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
@@ -237,13 +256,17 @@ namespace ProTagger.Repo.GitLog
                 }
                 if (lastPosition.HasValue && lastCommit != null)
                     result.Add(new LogGraphNode(
-                        lastPosition.Value, 
-                        CreateGraphDirections(lastDirections, new List<List<int>>()), 
-                        lastCommit, 
+                        lastPosition.Value,
+                        CreateGraphDirections(lastDirections, new List<List<int>>()),
+                        lastCommit,
                         false,
                         selectedBranches
                             .Where(branch => branch.Tip == lastCommit)
                             .Select(branch => CreateBranchInfo(branch))
+                            .ToList(),
+                        tags
+                            .Where(tag => tag.Target == lastCommit)
+                            .Select(tag => CreateTagInfo(tag))
                             .ToList()));
                 return new Variant<GraphType, string>(result);
             }
@@ -268,6 +291,11 @@ namespace ProTagger.Repo.GitLog
                 branch.IsRemote,
                 branch.IsCurrentRepositoryHead
             );
+        }
+
+        private static LogGraphNode.TagInfo CreateTagInfo(Tag tag)
+        {
+            return new LogGraphNode.TagInfo(tag.CanonicalName, tag.FriendlyName);
         }
     }
 }

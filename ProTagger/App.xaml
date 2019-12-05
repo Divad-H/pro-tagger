@@ -1,28 +1,29 @@
 ﻿<Application x:Class="ProTagger.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:options="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
              xmlns:local="clr-namespace:ProTagger"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <Color x:Key="col_blue">#566E8D</Color>
-        <SolidColorBrush x:Key="br_blue" Color="{StaticResource col_blue}" />
-        <Color x:Key="col_lightblue">#FF9CBBE4</Color>
-        <SolidColorBrush x:Key="br_lightblue" Color="{StaticResource col_lightblue}" />
-        <!--<Color x:Key="col_light">#FBFBF6</Color>-->
-        <Color x:Key="col_light">#FFFFFF</Color>
-        <SolidColorBrush x:Key="br_light" Color="{StaticResource col_light}" />
-        <Color x:Key="col_lightgray">#FFF7F7F4</Color>
-        <SolidColorBrush x:Key="br_lightgray" Color="{StaticResource col_lightgray}" />
-        <Color x:Key="col_gray">#FFD5D3CD</Color>
-        <SolidColorBrush x:Key="br_gray" Color="{StaticResource col_gray}" />
-        <Color x:Key="col_darkgray">#FFAEACA6</Color>
-        <SolidColorBrush x:Key="br_darkgray" Color="{StaticResource col_darkgray}" />
-        <Color x:Key="col_red">#FA766E</Color>
-        <SolidColorBrush x:Key="br_red" Color="{StaticResource col_red}" />
-        <Color x:Key="col_darkred">#b0403a</Color>
-        <SolidColorBrush x:Key="br_darkred" Color="{StaticResource col_darkred}" />
-        <Color x:Key="col_black">#000000</Color>
-        <SolidColorBrush x:Key="br_black" Color="{StaticResource col_black}" />
+        <Color options:Freeze="True" x:Key="col_blue">#566E8D</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_blue" Color="{StaticResource col_blue}" />
+        <Color options:Freeze="True" x:Key="col_lightblue">#FF9CBBE4</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_lightblue" Color="{StaticResource col_lightblue}" />
+        <!--<Color options:Freeze="True" x:Key="col_light">#FBFBF6</Color>-->
+        <Color options:Freeze="True" x:Key="col_light">#FFFFFF</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_light" Color="{StaticResource col_light}" />
+        <Color options:Freeze="True" x:Key="col_lightgray">#FFF7F7F4</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_lightgray" Color="{StaticResource col_lightgray}" />
+        <Color options:Freeze="True" x:Key="col_gray">#FFD5D3CD</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_gray" Color="{StaticResource col_gray}" />
+        <Color options:Freeze="True" x:Key="col_darkgray">#FFAEACA6</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_darkgray" Color="{StaticResource col_darkgray}" />
+        <Color options:Freeze="True" x:Key="col_red">#FA766E</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_red" Color="{StaticResource col_red}" />
+        <Color options:Freeze="True" x:Key="col_darkred">#b0403a</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_darkred" Color="{StaticResource col_darkred}" />
+        <Color options:Freeze="True" x:Key="col_black">#000000</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_black" Color="{StaticResource col_black}" />
 
         <!-- Scroll Bar -->
         <Style x:Key="FlatScrollBarLineButton" TargetType="{x:Type RepeatButton}">

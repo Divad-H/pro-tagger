@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.Specialized;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -53,6 +54,22 @@ namespace ProTagger.Wpf
             if (!(newHeaderContent is Grid grid))
                 return;
             grid.LayoutUpdated += GridUpdatedPublisher.OnGridUpdated;
+        }
+        public Func<object, object, bool>? KeepSelectionRule
+        {
+            get { return (Func<object, object, bool>?)GetValue(KeepSelectionRuleProperty); }
+            set { SetValue(KeepSelectionRuleProperty, value); }
+        }
+        public static readonly DependencyProperty KeepSelectionRuleProperty = DependencyProperty.Register(
+          nameof(KeepSelectionRule), typeof(Func<object, object, bool>), typeof(ColumnLayoutListView), new FrameworkPropertyMetadata(null));
+
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            var oldSelection = SelectedItem;
+            base.OnItemsChanged(e);
+            if (KeepSelectionRule == null || ItemsSource == null)
+                return;
+            SelectedItem = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSelection)) ?? ItemsSource.OfType<object>().FirstOrDefault();
         }
 
         public class GridPublisher

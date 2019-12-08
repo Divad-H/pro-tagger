@@ -10,6 +10,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReacitveMvvm;
 using System.Threading.Tasks;
+using System.Reactive.Subjects;
 
 namespace ProTagger.Repo.GitLog
 {
@@ -110,22 +111,50 @@ namespace ProTagger.Repo.GitLog
             }
         }
 
-        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IEnumerable<BranchSelection>> selectedBranches)
+        private LogGraphNode? _selectedNode;
+        public LogGraphNode? SelectedNode
+        {
+            get { return _selectedNode; }
+            set
+            {
+                if (_selectedNode == value)
+                    return;
+                _selectedNode = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public IObservable<LogGraphNode?> SelectedNodeObservable { get; }
+        public Func<object, object, bool> KeepSelectionRule { get; } = (object1, object2) =>
+            {
+                var node1 = object1 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
+                var node2 = object2 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
+                return node1.Sha == node2.Sha;
+            };
+
+        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IList<BranchSelection>> selectedBranches)
         {
             _logGraphNodes = new Variant<GraphType, string>(new GraphType());
 
-            var logGraphNodes = selectedBranches
+            var logGraphNodes = 
+                new BehaviorSubject<Variant<GraphType, string>>(new Variant<GraphType, string>("Select a repository."))
+                .DisposeWith(_disposable);
+            selectedBranches
                 .Select(branches => branches.Where(branch => branch.Selected))
                 .Select(branches => Observable.FromAsync(async ct =>
-                    {
-                        var res = await Task.Run(() => CreateGraph(repositoryFactory, path, branches));
-                        if (ct.IsCancellationRequested)
-                            return null;
-                        return res;
-                    }))
+                {
+                    var res = await Task.Run(() => CreateGraph(repositoryFactory, path, branches));
+                    if (ct.IsCancellationRequested)
+                        return null;
+                    return res;
+                }))
                 .Switch()
                 .SkipNull()
-                .Retry();
+                .Retry()
+                .Subscribe(graphNodes => logGraphNodes.OnNext(graphNodes))
+                .DisposeWith(_disposable);
+
+            SelectedNodeObservable = this.FromProperty(vm => vm.SelectedNode);
 
             logGraphNodes
                 .Subscribe(graphNodes => LogGraphNodes = graphNodes)

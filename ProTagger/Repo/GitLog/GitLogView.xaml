@@ -80,11 +80,14 @@
                     <Setter Property="Content">
                         <Setter.Value>
                             <custom:ColumnLayoutListView x:Name="OuterListView"
-                                      ItemsSource="{Binding LogGraphNodes.Value}" 
-                                      SelectionMode="Single" 
-                                      Foreground="{StaticResource br_black}"
-                                      VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                      ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}">
+                                                         ItemsSource="{Binding LogGraphNodes.Value}" 
+                                                         SelectionMode="Single" 
+                                                         SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                                                         Foreground="{StaticResource br_black}"
+                                                         VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                                         ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
+                                                         IsSynchronizedWithCurrentItem="True"
+                                                         KeepSelectionRule="{Binding KeepSelectionRule}">
                                 <custom:ColumnLayoutListView.HeaderContent>
                                     <Border BorderBrush="{StaticResource br_lightblue}" BorderThickness="0,0,0,0.5" Margin="0,0,0,3">
                                         <Grid Focusable="false"

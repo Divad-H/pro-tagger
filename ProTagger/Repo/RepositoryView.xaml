@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ToggleButton x:Name="PopupButton"
                       Content="Select Branches ⯆"
@@ -43,5 +44,6 @@
         </Popup>
         
         <logview:GitLogView Grid.Row="1" DataContext="{Binding Graph}"/>
+        <TextBlock Grid.Row="2" Text="{Binding SelectedCommit.Message}"/>
     </Grid>
 </UserControl>

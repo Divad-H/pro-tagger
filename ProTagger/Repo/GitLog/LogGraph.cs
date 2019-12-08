@@ -125,8 +125,10 @@ namespace ProTagger.Repo.GitLog
         }
 
         public IObservable<LogGraphNode?> SelectedNodeObservable { get; }
-        public Func<object, object, bool> KeepSelectionRule { get; } = (object1, object2) =>
+        public Func<object, object?, bool> KeepSelectionRule { get; } = (object1, object2) =>
             {
+                if (object2 == null)
+                    return false;
                 var node1 = object1 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
                 var node2 = object2 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
                 return node1.Sha == node2.Sha;

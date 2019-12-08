@@ -81,6 +81,19 @@ namespace ProTagger
         public List<BranchSelectionViewModel> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
 
+        private LogGraphNode? _selectedCommit;
+        public LogGraphNode? SelectedCommit
+        {
+            get { return _selectedCommit; }
+            set
+            {
+                if (_selectedCommit == value)
+                    return;
+                _selectedCommit = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public static async Task<RepositoryViewModel?> Create(ISchedulers schedulers, CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
         {
             var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path));
@@ -108,6 +121,10 @@ namespace ProTagger
             BranchesObservable = branchesObservable;
 
             _graph = new LogGraph(repositoryFactory, path, branchesObservable);
+
+            _graph.SelectedNodeObservable
+                .Subscribe(node => SelectedCommit = node)
+                .DisposeWith(_disposables);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

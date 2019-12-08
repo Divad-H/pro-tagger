@@ -146,7 +146,7 @@
                                         <Setter Property="Height" Value="16"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
-                                                <ControlTemplate TargetType="ListViewItem">
+                                                <ControlTemplate TargetType="custom:ColumnLayoutListViewItem">
                                                     <custom:GraphRow Content="{Binding}" 
                                                                      ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
                                                                      GridUpdatedPublisher="{Binding Source={x:Reference OuterListView}, Path=GridUpdatedPublisher}"
@@ -157,8 +157,13 @@
                                                                      LabelBrush="{StaticResource br_blue}"
                                                                      HeadBrush="{StaticResource br_darkred}"
                                                                      LabelForeground="{StaticResource br_light}"
+                                                                     IsSecondarySelected="{TemplateBinding IsSecondarySelected}"
                                                                      SnapsToDevicePixels="False"/>
                                                     <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSecondarySelected" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource br_darkred}" />
+                                                            <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                        </Trigger>
                                                         <Trigger Property="IsSelected" Value="True">
                                                             <Setter Property="Background" Value="{StaticResource br_blue}" />
                                                             <Setter Property="Foreground" Value="{StaticResource br_light}" />

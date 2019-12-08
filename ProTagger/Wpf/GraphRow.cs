@@ -107,6 +107,16 @@ namespace ProTagger.Wpf
           nameof(LabelForeground), typeof(Brush), typeof(GraphRow),
           new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
+        public Brush SecondarySelectionBackground
+        {
+            get { return (Brush)GetValue(SecondarySelectionBackgroundProperty); }
+            set { SetValue(SecondarySelectionBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty SecondarySelectionBackgroundProperty = DependencyProperty.Register(
+          nameof(SecondarySelectionBackground), typeof(Brush), typeof(GraphRow),
+          new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
         public Brush HeadBrush
         {
             get { return (Brush)GetValue(HeadBrushProperty); }
@@ -116,6 +126,16 @@ namespace ProTagger.Wpf
         public static readonly DependencyProperty HeadBrushProperty = DependencyProperty.Register(
           nameof(HeadBrush), typeof(Brush), typeof(GraphRow),
           new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool IsSecondarySelected
+        {
+            get { return (bool)GetValue(IsSecondarySelectedProperty); }
+            set { SetValue(IsSecondarySelectedProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsSecondarySelectedProperty = DependencyProperty.Register(
+          nameof(IsSecondarySelected), typeof(bool), typeof(GraphRow),
+          new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
         private void RegisterGridUpdated(ColumnLayoutListView.GridPublisher? oldValue, ColumnLayoutListView.GridPublisher? newValue)
         {

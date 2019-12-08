@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
@@ -9,18 +8,6 @@ namespace ProTagger.Wpf
 {
     public class ColumnLayoutListView : ListView
     {
-        //public GridColumnLayout ColumnLayout
-        //{
-        //    get { return (GridColumnLayout)GetValue(ColumnLayoutProperty); }
-        //    protected set { SetValue(ColumnLayoutPropertyKey, value); }
-        //}
-
-        //private static readonly DependencyPropertyKey ColumnLayoutPropertyKey = 
-        //    DependencyProperty.RegisterReadOnly(nameof(ColumnLayout), typeof(GridColumnLayout), typeof(ColumnLayoutListView),
-        //    new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.None));
-
-        //public static readonly DependencyProperty ColumnLayoutProperty = ColumnLayoutPropertyKey.DependencyProperty;
-
         public ColumnDefinitionCollection ColumnDefinitions
         {
             get { return (ColumnDefinitionCollection)GetValue(ColumnDefinitionsProperty); }
@@ -49,11 +36,18 @@ namespace ProTagger.Wpf
 
         private void RegisterGridChanged(object? oldHeaderContent, object newHeaderContent)
         {
-            if (oldHeaderContent is Grid oldGrid)
-                oldGrid.LayoutUpdated -= GridUpdatedPublisher.OnGridUpdated;
-            if (!(newHeaderContent is Grid grid))
-                return;
-            grid.LayoutUpdated += GridUpdatedPublisher.OnGridUpdated;
+            if (oldHeaderContent is DependencyObject oldDepObj)
+            {
+                var oldGrid = oldDepObj.GetChildOfType<Grid>();
+                if (oldGrid != null)
+                    oldGrid.LayoutUpdated -= GridUpdatedPublisher.OnGridUpdated;
+            }
+            if (newHeaderContent is DependencyObject newDepObj)
+            {
+                var newGrid = newDepObj.GetChildOfType<Grid>();
+                if (newGrid != null)
+                  newGrid.LayoutUpdated += GridUpdatedPublisher.OnGridUpdated;
+            }
         }
         public Func<object, object, bool>? KeepSelectionRule
         {

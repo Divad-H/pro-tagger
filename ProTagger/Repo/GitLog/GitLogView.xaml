@@ -73,123 +73,108 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <ContentPresenter>
-        <ContentPresenter.Style>
-            <Style TargetType="ContentPresenter">
-                <Style.Setters>
-                    <Setter Property="Content">
-                        <Setter.Value>
-                            <custom:ColumnLayoutListView x:Name="OuterListView"
-                                                         ItemsSource="{Binding LogGraphNodes.Value}" 
-                                                         SelectionMode="Single" 
-                                                         SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
-                                                         SecondarySelection="{Binding SecondarySelectedNode}"
-                                                         Foreground="{StaticResource br_black}"
-                                                         VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                                         ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
-                                                         IsSynchronizedWithCurrentItem="True"
-                                                         KeepSelectionRule="{Binding KeepSelectionRule}">
-                                <custom:ColumnLayoutListView.HeaderContent>
-                                    <Border BorderBrush="{StaticResource br_lightblue}" BorderThickness="0,0,0,0.5" Margin="0,0,0,3">
-                                        <Grid Focusable="false"
-                                          Height="16"
-                                          Name="HeaderGrid">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="1*" MinWidth="30"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="2*" MinWidth="50"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="1*" MinWidth="40"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="1*" MinWidth="40"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="50"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Graph" HorizontalAlignment="Center"/>
-                                            <GridSplitter Grid.Column="1"
-                                                          Style="{StaticResource GridSplitterStyle}">
-                                            </GridSplitter>
-                                            <TextBlock Text="Message" HorizontalAlignment="Center" Grid.Column="2"/>
-                                            <GridSplitter Grid.Column="3"
-                                                          Style="{StaticResource GridSplitterStyle}"/>
-                                            <TextBlock Text="Date" HorizontalAlignment="Center" Grid.Column="4"/>
-                                            <GridSplitter Grid.Column="5"
-                                                          Style="{StaticResource GridSplitterStyle}"/>
-                                            <TextBlock Text="Author" HorizontalAlignment="Center" Grid.Column="6"/>
-                                            <GridSplitter Grid.Column="7"
-                                                          Style="{StaticResource GridSplitterStyle}"
-                                                          IsEnabled="False"/>
-                                            <TextBlock Text="Sha" HorizontalAlignment="Center" Grid.Column="8"/>
-                                        </Grid>
-                                    </Border>
-                                </custom:ColumnLayoutListView.HeaderContent>
-                                <custom:ColumnLayoutListView.Style>
-                                    <Style TargetType="ListView">
-                                        <Setter Property="SnapsToDevicePixels" Value="false" />
-                                        <Setter Property="OverridesDefaultStyle" Value="true" />
-                                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
-                                        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-                                        <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
-                                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListView">
-                                                    <ScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}">
-                                                        <ItemsPresenter />
-                                                    </ScrollViewer>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </custom:ColumnLayoutListView.Style>
-                                <custom:ColumnLayoutListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="Height" Value="16"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="custom:ColumnLayoutListViewItem">
-                                                    <custom:GraphRow Content="{Binding}" 
-                                                                     ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
-                                                                     GridUpdatedPublisher="{Binding Source={x:Reference OuterListView}, Path=GridUpdatedPublisher}"
-                                                                     Background="{TemplateBinding Background}"
-                                                                     Foreground="{TemplateBinding Foreground}"
-                                                                     Fill="{StaticResource br_lightblue}"
-                                                                     HighlightFill="{StaticResource br_red}"
-                                                                     LabelBrush="{StaticResource br_blue}"
-                                                                     HeadBrush="{StaticResource br_darkred}"
-                                                                     LabelForeground="{StaticResource br_light}"
-                                                                     SnapsToDevicePixels="False"/>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsSecondarySelected" Value="True">
-                                                            <Setter Property="Background" Value="{StaticResource br_darkred}" />
-                                                            <Setter Property="Foreground" Value="{StaticResource br_light}" />
-                                                        </Trigger>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter Property="Background" Value="{StaticResource br_blue}" />
-                                                            <Setter Property="Foreground" Value="{StaticResource br_light}" />
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="ListViewItem.FocusVisualStyle" Value="{x:Null}" />
-                                    </Style>
-                                </custom:ColumnLayoutListView.ItemContainerStyle>
-                            </custom:ColumnLayoutListView>
-                        </Setter.Value>
-                    </Setter>
-                </Style.Setters>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding LogGraphNodes.VariantIndex}" Value="1">
-                        <Setter Property="Content">
-                            <Setter.Value>
-                                <TextBlock Text="{Binding LogGraphNodes.Value}" />
-                            </Setter.Value>
-                        </Setter>
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </ContentPresenter.Style>
-    </ContentPresenter>
+    <custom:VariantPresenter VariantContent="{Binding LogGraphNodes}" Style="{StaticResource DefaultErrorView}" x:Name="LogGraph">
+        <custom:VariantPresenter.Variant0Template>
+            <DataTemplate>
+                <custom:ColumnLayoutListView x:Name="OuterListView"
+                                             ItemsSource="{Binding}" 
+                                             SelectionMode="Single" 
+                                             SelectedItem="{Binding ElementName=LogGraph, Path=DataContext.SelectedNode, Mode=TwoWay}"
+                                             SecondarySelection="{Binding ElementName=LogGraph, Path=DataContext.SecondarySelectedNode}"
+                                             Foreground="{StaticResource br_black}"
+                                             VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                             ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
+                                             IsSynchronizedWithCurrentItem="True"
+                                             KeepSelectionRule="{Binding ElementName=LogGraph, Path=DataContext.KeepSelectionRule}">
+                    <custom:ColumnLayoutListView.HeaderContent>
+                        <Border BorderBrush="{StaticResource br_lightblue}" BorderThickness="0,0,0,0.5" Margin="0,0,0,3">
+                            <Grid Focusable="false"
+                                Height="16"
+                                Name="HeaderGrid">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" MinWidth="30"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="2*" MinWidth="50"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*" MinWidth="40"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*" MinWidth="40"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Graph" HorizontalAlignment="Center"/>
+                                <GridSplitter Grid.Column="1"
+                                                Style="{StaticResource GridSplitterStyle}">
+                                </GridSplitter>
+                                <TextBlock Text="Message" HorizontalAlignment="Center" Grid.Column="2"/>
+                                <GridSplitter Grid.Column="3"
+                                                Style="{StaticResource GridSplitterStyle}"/>
+                                <TextBlock Text="Date" HorizontalAlignment="Center" Grid.Column="4"/>
+                                <GridSplitter Grid.Column="5"
+                                                Style="{StaticResource GridSplitterStyle}"/>
+                                <TextBlock Text="Author" HorizontalAlignment="Center" Grid.Column="6"/>
+                                <GridSplitter Grid.Column="7"
+                                                Style="{StaticResource GridSplitterStyle}"
+                                                IsEnabled="False"/>
+                                <TextBlock Text="Sha" HorizontalAlignment="Center" Grid.Column="8"/>
+                            </Grid>
+                        </Border>
+                    </custom:ColumnLayoutListView.HeaderContent>
+                    <custom:ColumnLayoutListView.Style>
+                        <Style TargetType="ListView">
+                            <Setter Property="SnapsToDevicePixels" Value="false" />
+                            <Setter Property="OverridesDefaultStyle" Value="true" />
+                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+                            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+                            <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListView">
+                                        <ScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </custom:ColumnLayoutListView.Style>
+                    <custom:ColumnLayoutListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Height" Value="16"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="custom:ColumnLayoutListViewItem">
+                                        <custom:GraphRow Content="{Binding}" 
+                                                            ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
+                                                            GridUpdatedPublisher="{Binding Source={x:Reference OuterListView}, Path=GridUpdatedPublisher}"
+                                                            Background="{TemplateBinding Background}"
+                                                            Foreground="{TemplateBinding Foreground}"
+                                                            Fill="{StaticResource br_lightblue}"
+                                                            HighlightFill="{StaticResource br_red}"
+                                                            LabelBrush="{StaticResource br_blue}"
+                                                            HeadBrush="{StaticResource br_darkred}"
+                                                            LabelForeground="{StaticResource br_light}"
+                                                            SnapsToDevicePixels="False"/>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSecondarySelected" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource br_darkred}" />
+                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource br_blue}" />
+                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="ListViewItem.FocusVisualStyle" Value="{x:Null}" />
+                        </Style>
+                    </custom:ColumnLayoutListView.ItemContainerStyle>
+                </custom:ColumnLayoutListView>
+            </DataTemplate>
+        </custom:VariantPresenter.Variant0Template>
+    </custom:VariantPresenter>
 </UserControl>

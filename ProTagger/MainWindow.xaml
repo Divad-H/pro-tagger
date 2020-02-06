@@ -19,17 +19,12 @@
             <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}" CommandParameter="Ratte" Grid.Column="1"/>
         </Grid>
-        <custom:VariantPresenter VariantContent="{Binding Repository}">
+        <custom:VariantPresenter VariantContent="{Binding Repository}" Style="{StaticResource DefaultErrorView}">
             <custom:VariantPresenter.Variant0Template>
                 <DataTemplate>
                     <repo:RepositoryView/>
                 </DataTemplate>
             </custom:VariantPresenter.Variant0Template>
-            <custom:VariantPresenter.Variant1Template>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" />
-                </DataTemplate>
-            </custom:VariantPresenter.Variant1Template>
         </custom:VariantPresenter>
     </DockPanel>
 </Window>

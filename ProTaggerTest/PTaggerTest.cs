@@ -39,7 +39,8 @@ namespace ProTaggerTest
             vm.RepositoryObservable
                 .Subscribe(repoVM =>
                 {
-                    repositoryViewModel = repoVM;
+                    Assert.IsTrue(repoVM.Is<RepositoryViewModel>());
+                    repositoryViewModel = repoVM.Get<RepositoryViewModel>();
                     signal.Release();
                 })
                 .DisposeWith(_diposables);

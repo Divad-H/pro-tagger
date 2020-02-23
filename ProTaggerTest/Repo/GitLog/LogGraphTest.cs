@@ -61,8 +61,8 @@ namespace ProTaggerTest.Repo.GitLog
         [TestMethod]
         public void CreateGraphSimpleTest()
         {
-            var graph = LogGraph.CreateGraph(new SimpleRepositoryFactoryMock(),
-                                             "./",
+            using var repository = new SimpleRepositoryFactoryMock().CreateRepository("./");
+            var graph = LogGraph.CreateGraph(repository,
                                              new List<BranchSelection> 
                                              { 
                                                  new BranchSelection("master", "master", true),
@@ -163,8 +163,8 @@ namespace ProTaggerTest.Repo.GitLog
         [TestMethod]
         public void CreateGraphUnrelatedHistoryTest()
         {
-            var graph = LogGraph.CreateGraph(new UnrelatedHistoryRepositoryMock(),
-                                             "./",
+            using var repository = new UnrelatedHistoryRepositoryMock().CreateRepository("./");
+            var graph = LogGraph.CreateGraph(repository,
                                              new List<BranchSelection>
                                              {
                                                  new BranchSelection("master", "master", true),
@@ -245,8 +245,8 @@ namespace ProTaggerTest.Repo.GitLog
         [TestMethod]
         public void CreateGraphThreeParentsTest()
         {
-            var graph = LogGraph.CreateGraph(new ThreeParentRepositoryFactoryMock(),
-                                             "./",
+            using var repository = new ThreeParentRepositoryFactoryMock().CreateRepository("./");
+            var graph = LogGraph.CreateGraph(repository,
                                              new List<BranchSelection>
                                              {
                                                  new BranchSelection("master", "master", true),
@@ -362,8 +362,8 @@ namespace ProTaggerTest.Repo.GitLog
         [TestMethod]
         public void CreateGraphReusedColumnTest()
         {
-            var graph = LogGraph.CreateGraph(new ReusedColumnRepositoryMock(),
-                                             "./",
+            using var repository = new ReusedColumnRepositoryMock().CreateRepository("./");
+            var graph = LogGraph.CreateGraph(repository,
                                              new List<BranchSelection>
                                              {
                                                  new BranchSelection("master", "master", true),
@@ -482,8 +482,8 @@ namespace ProTaggerTest.Repo.GitLog
         [TestMethod]
         public void CreateGraphSwitchingParentOrderTest()
         {
-            var graph = LogGraph.CreateGraph(new SwitchingParentOrderRepositoryMock(),
-                                             "./",
+            using var repository = new SwitchingParentOrderRepositoryMock().CreateRepository("./");
+            var graph = LogGraph.CreateGraph(repository,
                                              new List<BranchSelection>
                                              {
                                                  new BranchSelection("master", "master", true),

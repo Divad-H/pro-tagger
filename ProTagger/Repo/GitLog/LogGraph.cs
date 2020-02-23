@@ -111,6 +111,7 @@ namespace ProTagger.Repo.GitLog
             }
         }
 
+        public IObservable<LogGraphNode?> SelectedNodeObservable { get; }
         private LogGraphNode? _selectedNode;
         public LogGraphNode? SelectedNode
         {
@@ -124,7 +125,20 @@ namespace ProTagger.Repo.GitLog
             }
         }
 
-        public IObservable<LogGraphNode?> SelectedNodeObservable { get; }
+        public IObservable<LogGraphNode?> SecondarySelectedNodeObservable { get; }
+        private LogGraphNode? _secondarySelectedNode;
+        public LogGraphNode? SecondarySelectedNode
+        {
+            get { return _secondarySelectedNode; }
+            set
+            {
+                if (_secondarySelectedNode == value)
+                    return;
+                _secondarySelectedNode = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public Func<object, object?, bool> KeepSelectionRule { get; } = (object1, object2) =>
             {
                 if (object2 == null)
@@ -134,7 +148,7 @@ namespace ProTagger.Repo.GitLog
                 return node1.Sha == node2.Sha;
             };
 
-        public LogGraph(IRepositoryFactory repositoryFactory, string path, IObservable<IList<BranchSelection>> selectedBranches)
+        public LogGraph(IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
         {
             _logGraphNodes = new Variant<GraphType, string>(new GraphType());
 
@@ -145,7 +159,7 @@ namespace ProTagger.Repo.GitLog
                 .Select(branches => branches.Where(branch => branch.Selected))
                 .Select(branches => Observable.FromAsync(async ct =>
                 {
-                    var res = await Task.Run(() => CreateGraph(repositoryFactory, path, branches));
+                    var res = await Task.Run(() => CreateGraph(repository, branches));
                     if (ct.IsCancellationRequested)
                         return null;
                     return res;
@@ -157,6 +171,7 @@ namespace ProTagger.Repo.GitLog
                 .DisposeWith(_disposable);
 
             SelectedNodeObservable = this.FromProperty(vm => vm.SelectedNode);
+            SecondarySelectedNodeObservable = this.FromProperty(vm => vm.SecondarySelectedNode);
 
             logGraphNodes
                 .Subscribe(graphNodes => LogGraphNodes = graphNodes)
@@ -176,15 +191,13 @@ namespace ProTagger.Repo.GitLog
         }
 
         internal static Variant<GraphType, string> CreateGraph(
-            IRepositoryFactory repositoryFactory, 
-            string path, 
+            IRepositoryWrapper repository, 
             IEnumerable<BranchSelection> branches)
         {
             try
             {
-                using var repo = repositoryFactory.CreateRepository(path);
-                var selectedBranches = branches.Select(branch => repo.Branches[branch.LongName]).ToList();
-                var tags = repo.Tags.ToList();
+                var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
+                var tags = repository.Tags.ToList();
                 var result = new GraphType();
                 var expectedIds = new List<ObjectId?>();
                 var directions = new List<List<int>>();
@@ -200,7 +213,7 @@ namespace ProTagger.Repo.GitLog
                     IncludeReachableFrom = selectedBranches
                 };
 
-                foreach (Commit c in repo.QueryCommits(commitFilter)/*.Take(1000)*/)
+                foreach (Commit c in repository.QueryCommits(commitFilter)/*.Take(1000)*/)
                 {
                     var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
                     if (nextPosition == -1)

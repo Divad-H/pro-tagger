@@ -127,16 +127,6 @@ namespace ProTagger.Wpf
           nameof(HeadBrush), typeof(Brush), typeof(GraphRow),
           new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public bool IsSecondarySelected
-        {
-            get { return (bool)GetValue(IsSecondarySelectedProperty); }
-            set { SetValue(IsSecondarySelectedProperty, value); }
-        }
-
-        public static readonly DependencyProperty IsSecondarySelectedProperty = DependencyProperty.Register(
-          nameof(IsSecondarySelected), typeof(bool), typeof(GraphRow),
-          new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
-
         private void RegisterGridUpdated(ColumnLayoutListView.GridPublisher? oldValue, ColumnLayoutListView.GridPublisher? newValue)
         {
             if (oldValue != null)

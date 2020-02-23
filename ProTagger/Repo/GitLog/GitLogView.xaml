@@ -83,6 +83,7 @@
                                                          ItemsSource="{Binding LogGraphNodes.Value}" 
                                                          SelectionMode="Single" 
                                                          SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                                                         SecondarySelection="{Binding SecondarySelectedNode}"
                                                          Foreground="{StaticResource br_black}"
                                                          VirtualizingStackPanel.VirtualizationMode="Recycling"
                                                          ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"
@@ -157,7 +158,6 @@
                                                                      LabelBrush="{StaticResource br_blue}"
                                                                      HeadBrush="{StaticResource br_darkred}"
                                                                      LabelForeground="{StaticResource br_light}"
-                                                                     IsSecondarySelected="{TemplateBinding IsSecondarySelected}"
                                                                      SnapsToDevicePixels="False"/>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsSecondarySelected" Value="True">

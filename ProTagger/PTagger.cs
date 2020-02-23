@@ -29,15 +29,15 @@ namespace ProTagger
             }
         }
 
-        private RepositoryViewModel? _repository;
-        public RepositoryViewModel? Repository
+        private Variant<RepositoryViewModel, string> _repository = new Variant<RepositoryViewModel, string>("No repository selected.");
+        public Variant<RepositoryViewModel, string> Repository
         {
             get { return _repository; }
             set
             {
                 if (_repository == value)
                     return;
-                _repository?.Dispose();
+                (_repository?.Get() as IDisposable)?.Dispose();
                 _repository = value;
                 NotifyPropertyChanged();
             }
@@ -45,7 +45,7 @@ namespace ProTagger
 
         public ICommand RefreshCommand { get; }
 
-        public IObservable<RepositoryViewModel> RepositoryObservable { get; }
+        public IObservable<Variant<RepositoryViewModel, string>> RepositoryObservable { get; }
 
         public PTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers)
         {
@@ -91,7 +91,7 @@ namespace ProTagger
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()
         {
-            _repository?.Dispose();
+            (_repository?.Get() as IDisposable)?.Dispose();
             _disposable.Dispose();
         }
     }

@@ -94,37 +94,53 @@ namespace ProTagger
             }
         }
 
-        public static async Task<RepositoryViewModel?> Create(ISchedulers schedulers, CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
+        public static async Task<Variant<RepositoryViewModel, string>?> Create(ISchedulers schedulers, CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
         {
-            var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path));
-            if (ct.IsCancellationRequested)
-                return null;
-            return repositoryViewModel;
+            try
+            {
+                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path));
+                if (ct.IsCancellationRequested)
+                {
+                    repositoryViewModel?.Dispose();
+                    return null;
+                }
+                return new Variant<RepositoryViewModel, string>(repositoryViewModel);
+            }
+            catch (Exception e)
+            {
+                return new Variant<RepositoryViewModel, string>(e.Message);
+            }
         }
+
+        readonly IRepositoryWrapper _repository;
 
         public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path)
         {
             var branches = new List<BranchSelectionViewModel>();
+            _repository = repositoryFactory.CreateRepository(path);
             try
             {
-                using var repo = repositoryFactory.CreateRepository(path);
-                foreach (var branch in repo.Branches)
+                foreach (var branch in _repository.Branches)
                     branches.Add(new BranchSelectionViewModel(schedulers, branch, branch.IsCurrentRepositoryHead));
+
+                var branchesObservable = branches
+                    .Select(b => b.BranchSelectionObservable)
+                    .CombineLatest();
+
+                Branches = branches;
+                BranchesObservable = branchesObservable;
+
+                _graph = new LogGraph(_repository, branchesObservable);
+
+                _graph.SelectedNodeObservable
+                    .Subscribe(node => SelectedCommit = node)
+                    .DisposeWith(_disposables);
             }
             catch (Exception)
-            { }
-            var branchesObservable = branches
-                .Select(b => b.BranchSelectionObservable)
-                .CombineLatest();
-
-            Branches = branches;
-            BranchesObservable = branchesObservable;
-
-            _graph = new LogGraph(repositoryFactory, path, branchesObservable);
-
-            _graph.SelectedNodeObservable
-                .Subscribe(node => SelectedCommit = node)
-                .DisposeWith(_disposables);
+            {
+                _repository.Dispose();
+                throw;
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -136,6 +152,7 @@ namespace ProTagger
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         public void Dispose()
         {
+            _repository.Dispose();
             _graph.Dispose();
             _disposables.Dispose();
         }

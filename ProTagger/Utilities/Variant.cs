@@ -2,21 +2,31 @@
 
 namespace ProTagger
 {
-    public class Variant<T1, T2>
-        where T1 : notnull
-        where T2 : notnull
+    public class Variant
     {
-        private object _value;
+        protected object _value;
 
-        public Variant(T1 value)
-        {
-             _value = value;
-        }
-
-        public Variant(T2 value)
+        protected Variant(object value)
         {
             _value = value;
         }
+        
+        public object Value => _value;
+
+        public virtual int VariantIndex { get; } = 0;
+    }
+
+    public class Variant<T1, T2> : Variant
+        where T1 : notnull
+        where T2 : notnull
+    {
+        public Variant(T1 value) 
+            : base(value)
+        {}
+
+        public Variant(T2 value)
+            : base(value)
+        {}
 
         public TRet Visit<TRet>(Func<T1, TRet> f1, Func<T2, TRet> f2)
         {
@@ -45,8 +55,6 @@ namespace ProTagger
             return _value;
         }
 
-        public object Value => _value;
-
         public bool Is<T>()
         {
             return _value is T;
@@ -64,6 +72,6 @@ namespace ProTagger
             return this;
         }
 
-        public int VariantIndex => _value is T1 ? 0 : 1;
+        public override int VariantIndex => _value is T1 ? 0 : 1;
     }
 }

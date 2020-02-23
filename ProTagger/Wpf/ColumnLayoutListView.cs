@@ -111,8 +111,8 @@ namespace ProTagger.Wpf
             base.OnItemsChanged(e);
             if (KeepSelectionRule == null || ItemsSource == null)
                 return;
-            SelectedItem = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSelection)) ?? ItemsSource.OfType<object>().FirstOrDefault();
-            SecondarySelection = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSecondarySelection)) ?? ItemsSource.OfType<object>().FirstOrDefault();
+            SelectedItem = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSelection));
+            SecondarySelection = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSecondarySelection));
         }
 
         public class GridPublisher

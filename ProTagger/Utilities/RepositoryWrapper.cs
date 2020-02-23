@@ -7,6 +7,7 @@ namespace ProTagger.Utilities
         public RepositoryWrapper(string path)
         {
             _repository = new Repository(path);
+            //_repository.Commits
         }
 
         private readonly Repository _repository;
@@ -19,6 +20,8 @@ namespace ProTagger.Utilities
         public BranchCollection Branches => _repository.Branches;
 
         public TagCollection Tags => _repository.Tags;
+
+        public Diff Diff => _repository.Diff;
 
         public void Dispose()
         {

@@ -9,5 +9,7 @@ namespace ProTagger.Utilities
 
         public BranchCollection Branches { get; }
         public TagCollection Tags { get; }
+
+        public Diff Diff { get; }
     }
 }

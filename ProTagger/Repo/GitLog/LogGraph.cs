@@ -81,6 +81,7 @@ namespace ProTagger.Repo.GitLog
             Committer = commit.Committer;
             Branches = branches;
             Tags = tags;
+            Commit = commit;
         }
 
         public int GraphPosition { get; }
@@ -94,6 +95,7 @@ namespace ProTagger.Repo.GitLog
         public Signature Committer { get; }
         public IList<BranchInfo> Branches { get; }
         public IList<TagInfo> Tags { get; }
+        public Commit Commit;
     }
 
     public class LogGraph : INotifyPropertyChanged, IDisposable

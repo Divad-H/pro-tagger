@@ -80,7 +80,7 @@
                                              ItemsSource="{Binding}" 
                                              SelectionMode="Single" 
                                              SelectedItem="{Binding ElementName=LogGraph, Path=DataContext.SelectedNode, Mode=TwoWay}"
-                                             SecondarySelection="{Binding ElementName=LogGraph, Path=DataContext.SecondarySelectedNode}"
+                                             SecondarySelection="{Binding ElementName=LogGraph, Path=DataContext.SecondarySelectedNode, Mode=TwoWay}"
                                              Foreground="{StaticResource br_black}"
                                              VirtualizingStackPanel.VirtualizationMode="Recycling"
                                              ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"

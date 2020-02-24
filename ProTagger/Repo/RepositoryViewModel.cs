@@ -1,4 +1,5 @@
 ﻿using LibGit2Sharp;
+using ProTagger.Repo.Diff;
 using ProTagger.Repo.GitLog;
 using ProTagger.Utilities;
 using ReacitveMvvm;
@@ -81,15 +82,15 @@ namespace ProTagger
         public List<BranchSelectionViewModel> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
 
-        private LogGraphNode? _selectedCommit;
-        public LogGraphNode? SelectedCommit
+        private DiffViewModel _diff;
+        public DiffViewModel Diff
         {
-            get { return _selectedCommit; }
+            get { return _diff; }
             set
             {
-                if (_selectedCommit == value)
+                if (_diff == value)
                     return;
-                _selectedCommit = value;
+                _diff = value;
                 NotifyPropertyChanged();
             }
         }
@@ -131,16 +132,18 @@ namespace ProTagger
                 BranchesObservable = branchesObservable;
 
                 _graph = new LogGraph(_repository, branchesObservable);
-
-                _graph.SelectedNodeObservable
-                    .Subscribe(node => SelectedCommit = node)
-                    .DisposeWith(_disposables);
             }
             catch (Exception)
             {
                 _repository.Dispose();
                 throw;
             }
+            var selectedCommit = _graph.SelectedNodeObservable
+                .Select(node => node?.Commit);
+            var secondarySelectedCommit = _graph.SecondarySelectedNodeObservable
+                .Select(node => node?.Commit);
+
+            _diff = new DiffViewModel(_repository, secondarySelectedCommit, selectedCommit);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -152,6 +155,7 @@ namespace ProTagger
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         public void Dispose()
         {
+            _diff.Dispose();
             _repository.Dispose();
             _graph.Dispose();
             _disposables.Dispose();

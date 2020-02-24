@@ -3,15 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ProTagger.Repo"
              xmlns:logview="clr-namespace:ProTagger.Repo.GitLog"
+             xmlns:diffview="clr-namespace:ProTagger.Repo.Diff"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
         <ToggleButton x:Name="PopupButton"
                       Content="Select Branches ⯆"
@@ -42,8 +42,8 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Popup>
-        
+
         <logview:GitLogView Grid.Row="1" DataContext="{Binding Graph}"/>
-        <TextBlock Grid.Row="2" Text="{Binding SelectedCommit.Message}"/>
+        <diffview:DiffView Grid.Row="2" DataContext="{Binding Diff}"/>
     </Grid>
 </UserControl>

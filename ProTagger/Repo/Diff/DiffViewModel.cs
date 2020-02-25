@@ -28,7 +28,7 @@ namespace ProTagger.Repo.Diff
                 NotifyPropertyChanged();
             }
         }
-        private bool _isSelected = false;
+        private bool _isSelected;
         public bool IsSelected
         {
             get
@@ -45,9 +45,10 @@ namespace ProTagger.Repo.Diff
         }
         public readonly IObservable<bool> IsSelectedObservable;
 
-        public SingleFileDiff(TreeEntryChanges treeEntryChanges)
+        public SingleFileDiff(TreeEntryChanges treeEntryChanges, bool isSelected)
         {
             _treeEntryChanges = treeEntryChanges;
+            _isSelected = isSelected;
             IsSelectedObservable = this
                 .FromProperty(vm => vm.IsSelected);
         }
@@ -56,6 +57,25 @@ namespace ProTagger.Repo.Diff
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private class SingleFileDiffComparer : IEqualityComparer<SingleFileDiff>
+        {
+            public bool Equals(SingleFileDiff x, SingleFileDiff y)
+            {
+                return x.TreeEntryChanges.Path == y.TreeEntryChanges.Path;
+            }
+
+            public int GetHashCode(SingleFileDiff obj)
+            {
+                return obj.TreeEntryChanges.Path.GetHashCode();
+            }
+        }
+
+        public static void ApplySelections(IList<SingleFileDiff> from, IList<SingleFileDiff> to)
+        {
+            foreach (var x in to.Intersect(from.Where(f => f.IsSelected), new SingleFileDiffComparer()))
+                x.IsSelected = true;
         }
     }
 
@@ -154,21 +174,27 @@ namespace ProTagger.Repo.Diff
                     newCommit != null ?
                         FileDiff.CreateDiff(_repository, oldCommit, newCommit)
                             .SelectResult(treeEntriesChanges => treeEntriesChanges
-                                .Select(treeEntriesChanges => new SingleFileDiff(treeEntriesChanges))
+                                .Select(treeEntriesChanges => new SingleFileDiff(treeEntriesChanges, false))
                                 .ToList()) :
                         new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage))
+                .Scan((last, current) =>
+                {
+                    if (current.Is<List<SingleFileDiff>>() && last.Is<List<SingleFileDiff>>())
+                        SingleFileDiff.ApplySelections(last.Get<List<SingleFileDiff>>(), current.Get<List<SingleFileDiff>>());
+                    return current;
+                })
                 .Publish();
 
             var selectedFilesObservable = filesDiffObservable
                 .Select(singleFileDiffs => singleFileDiffs.Is<string>() ?
-                  Observable.Return(new List<string>()) :
-                  singleFileDiffs.Get<List<SingleFileDiff>>()
-                      .Select(singleFileDiff => singleFileDiff.IsSelectedObservable
-                          .Select(isSelected => Tuple.Create(singleFileDiff.TreeEntryChanges, isSelected)))
-                      .CombineLatest()
-                      .Select(treeEntriesChanges => treeEntriesChanges
-                          .Where(tup => tup.Item2)
-                          .Select(tup => tup.Item1.Path)))
+                    Observable.Return(new List<string>()) :
+                    singleFileDiffs.Get<List<SingleFileDiff>>()
+                        .Select(singleFileDiff => singleFileDiff.IsSelectedObservable
+                            .Select(isSelected => Tuple.Create(singleFileDiff.TreeEntryChanges, isSelected)))
+                        .CombineLatest()
+                        .Select(treeEntriesChanges => treeEntriesChanges
+                            .Where(tup => tup.Item2)
+                            .Select(tup => tup.Item1.Path)))
                 .Switch();
 
             filesDiffObservable

@@ -62,6 +62,7 @@ namespace ProTagger.Repo.Diff
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
         const string NoCommitSelectedMessage = "No commit selected.";
+        const string NoFilesSelectedMessage = "No files selected.";
 
         readonly IObservable<Commit?> OldCommitObservable;
         private Commit? _oldCommit;
@@ -98,18 +99,18 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        private IList<string> _selectedFiles = new List<string>();
-        public IList<string> SelectedFiles
+        private Variant<Patch, string> _patchDiff = new Variant<Patch, string>(NoFilesSelectedMessage);
+        public Variant<Patch, string> PatchDiff
         {
             get
             {
-                return _selectedFiles;
+                return _patchDiff;
             }
             private set
             {
-                if (_selectedFiles == value)
+                if (_patchDiff == value)
                     return;
-                _selectedFiles = value;
+                _patchDiff = value;
                 NotifyPropertyChanged();
             }
         }
@@ -157,9 +158,6 @@ namespace ProTagger.Repo.Diff
                                 .ToList()) :
                         new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage))
                 .Publish();
-            filesDiffObservable
-                .Connect()
-                .DisposeWith(_disposables);
 
             var selectedFilesObservable = filesDiffObservable
                 .Select(singleFileDiffs => singleFileDiffs.Is<string>() ?
@@ -177,8 +175,19 @@ namespace ProTagger.Repo.Diff
                 .Subscribe(filesDiff => FilesDiff = filesDiff)
                 .DisposeWith(_disposables);
 
-            selectedFilesObservable
-                .Subscribe(selectedFiles => SelectedFiles = selectedFiles.ToList())
+            var patchDiff = selectedFilesObservable
+                .WithLatestFrom(OldCommitObservable, (selectedFiles, oldCommit) => new { SelectedFiles = selectedFiles, OldCommit = oldCommit })
+                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.SelectedFiles, data.OldCommit, NewCommit = newCommit })
+                .Select(data => data.NewCommit == null || !data.SelectedFiles.Any() ?
+                    new Variant<Patch, string>(NoFilesSelectedMessage) :
+                    Diff.PatchDiff.CreateDiff(_repository, data.OldCommit, data.NewCommit, data.SelectedFiles));
+
+            patchDiff
+                .Subscribe(patchDiff => PatchDiff = patchDiff)
+                .DisposeWith(_disposables);
+
+            filesDiffObservable
+                .Connect()
                 .DisposeWith(_disposables);
         }
 

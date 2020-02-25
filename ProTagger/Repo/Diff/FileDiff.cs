@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ProTagger.Repo.Diff
 {
-    class FileDiff
+    static class FileDiff
     {
         internal static Variant<IEnumerable<TreeEntryChanges>, string> CreateDiff(
                 IRepositoryWrapper repository,

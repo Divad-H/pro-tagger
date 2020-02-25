@@ -30,6 +30,20 @@
                 </DataTemplate>
             </custom:VariantPresenter.Variant0Template>
         </custom:VariantPresenter>
-        <ItemsControl ItemsSource="{Binding SelectedFiles}" Grid.Column="1"/>
+        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <custom:VariantPresenter VariantContent="{Binding PatchDiff}" Style="{StaticResource DefaultErrorView}">
+                <custom:VariantPresenter.Variant0Template>
+                    <DataTemplate>
+                        <ItemsControl ItemsSource="{Binding}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Patch}" FontFamily="Consolas"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DataTemplate>
+                </custom:VariantPresenter.Variant0Template>
+            </custom:VariantPresenter>
+        </ScrollViewer>
     </Grid>
 </UserControl>

@@ -11,6 +11,54 @@ using System.Runtime.CompilerServices;
 
 namespace ProTagger.Repo.Diff
 {
+    public class SingleFileDiff : INotifyPropertyChanged
+    {
+        private TreeEntryChanges _treeEntryChanges;
+        public TreeEntryChanges TreeEntryChanges
+        {
+            get
+            {
+                return _treeEntryChanges;
+            }
+            set
+            {
+                if (_treeEntryChanges == value)
+                    return;
+                _treeEntryChanges = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private bool _isSelected = false;
+        public bool IsSelected
+        {
+            get
+            {
+                return _isSelected;
+            }
+            set
+            {
+                if (_isSelected == value)
+                    return;
+                _isSelected = value;
+                NotifyPropertyChanged();
+            }
+        }
+        public readonly IObservable<bool> IsSelectedObservable;
+
+        public SingleFileDiff(TreeEntryChanges treeEntryChanges)
+        {
+            _treeEntryChanges = treeEntryChanges;
+            IsSelectedObservable = this
+                .FromProperty(vm => vm.IsSelected);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
         const string NoCommitSelectedMessage = "No commit selected.";
@@ -50,9 +98,25 @@ namespace ProTagger.Repo.Diff
             }
         }
 
+        private IList<string> _selectedFiles = new List<string>();
+        public IList<string> SelectedFiles
+        {
+            get
+            {
+                return _selectedFiles;
+            }
+            private set
+            {
+                if (_selectedFiles == value)
+                    return;
+                _selectedFiles = value;
+                NotifyPropertyChanged();
+            }
+        }
 
-        private Variant<List<TreeEntryChanges>, string> _filesDiff = new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage);
-        public Variant<List<TreeEntryChanges>, string> FilesDiff
+
+        private Variant<List<SingleFileDiff>, string> _filesDiff = new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage);
+        public Variant<List<SingleFileDiff>, string> FilesDiff
         {
             get
             {
@@ -87,11 +151,34 @@ namespace ProTagger.Repo.Diff
             var filesDiffObservable = NewCommitObservable
                 .CombineLatest(OldCommitObservable, (newCommit, oldCommit) =>
                     newCommit != null ?
-                        FileDiff.CreateDiff(_repository, oldCommit, newCommit) :
-                        new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage));
+                        FileDiff.CreateDiff(_repository, oldCommit, newCommit)
+                            .SelectResult(treeEntriesChanges => treeEntriesChanges
+                                .Select(treeEntriesChanges => new SingleFileDiff(treeEntriesChanges))
+                                .ToList()) :
+                        new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage))
+                .Publish();
+            filesDiffObservable
+                .Connect()
+                .DisposeWith(_disposables);
+
+            var selectedFilesObservable = filesDiffObservable
+                .Select(singleFileDiffs => singleFileDiffs.Is<string>() ?
+                  Observable.Return(new List<string>()) :
+                  singleFileDiffs.Get<List<SingleFileDiff>>()
+                      .Select(singleFileDiff => singleFileDiff.IsSelectedObservable
+                          .Select(isSelected => Tuple.Create(singleFileDiff.TreeEntryChanges, isSelected)))
+                      .CombineLatest()
+                      .Select(treeEntriesChanges => treeEntriesChanges
+                          .Where(tup => tup.Item2)
+                          .Select(tup => tup.Item1.Path)))
+                .Switch();
 
             filesDiffObservable
                 .Subscribe(filesDiff => FilesDiff = filesDiff)
+                .DisposeWith(_disposables);
+
+            selectedFilesObservable
+                .Subscribe(selectedFiles => SelectedFiles = selectedFiles.ToList())
                 .DisposeWith(_disposables);
         }
 

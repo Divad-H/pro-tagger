@@ -8,7 +8,7 @@ namespace ProTagger.Repo.Diff
 {
     class FileDiff
     {
-        internal static Variant<List<TreeEntryChanges>, string> CreateDiff(
+        internal static Variant<IEnumerable<TreeEntryChanges>, string> CreateDiff(
                 IRepositoryWrapper repository,
                 Commit? oldCommit,
                 Commit newCommit)
@@ -16,7 +16,7 @@ namespace ProTagger.Repo.Diff
             try
             {
                 var treeChanges = repository.Diff.Compare<TreeChanges>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, new CompareOptions());
-                return new Variant<List<TreeEntryChanges>, string>(
+                return new Variant<IEnumerable<TreeEntryChanges>, string>(
                     treeChanges.Added
                         .Concat(treeChanges.Deleted)
                         .Concat(treeChanges.Modified)
@@ -24,12 +24,11 @@ namespace ProTagger.Repo.Diff
                         .Concat(treeChanges.Renamed)
                         .Concat(treeChanges.Copied)
                         .Concat(treeChanges.Unmodified)
-                        .Concat(treeChanges.Conflicted)
-                        .ToList());
+                        .Concat(treeChanges.Conflicted));
             }
             catch (Exception e)
             {
-                return new Variant<List<TreeEntryChanges>, string>(e.Message);
+                return new Variant<IEnumerable<TreeEntryChanges>, string>(e.Message);
             }
         }
     }

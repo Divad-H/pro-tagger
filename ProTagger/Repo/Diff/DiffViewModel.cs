@@ -190,11 +190,11 @@ namespace ProTagger.Repo.Diff
                     Observable.Return(new List<string>()) :
                     singleFileDiffs.Get<List<SingleFileDiff>>()
                         .Select(singleFileDiff => singleFileDiff.IsSelectedObservable
-                            .Select(isSelected => Tuple.Create(singleFileDiff.TreeEntryChanges, isSelected)))
+                            .Select(isSelected => new { singleFileDiff.TreeEntryChanges, isSelected }))
                         .CombineLatest()
                         .Select(treeEntriesChanges => treeEntriesChanges
-                            .Where(tup => tup.Item2)
-                            .Select(tup => tup.Item1.Path)))
+                            .Where(d => d.isSelected)
+                            .Select(d => d.TreeEntryChanges.Path)))
                 .Switch();
 
             filesDiffObservable
@@ -202,11 +202,11 @@ namespace ProTagger.Repo.Diff
                 .DisposeWith(_disposables);
 
             var patchDiff = selectedFilesObservable
-                .WithLatestFrom(OldCommitObservable, (selectedFiles, oldCommit) => new { SelectedFiles = selectedFiles, OldCommit = oldCommit })
-                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.SelectedFiles, data.OldCommit, NewCommit = newCommit })
-                .Select(data => data.NewCommit == null || !data.SelectedFiles.Any() ?
+                .WithLatestFrom(OldCommitObservable, (selectedFiles, oldCommit) => new { selectedFiles, oldCommit })
+                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.selectedFiles, data.oldCommit, newCommit })
+                .Select(data => data.newCommit == null || !data.selectedFiles.Any() ?
                     new Variant<Patch, string>(NoFilesSelectedMessage) :
-                    Diff.PatchDiff.CreateDiff(_repository, data.OldCommit, data.NewCommit, data.SelectedFiles));
+                    Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, data.selectedFiles));
 
             patchDiff
                 .Subscribe(patchDiff => PatchDiff = patchDiff)

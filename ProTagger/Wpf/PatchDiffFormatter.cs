@@ -47,7 +47,9 @@ namespace ProTagger.Wpf
                     {
                         foreach (var oldLine in wordDiff.OldText)
                         {
-                            double x = 0;
+                            var lineNoText = CreateText(oldLine.LineNumber.ToString());
+                            texts.Add(Tuple.Create(lineNoText, new Point(15 - lineNoText.Width / 2, lineIndex * 10)));
+                            double x = 60;
                             foreach (var token in oldLine.Text)
                             {
                                 var text = CreateText(token.Text);
@@ -60,7 +62,9 @@ namespace ProTagger.Wpf
                         }
                         foreach (var newLine in wordDiff.NewText)
                         {
-                            double x = 0;
+                            var lineNoText = CreateText(newLine.LineNumber.ToString());
+                            texts.Add(Tuple.Create(lineNoText, new Point(45 - lineNoText.Width / 2, lineIndex * 10)));
+                            double x = 60;
                             foreach (var token in newLine.Text)
                             {
                                 var text = CreateText(token.Text);
@@ -74,8 +78,12 @@ namespace ProTagger.Wpf
                     },
                     unchangedLine =>
                     {
+                        var lineNoText = CreateText(unchangedLine.OldLineNumber.ToString());
+                        texts.Add(Tuple.Create(lineNoText, new Point(15 - lineNoText.Width / 2, lineIndex * 10)));
+                        lineNoText = CreateText(unchangedLine.NewLineNumber.ToString());
+                        texts.Add(Tuple.Create(lineNoText, new Point(45 - lineNoText.Width / 2, lineIndex * 10)));
                         var text = CreateText(unchangedLine.Text);
-                        texts.Add(Tuple.Create(text, new Point(0, lineIndex++ * 10)));
+                        texts.Add(Tuple.Create(text, new Point(60, lineIndex++ * 10)));
                     });
                 }
             }

@@ -34,29 +34,21 @@ namespace ProTagger.Repo.GitLog
             public List<int> Next;
         }
 
-        public struct BranchInfo
+        public readonly struct BranchInfo
         {
-            public BranchInfo(string longName, string shortName, bool isRemote, bool isHead)
-            {
-                LongName = longName;
-                ShortName = shortName;
-                IsRemote = isRemote;
-                IsHead = isHead;
-            }
-
+            public BranchInfo(string longName, string shortName, bool isRemote, bool isHead) =>
+                (LongName, ShortName, IsRemote, IsHead) = (longName, shortName, isRemote, isHead);
+            
             public string LongName { get; }
             public string ShortName { get; }
             public bool IsRemote { get; }
             public bool IsHead { get; }
         }
 
-        public struct TagInfo
+        public readonly struct TagInfo
         {
-            public TagInfo(string longName, string shortName)
-            {
-                LongName = longName;
-                ShortName = shortName;
-            }
+            public TagInfo(string longName, string shortName) =>
+                (LongName, ShortName) = (longName, shortName);
 
             public string LongName { get; }
             public string ShortName { get; }

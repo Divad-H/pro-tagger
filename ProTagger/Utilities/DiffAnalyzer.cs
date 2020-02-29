@@ -7,55 +7,42 @@ namespace ProTagger.Utilities
 {
     public static class DiffAnalyzer
     {
-        public struct Token
+        public readonly struct Token
         {
             public readonly string Text;
             public readonly bool Unchanged;
 
-            public Token(string text, bool unchanged)
-            {
-                Text = text;
-                Unchanged = unchanged;
-            }
+            public Token(string text, bool unchanged) =>
+                (Text, Unchanged) = (text, unchanged);
         }
-        public struct ChangedLine
+        public readonly struct ChangedLine
         {
             public readonly int LineNumber;
             public readonly List<Token> Text;
 
-            public ChangedLine(int lineNumber, List<Token> text)
-            { 
-                LineNumber = lineNumber;
-                Text = text;
-            }
+            public ChangedLine(int lineNumber, List<Token> text) =>
+                (LineNumber, Text) = (lineNumber, text);
         }
-        public struct WordDiff
+        public readonly struct WordDiff
         {
             public readonly List<ChangedLine> NewText;
             public readonly List<ChangedLine> OldText;
 
-            public WordDiff(List<ChangedLine> newText, List<ChangedLine> oldText)
-            {
-                NewText = newText;
-                OldText = oldText;
-            }
+            public WordDiff(List<ChangedLine> newText, List<ChangedLine> oldText) =>
+                (NewText, OldText) = (newText, oldText);
         }
 
-        public struct UnchangedLine
+        public readonly struct UnchangedLine
         {
             public readonly int NewLineNumber;
             public readonly int OldLineNumber;
             public readonly string Text;
 
-            public UnchangedLine(int oldLineNumber, int newLineNumber, string text)
-            {
-                NewLineNumber = newLineNumber;
-                OldLineNumber = oldLineNumber;
-                Text = text;
-            }
+            public UnchangedLine(int oldLineNumber, int newLineNumber, string text) =>
+                (NewLineNumber, OldLineNumber, Text) = (newLineNumber, oldLineNumber, text);
         }
 
-        public struct Hunk
+        public readonly struct Hunk
         {
             public readonly int NewBeginLine;
             public readonly int NewHunkLength;
@@ -139,12 +126,8 @@ namespace ProTagger.Utilities
             public bool Unchanged;
             public int Line;
 
-            public IndexedToken(string text, int line)
-            {
-                Text = text;
-                Unchanged = true;
-                Line = line;
-            }
+            public IndexedToken(string text, int line) =>
+                (Text, Unchanged, Line) = (text, true, line);
         }
 
         private struct CurrentBest

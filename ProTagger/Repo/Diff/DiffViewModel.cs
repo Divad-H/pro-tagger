@@ -11,6 +11,16 @@ using System.Runtime.CompilerServices;
 
 namespace ProTagger.Repo.Diff
 {
+    static class SingleFileDiffHelper
+    {
+        public static List<SingleFileDiff> EnsureElementSelected(this List<SingleFileDiff> elements)
+        {
+            if (elements.Any() && !elements.Any(element => element.IsSelected))
+                elements.First().IsSelected = true;
+            return elements;
+        }
+    }
+
     public class SingleFileDiff : INotifyPropertyChanged
     {
         private TreeEntryChanges _treeEntryChanges;
@@ -72,10 +82,15 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        public static void ApplySelections(IList<SingleFileDiff> from, IList<SingleFileDiff> to)
+        public static bool ApplySelections(IList<SingleFileDiff> from, IList<SingleFileDiff> to)
         {
+            bool similarFound = false;
             foreach (var x in to.Intersect(from.Where(f => f.IsSelected), new SingleFileDiffComparer()))
+            {
                 x.IsSelected = true;
+                similarFound = true;
+            }
+            return similarFound;
         }
     }
 
@@ -192,9 +207,11 @@ namespace ProTagger.Repo.Diff
                 .Scan((last, current) =>
                 {
                     if (current.Is<List<SingleFileDiff>>() && last.Is<List<SingleFileDiff>>())
-                        SingleFileDiff.ApplySelections(last.Get<List<SingleFileDiff>>(), current.Get<List<SingleFileDiff>>());
+                        if (!SingleFileDiff.ApplySelections(last.Get<List<SingleFileDiff>>(), current.Get<List<SingleFileDiff>>()))
+                            current.Get<List<SingleFileDiff>>().First().IsSelected = true;
                     return current;
                 })
+                .Select(variant => variant.SelectResult(fileDiffs => fileDiffs.EnsureElementSelected()))
                 .Publish();
 
             var selectedFilesObservable = filesDiffObservable

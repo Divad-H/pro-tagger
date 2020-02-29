@@ -130,9 +130,9 @@ namespace ProTagger.Wpf
         private void RegisterGridUpdated(ColumnLayoutListView.GridPublisher? oldValue, ColumnLayoutListView.GridPublisher? newValue)
         {
             if (oldValue != null)
-                oldValue.GridUpdated -= OnGridUpdated;
+                WeakEventManager<ColumnLayoutListView.GridPublisher, EventArgs>.RemoveHandler(oldValue, nameof(newValue.GridUpdated), OnGridUpdated);
             if (newValue != null)
-                newValue.GridUpdated += OnGridUpdated;
+                WeakEventManager<ColumnLayoutListView.GridPublisher, EventArgs>.AddHandler(newValue, nameof(newValue.GridUpdated), OnGridUpdated);
         }
 
         List<double>? _columnWidthBuffer;

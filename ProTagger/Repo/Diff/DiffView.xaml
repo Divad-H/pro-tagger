@@ -37,7 +37,16 @@
                         <ItemsControl ItemsSource="{Binding}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Patch}" FontFamily="Consolas"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding PatchEntryChanges.Path}" FontFamily="Consolas"/>
+                                        <ItemsControl ItemsSource="{Binding Hunks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <custom:PatchDiffFormatter Content="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

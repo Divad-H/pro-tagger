@@ -79,6 +79,18 @@ namespace ProTagger.Repo.Diff
         }
     }
 
+    public class FilePatch
+    {
+        public List<DiffAnalyzer.Hunk> Hunks { get; }
+        public PatchEntryChanges PatchEntryChanges { get; }
+
+        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges)
+        {
+            Hunks = hunks;
+            PatchEntryChanges = patchEntryChanges;
+        }
+    }
+
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
         const string NoCommitSelectedMessage = "No commit selected.";
@@ -119,8 +131,8 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        private Variant<Patch, string> _patchDiff = new Variant<Patch, string>(NoFilesSelectedMessage);
-        public Variant<Patch, string> PatchDiff
+        private Variant<IList<FilePatch>, string> _patchDiff = new Variant<IList<FilePatch>, string>(NoFilesSelectedMessage);
+        public Variant<IList<FilePatch>, string> PatchDiff
         {
             get
             {
@@ -206,7 +218,12 @@ namespace ProTagger.Repo.Diff
                 .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.selectedFiles, data.oldCommit, newCommit })
                 .Select(data => data.newCommit == null || !data.selectedFiles.Any() ?
                     new Variant<Patch, string>(NoFilesSelectedMessage) :
-                    Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, data.selectedFiles));
+                    Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, data.selectedFiles))
+                .Select(patchVariant => patchVariant.Visit(
+                    patch => new Variant<IList<FilePatch>, string>(patch
+                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch), patchEntry))
+                        .ToList()),
+                    error => new Variant<IList<FilePatch>, string>(error)));
 
             patchDiff
                 .Subscribe(patchDiff => PatchDiff = patchDiff)

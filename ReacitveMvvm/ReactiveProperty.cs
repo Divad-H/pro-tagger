@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace ReactiveMvvm
 {
-    public static class ReactiveProperties
+    public static class ReactiveProperty
     {
         public static IObservable<TProperty> FromProperty<TViewModel, TProperty>(
             this TViewModel viewModel,

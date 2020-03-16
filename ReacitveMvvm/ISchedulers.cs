@@ -5,5 +5,6 @@ namespace ReacitveMvvm
     public interface ISchedulers
     {
         IScheduler Dispatcher { get; }
+        IScheduler ThreadPool { get; }
     }
 }

@@ -52,9 +52,8 @@ namespace ProTagger
         {
             _branchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
             BranchSelectionObservable = this
-                    .FromProperty(vm => vm.Selected)
-                    .ObserveOn(schedulers.Dispatcher)
-                    .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, Selected));
+                .FromProperty(vm => vm.Selected)
+                .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, Selected));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -143,7 +142,7 @@ namespace ProTagger
             var secondarySelectedCommit = _graph.SecondarySelectedNodeObservable
                 .Select(node => node?.Commit);
 
-            _diff = new DiffViewModel(_repository, secondarySelectedCommit, selectedCommit);
+            _diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

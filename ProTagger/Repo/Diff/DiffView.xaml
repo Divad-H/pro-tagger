@@ -7,7 +7,7 @@
              xmlns:custom="clr-namespace:ProTagger.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+    <Grid x:Name="ParentGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
@@ -15,12 +15,7 @@
         <custom:VariantPresenter VariantContent="{Binding FilesDiff}" Style="{StaticResource DefaultErrorView}">
             <custom:VariantPresenter.Variant0Template>
                 <DataTemplate>
-                    <ListBox ItemsSource="{Binding}" SelectionMode="Extended">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
+                    <ListBox ItemsSource="{Binding}" SelectionMode="Extended" custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding TreeEntryChanges.Path}"/>

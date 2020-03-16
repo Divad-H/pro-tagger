@@ -1,109 +1,28 @@
 ﻿using LibGit2Sharp;
 using ProTagger.Utilities;
+using ProTagger.Wpf;
+using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 
 namespace ProTagger.Repo.Diff
 {
-    static class SingleFileDiffHelper
-    {
-        public static List<SingleFileDiff> EnsureElementSelected(this List<SingleFileDiff> elements)
-        {
-            if (elements.Any() && !elements.Any(element => element.IsSelected))
-                elements.First().IsSelected = true;
-            return elements;
-        }
-    }
-
-    public class SingleFileDiff : INotifyPropertyChanged
-    {
-        private TreeEntryChanges _treeEntryChanges;
-        public TreeEntryChanges TreeEntryChanges
-        {
-            get
-            {
-                return _treeEntryChanges;
-            }
-            set
-            {
-                if (_treeEntryChanges == value)
-                    return;
-                _treeEntryChanges = value;
-                NotifyPropertyChanged();
-            }
-        }
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get
-            {
-                return _isSelected;
-            }
-            set
-            {
-                if (_isSelected == value)
-                    return;
-                _isSelected = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public readonly IObservable<bool> IsSelectedObservable;
-
-        public SingleFileDiff(TreeEntryChanges treeEntryChanges, bool isSelected)
-        {
-            _treeEntryChanges = treeEntryChanges;
-            _isSelected = isSelected;
-            IsSelectedObservable = this
-                .FromProperty(vm => vm.IsSelected);
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private class SingleFileDiffComparer : IEqualityComparer<SingleFileDiff>
-        {
-            public bool Equals(SingleFileDiff x, SingleFileDiff y)
-            {
-                return x.TreeEntryChanges.Path == y.TreeEntryChanges.Path;
-            }
-
-            public int GetHashCode(SingleFileDiff obj)
-            {
-                return obj.TreeEntryChanges.Path.GetHashCode();
-            }
-        }
-
-        public static bool ApplySelections(IList<SingleFileDiff> from, IList<SingleFileDiff> to)
-        {
-            bool similarFound = false;
-            foreach (var x in to.Intersect(from.Where(f => f.IsSelected), new SingleFileDiffComparer()))
-            {
-                x.IsSelected = true;
-                similarFound = true;
-            }
-            return similarFound;
-        }
-    }
-
     public class FilePatch
     {
         public List<DiffAnalyzer.Hunk> Hunks { get; }
         public PatchEntryChanges PatchEntryChanges { get; }
+        public TreeEntryChanges TreeEntryChanges { get; }
 
-        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges)
-        {
-            Hunks = hunks;
-            PatchEntryChanges = patchEntryChanges;
-        }
+        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, TreeEntryChanges treeEntryChanges)
+          => (Hunks, PatchEntryChanges, TreeEntryChanges) = (hunks, patchEntryChanges, treeEntryChanges);
     }
 
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
@@ -146,8 +65,9 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        private Variant<IList<FilePatch>, string> _patchDiff = new Variant<IList<FilePatch>, string>(NoFilesSelectedMessage);
-        public Variant<IList<FilePatch>, string> PatchDiff
+        private Variant<BatchList<FilePatch>, string> _patchDiff
+            = new Variant<BatchList<FilePatch>, string>(NoFilesSelectedMessage);
+        public Variant<BatchList<FilePatch>, string> PatchDiff
         {
             get
             {
@@ -162,9 +82,24 @@ namespace ProTagger.Repo.Diff
             }
         }
 
+        private BatchList<TreeEntryChanges> _selectedFiles = new BatchList<TreeEntryChanges>();
+        public BatchList<TreeEntryChanges> SelectedFiles
+        {
+            get
+            {
+                return _selectedFiles;
+            }
+            set
+            {
+                if (_selectedFiles == value)
+                    return;
+                _selectedFiles = value;
+                NotifyPropertyChanged();
+            }
+        }
 
-        private Variant<List<SingleFileDiff>, string> _filesDiff = new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage);
-        public Variant<List<SingleFileDiff>, string> FilesDiff
+        private Variant<List<TreeEntryChanges>, string> _filesDiff = new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage);
+        public Variant<List<TreeEntryChanges>, string> FilesDiff
         {
             get
             {
@@ -181,7 +116,7 @@ namespace ProTagger.Repo.Diff
 
         private readonly IRepositoryWrapper _repository;
 
-        public DiffViewModel(IRepositoryWrapper repository, IObservable<Commit?> oldCommit, IObservable<Commit?> newCommit)
+        public DiffViewModel(IRepositoryWrapper repository, ISchedulers schedulers, IObservable<Commit?> oldCommit, IObservable<Commit?> newCommit)
         {
             _repository = repository;
 
@@ -201,49 +136,84 @@ namespace ProTagger.Repo.Diff
                     newCommit != null ?
                         FileDiff.CreateDiff(_repository, oldCommit, newCommit)
                             .SelectResult(treeEntriesChanges => treeEntriesChanges
-                                .Select(treeEntriesChanges => new SingleFileDiff(treeEntriesChanges, false))
                                 .ToList()) :
-                        new Variant<List<SingleFileDiff>, string>(NoCommitSelectedMessage))
-                .Scan((last, current) =>
-                {
-                    if (current.Is<List<SingleFileDiff>>() && last.Is<List<SingleFileDiff>>())
-                        if (!SingleFileDiff.ApplySelections(last.Get<List<SingleFileDiff>>(), current.Get<List<SingleFileDiff>>()))
-                            current.Get<List<SingleFileDiff>>().First().IsSelected = true;
-                    return current;
-                })
-                .Select(variant => variant.SelectResult(fileDiffs => fileDiffs.EnsureElementSelected()))
+                        new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
                 .Publish();
 
-            var selectedFilesObservable = filesDiffObservable
-                .Select(singleFileDiffs => singleFileDiffs.Is<string>() ?
-                    Observable.Return(new List<string>()) :
-                    singleFileDiffs.Get<List<SingleFileDiff>>()
-                        .Select(singleFileDiff => singleFileDiff.IsSelectedObservable
-                            .Select(isSelected => new { singleFileDiff.TreeEntryChanges, isSelected }))
-                        .CombineLatest()
-                        .Select(treeEntriesChanges => treeEntriesChanges
-                            .Where(d => d.isSelected)
-                            .Select(d => d.TreeEntryChanges.Path)))
-                .Switch();
+            var selectedFilesObservable = SelectedFiles
+                .MakeObservable()
+                .ObserveOn(schedulers.ThreadPool);
 
             filesDiffObservable
                 .Subscribe(filesDiff => FilesDiff = filesDiff)
                 .DisposeWith(_disposables);
 
-            var patchDiff = selectedFilesObservable
-                .WithLatestFrom(OldCommitObservable, (selectedFiles, oldCommit) => new { selectedFiles, oldCommit })
-                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.selectedFiles, data.oldCommit, newCommit })
-                .Select(data => data.newCommit == null || !data.selectedFiles.Any() ?
-                    new Variant<Patch, string>(NoFilesSelectedMessage) :
-                    Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, data.selectedFiles))
+            var addedPatchDiff = selectedFilesObservable
+                .Select(args => args.NewItems)
+                .SkipNull()
+                .WithLatestFrom(OldCommitObservable, (addedSelection, oldCommit) => new { addedSelection, oldCommit })
+                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.addedSelection, data.oldCommit, newCommit })
+                .SelectMany(data => data.addedSelection.Cast<TreeEntryChanges>()
+                    .Select(treeEntryChanges => 
+                        data.newCommit == null ?
+                        new Variant<PatchDiff, string>(NoFilesSelectedMessage) :
+                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, treeEntryChanges
+                            .Yield()
+                            .SelectMany(o => o.Path
+                                .Yield()
+                                .Concat(o.OldPath.Yield())
+                                .Distinct()
+                                .Where(path => !string.IsNullOrEmpty(path)))
+                            .ToList(), treeEntryChanges)))
                 .Select(patchVariant => patchVariant.Visit(
-                    patch => new Variant<IList<FilePatch>, string>(patch
-                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch), patchEntry))
+                    patch => new Variant<IList<FilePatch>, string>(patch.Patch
+                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch), patchEntry, patch.TreeEntryChanges))
                         .ToList()),
                     error => new Variant<IList<FilePatch>, string>(error)));
 
-            patchDiff
-                .Subscribe(patchDiff => PatchDiff = patchDiff)
+            var removedPatchDíff = selectedFilesObservable
+                .Select(args => args.OldItems?
+                    .Cast<TreeEntryChanges>())
+                .SkipNull();
+
+            var addedRemoved = addedPatchDiff
+                .Select(added => new Variant<Variant<IList<FilePatch>, string>, IEnumerable<TreeEntryChanges>>(added))
+                .Merge(removedPatchDíff
+                    .Select(removed => new Variant<Variant<IList<FilePatch>, string>, IEnumerable<TreeEntryChanges>>(removed)))
+                .ObserveOn(schedulers.Dispatcher);
+
+            var missedRemoves = new List<TreeEntryChanges>();
+            addedRemoved
+                .Subscribe(addRem => addRem.Visit(
+                    added => added.Visit(
+                        newFiles => PatchDiff.Visit(
+                            patchDiff =>
+                            {
+                                foreach (var item in newFiles)
+                                {
+                                    var missed = missedRemoves.Find(missed => item.TreeEntryChanges.Path == missed.Path
+                                        && item.TreeEntryChanges.OldPath == missed.OldPath
+                                        && item.TreeEntryChanges.Oid == missed.Oid
+                                        && item.TreeEntryChanges.OldOid == missed.OldOid);
+                                    if (missed != null)
+                                        missedRemoves.Remove(missed);
+                                    else
+                                        patchDiff.Add(item);
+                                }
+                            },
+                            _ => PatchDiff = new Variant<BatchList<FilePatch>, string>(new BatchList<FilePatch>(newFiles))),
+                        errorMsg => PatchDiff = new Variant<BatchList<FilePatch>, string>(errorMsg)),
+                    removed => PatchDiff.Visit(
+                        patchDiff =>
+                        {
+                            foreach (var item in removed)
+                                if (!patchDiff.Remove(patchDiff.FirstOrDefault(old => old.TreeEntryChanges.Path == item.Path
+                                     && old.TreeEntryChanges.OldPath == item.OldPath
+                                     && old.TreeEntryChanges.Oid == item.Oid
+                                     && old.TreeEntryChanges.OldOid == item.OldOid)))
+                                    missedRemoves.Add(item);
+                        },
+                        _ => { })))
                 .DisposeWith(_disposables);
 
             filesDiffObservable

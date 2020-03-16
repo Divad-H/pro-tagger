@@ -7,21 +7,29 @@ using System.Text;
 
 namespace ProTagger.Repo.Diff
 {
-    static class PatchDiff
+    class PatchDiff
     {
-        internal static Variant<Patch, string> CreateDiff(
+        public readonly Patch Patch;
+        public readonly TreeEntryChanges TreeEntryChanges;
+
+        private PatchDiff(Patch patch, TreeEntryChanges treeEntryChanges)
+            => (Patch, TreeEntryChanges) = (patch, treeEntryChanges);
+
+        internal static Variant<PatchDiff, string> CreateDiff(
                 IRepositoryWrapper repository,
                 Commit? oldCommit,
                 Commit newCommit,
-                IEnumerable<string> paths)
+                IEnumerable<string> paths,
+                TreeEntryChanges treeEntryChanges)
         {
             try
             {
-                return new Variant<Patch, string>(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths));
+                return new Variant<PatchDiff, string>(
+                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths), treeEntryChanges));
             }
             catch (Exception e)
             {
-                return new Variant<Patch, string>(e.Message);
+                return new Variant<PatchDiff, string>(e.Message);
             }
         }
     }

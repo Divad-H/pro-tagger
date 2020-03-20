@@ -98,8 +98,8 @@ namespace ProTagger.Wpf
         }
         public Func<object, object?, bool>? KeepSelectionRule
         {
-            get { return (Func<object, object?, bool>?)GetValue(KeepSelectionRuleProperty); }
-            set { SetValue(KeepSelectionRuleProperty, value); }
+            get => (Func<object, object?, bool>?)GetValue(KeepSelectionRuleProperty);
+            set => SetValue(KeepSelectionRuleProperty, value);
         }
         public static readonly DependencyProperty KeepSelectionRuleProperty = DependencyProperty.Register(
           nameof(KeepSelectionRule), typeof(Func<object, object?, bool>), typeof(ColumnLayoutListView), new FrameworkPropertyMetadata(null));

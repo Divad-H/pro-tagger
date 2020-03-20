@@ -10,26 +10,30 @@ namespace ProTagger.Repo.Diff
     class PatchDiff
     {
         public readonly Patch Patch;
-        public readonly TreeEntryChanges TreeEntryChanges;
+        public readonly CancelableChanges CancelableChanges;
 
-        private PatchDiff(Patch patch, TreeEntryChanges treeEntryChanges)
-            => (Patch, TreeEntryChanges) = (patch, treeEntryChanges);
+        private PatchDiff(Patch patch, CancelableChanges cancelableChanges)
+            => (Patch, CancelableChanges) = (patch, cancelableChanges);
 
-        internal static Variant<PatchDiff, string> CreateDiff(
+        internal static Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>> CreateDiff(
                 IRepositoryWrapper repository,
                 Commit? oldCommit,
                 Commit newCommit,
                 IEnumerable<string> paths,
-                TreeEntryChanges treeEntryChanges)
+                CancelableChanges cancelableChanges)
         {
             try
             {
-                return new Variant<PatchDiff, string>(
-                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths), treeEntryChanges));
+                if (cancelableChanges.Cancellation.Token.IsCancellationRequested)
+                    return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
+                        new Variant<CancelableChanges, CancelableChangesWithError>(cancelableChanges));
+                return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
+                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths), cancelableChanges));
             }
             catch (Exception e)
             {
-                return new Variant<PatchDiff, string>(e.Message);
+                return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
+                    new Variant<CancelableChanges, CancelableChangesWithError>(new CancelableChangesWithError(cancelableChanges, e.Message)));
             }
         }
     }

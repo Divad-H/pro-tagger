@@ -67,7 +67,7 @@ index ecddd45..cc38031 100644
 +            (_repository?.Get() as IDisposable)?.Dispose();
              _disposable.Dispose();
          }
-     }");
+     }", new System.Threading.CancellationToken());
             Assert.AreEqual(3, result.Count);
             Assert.AreEqual(14, result[0].Diff.Count);
             Assert.IsTrue(result[0].Diff[3].Is<DiffAnalyzer.WordDiff>());

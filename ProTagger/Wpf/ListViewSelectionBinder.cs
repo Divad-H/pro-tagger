@@ -167,6 +167,17 @@ namespace ProTagger.Wpf
 #pragma warning restore CS8601 // Possible null reference assignment.
         }
 
+        public int RemoveAll(Func<T, bool> match)
+        {
+            var itemsToRemove = _list.Where(match).ToList();
+            if (!itemsToRemove.Any())
+                return 0;
+            foreach (var item in itemsToRemove)
+                _list.Remove(item);
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsToRemove));
+            return itemsToRemove.Count;
+        }
+
         public void RemoveAt(int index)
         {
             var item = _list[index];

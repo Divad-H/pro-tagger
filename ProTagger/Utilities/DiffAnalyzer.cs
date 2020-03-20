@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace ProTagger.Utilities
 {
@@ -63,13 +64,15 @@ namespace ProTagger.Utilities
             }
         }
 
-        static internal List<Hunk> SplitIntoHunks(string rawFilePatch)
+        static internal List<Hunk> SplitIntoHunks(string rawFilePatch, CancellationToken ct)
         {
             var rawHunks = rawFilePatch.Split("\n@@");
 
             var result = new List<Hunk>();
             foreach (var rawHunk in rawHunks.Skip(1))
             {
+                if (ct.IsCancellationRequested)
+                    return new List<Hunk>();
                 var lineInfoLength = rawHunk.IndexOf("@@");
                 var lineInfo = rawHunk.Substring(0, lineInfoLength);
                 var oldNewTokens = lineInfo.Split(new char[] { ' ', '-', '+' }, StringSplitOptions.RemoveEmptyEntries);
@@ -81,12 +84,12 @@ namespace ProTagger.Utilities
                 var newFirstLine = tokens[1].Length > 1 ? int.Parse(tokens[1][0]) : 0;
                 result.Add(new Hunk(newFirstLine, tokens[1].Length > 1 ? int.Parse(tokens[1][1]) : 0, oldFirstLine, tokens[0].Length > 1 ? int.Parse(tokens[0][1]) : 0,
                     rawHunk.Substring(lineInfoLength + 2, firstLineEndIndex - lineInfoLength - 2).Trim(),
-                    ParseHunk(rawHunk.Substring(firstLineEndIndex + "\n".Length), newFirstLine, oldFirstLine)));
+                    ParseHunk(rawHunk.Substring(firstLineEndIndex + "\n".Length), newFirstLine, oldFirstLine, ct)));
             }
             return result;
         }
 
-        static List<Variant<WordDiff, UnchangedLine>> ParseHunk(string rawHunkContent, int newLine, int oldLine)
+        static List<Variant<WordDiff, UnchangedLine>> ParseHunk(string rawHunkContent, int newLine, int oldLine, CancellationToken ct)
         {
             var lines = rawHunkContent.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
             var result = new List<Variant<WordDiff, UnchangedLine>>();
@@ -94,6 +97,8 @@ namespace ProTagger.Utilities
             var currentNewLines = new List<string>();
             foreach (var line in lines)
             {
+                if (ct.IsCancellationRequested)
+                    return new List<Variant<WordDiff, UnchangedLine>>();
                 if (line.Length == 0 || line.ElementAt(0) == ' ')
                 {
                     if (currentNewLines.Count > 0 || currentOldLines.Count > 0)

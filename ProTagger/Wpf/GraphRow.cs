@@ -178,9 +178,8 @@ namespace ProTagger.Wpf
 
         internal void Render()
         {
-            var drawingContext = _backingStore.Open();
+            using var drawingContext = _backingStore.Open();
             Render(drawingContext);
-            drawingContext.Close();
         }
 
         private static readonly Typeface _typeface = new Typeface("Consolas");

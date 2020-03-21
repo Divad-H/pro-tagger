@@ -200,7 +200,8 @@ namespace ProTagger.Wpf
         {
             _listBox = listBox ?? throw new ArgumentNullException(nameof(listBox));
             _selectedItems = selectedItems ?? throw new ArgumentNullException(nameof(selectedItems));
-            _listBox.SelectedItems.Clear();
+            if (_listBox.SelectedItems.Count > 0)
+                _listBox.SelectedItems.Clear();
             if (_selectedItems is IBatchList batchList)
                 batchList.ModifyNoDuplicates(_selectedItems, Enumerable.Empty<object>());
             else

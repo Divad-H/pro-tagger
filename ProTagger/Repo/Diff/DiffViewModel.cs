@@ -109,7 +109,8 @@ namespace ProTagger.Repo.Diff
 
             int dummy = 3;
             var compareOptionsObservable = Observable
-                .Interval(TimeSpan.FromSeconds(3), schedulers.Dispatcher)
+                //.Interval(TimeSpan.FromSeconds(3), schedulers.Dispatcher)
+                .Return(1)
                 .StartWith(0)
                 .Select(_ => new CompareOptions()
                 {
@@ -118,7 +119,7 @@ namespace ProTagger.Repo.Diff
                     IncludeUnmodified = false,
                     IndentHeuristic = false,
                     InterhunkLines = 0,
-                    Similarity = new SimilarityOptions()
+                    Similarity = SimilarityOptions.Default
                 });
 
             var changedFilesSelectedObservable = SelectedFiles
@@ -150,30 +151,6 @@ namespace ProTagger.Repo.Diff
                     data.changes.Options
                 })
                 .Publish();
-
-            var addedPatchDiff = changedDiffSelection
-                .ObserveOn(schedulers.ThreadPool)
-                .SelectMany(data => data.cancellableChanges
-                    .Select(cancellableChanges => 
-                        data.newCommit == null ?
-                        new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
-                            new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage))) :
-                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, cancellableChanges
-                            .Yield()
-                            .SelectMany(o => o.TreeEntryChanges.Path
-                                .Yield()
-                                .Concat(o.TreeEntryChanges.OldPath.Yield())
-                                .Distinct()
-                                .Where(path => !string.IsNullOrEmpty(path)))
-                            .ToList(), data.Options, cancellableChanges)))
-                .Select(patchVariant => patchVariant.Visit(
-                    patch => new Variant<IList<FilePatch>, CancellableChangesWithError>(patch.Patch
-                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, patch.CancellableChanges.Cancellation.Token), patchEntry, patch.CancellableChanges))
-                        .ToList()),
-                    unsuccess => unsuccess.Visit(
-                        cancelled => new Variant<IList<FilePatch>, CancellableChangesWithError>(new List<FilePatch>()),
-                        error => new Variant<IList<FilePatch>, CancellableChangesWithError>(error))))
-                .ObserveOn(schedulers.Dispatcher);
 
             var removedPatchDíff = changedFilesSelectedObservable
                 .Select(args => args.OldItems?
@@ -208,6 +185,30 @@ namespace ProTagger.Repo.Diff
                         PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == item, e => e.CancellableChanges == item));
                 })
                 .DisposeWith(_disposables);
+
+            var addedPatchDiff = changedDiffSelection
+                .ObserveOn(schedulers.ThreadPool)
+                .SelectMany(data => data.cancellableChanges
+                    .Select(cancellableChanges =>
+                        data.newCommit == null ?
+                        new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
+                            new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage))) :
+                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, cancellableChanges
+                            .Yield()
+                            .SelectMany(o => o.TreeEntryChanges.Path
+                                .Yield()
+                                .Concat(o.TreeEntryChanges.OldPath.Yield())
+                                .Distinct()
+                                .Where(path => !string.IsNullOrEmpty(path)))
+                            .ToList(), data.Options, cancellableChanges)))
+                .Select(patchVariant => patchVariant.Visit(
+                    patch => new Variant<IList<FilePatch>, CancellableChangesWithError>(patch.Patch
+                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, patch.CancellableChanges.Cancellation.Token), patchEntry, patch.CancellableChanges))
+                        .ToList()),
+                    unsuccess => unsuccess.Visit(
+                        cancelled => new Variant<IList<FilePatch>, CancellableChangesWithError>(new List<FilePatch>()),
+                        error => new Variant<IList<FilePatch>, CancellableChangesWithError>(error))))
+                .ObserveOn(schedulers.Dispatcher);
 
             addedPatchDiff
                 .Subscribe(added => added.Visit(

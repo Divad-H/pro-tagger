@@ -18,8 +18,8 @@ namespace ProTaggerTest
     {
         class TestSchedulers : ISchedulers
         {
-            public IScheduler Dispatcher => Scheduler.Default;
-            public IScheduler ThreadPool => Scheduler.Default;
+            public IScheduler Dispatcher => Scheduler.Immediate;
+            public IScheduler ThreadPool => Scheduler.Immediate;
         }
 
         class TestRepositoryFactory : IRepositoryFactory

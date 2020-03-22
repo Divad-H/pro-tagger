@@ -16,68 +16,50 @@ using System.Threading;
 
 namespace ProTagger.Repo.Diff
 {
-    public class CancelableChanges
+    public class CancellableChanges
     {
         public TreeEntryChanges TreeEntryChanges { get; }
         public CancellationTokenSource Cancellation { get; }
-        public CancelableChanges(TreeEntryChanges treeEntryChanges)
+        public CancellableChanges(TreeEntryChanges treeEntryChanges)
             => (TreeEntryChanges, Cancellation) = (treeEntryChanges, new CancellationTokenSource());
     }
 
-    public class CancelableChangesWithError
+    public class CancellableChangesWithError
     {
-        public CancelableChanges CancelableChanges { get; }
+        public CancellableChanges CancellableChanges { get; }
         public string Error { get; }
-        public CancelableChangesWithError(CancelableChanges changes, string error)
-            => (CancelableChanges, Error) = (changes, error);
+        public CancellableChangesWithError(CancellableChanges changes, string error)
+            => (CancellableChanges, Error) = (changes, error);
     }
 
     public class FilePatch
     {
         public List<DiffAnalyzer.Hunk> Hunks { get; }
         public PatchEntryChanges PatchEntryChanges { get; }
-        public CancelableChanges CancelableChanges { get; }
+        public CancellableChanges CancellableChanges { get; }
 
-        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, CancelableChanges cancelableChanges)
-          => (Hunks, PatchEntryChanges, CancelableChanges) = (hunks, patchEntryChanges, cancelableChanges);
+        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, CancellableChanges cancellableChanges)
+          => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
     }
 
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
+        private class ChangesAndSource
+        {
+            public IEnumerable<TreeEntryChanges> Changes { get; }
+            public CompareOptions Options { get; }
+            public ChangesAndSource(IEnumerable<TreeEntryChanges> changes, CompareOptions options)
+                => (Changes, Options) = (changes, options);
+        }
+
         const string NoCommitSelectedMessage = "No commit selected.";
         const string NoFilesSelectedMessage = "No files selected.";
 
         readonly IObservable<Commit?> OldCommitObservable;
-        private Commit? _oldCommit;
-        public Commit? OldCommit
-        {
-            get => _oldCommit;
-            private set
-            {
-                if (_oldCommit == value)
-                    return;
-                _oldCommit = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-
         readonly IObservable<Commit?> NewCommitObservable;
-        private Commit? _newCommit;
-        public Commit? NewCommit
-        {
-            get => _newCommit;
-            private set
-            {
-                if (_newCommit == value)
-                    return;
-                _newCommit = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private BatchList<Variant<FilePatch, CancelableChangesWithError>> _patchDiff = new BatchList<Variant<FilePatch, CancelableChangesWithError>>();
-        public BatchList<Variant<FilePatch, CancelableChangesWithError>> PatchDiff
+        
+        private BatchList<Variant<FilePatch, CancellableChangesWithError>> _patchDiff = new BatchList<Variant<FilePatch, CancellableChangesWithError>>();
+        public BatchList<Variant<FilePatch, CancellableChangesWithError>> PatchDiff
         {
             get => _patchDiff;
             private set
@@ -89,18 +71,7 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        private BatchList<TreeEntryChanges> _selectedFiles = new BatchList<TreeEntryChanges>();
-        public BatchList<TreeEntryChanges> SelectedFiles
-        {
-            get => _selectedFiles;
-            set
-            {
-                if (_selectedFiles == value)
-                    return;
-                _selectedFiles = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public BatchList<TreeEntryChanges> SelectedFiles { get; } = new BatchList<TreeEntryChanges>();
 
         public Func<object, object, bool> KeepTreeDiffChangesSelectedRule 
             => (oldFile, newFile) => ((TreeEntryChanges)oldFile).Path == ((TreeEntryChanges)newFile).Path;
@@ -127,14 +98,6 @@ namespace ProTagger.Repo.Diff
             OldCommitObservable = oldCommit;
             NewCommitObservable = newCommit;
 
-            OldCommitObservable
-                .Subscribe((oldCommit) => OldCommit = oldCommit)
-                .DisposeWith(_disposables);
-
-            NewCommitObservable
-                .Subscribe((newCommit) => NewCommit = newCommit)
-                .DisposeWith(_disposables);
-
             var filesDiffObservable = NewCommitObservable
                 .CombineLatest(OldCommitObservable, (newCommit, oldCommit) =>
                     newCommit != null ?
@@ -144,64 +107,87 @@ namespace ProTagger.Repo.Diff
                         new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
                 .Publish();
 
-            var selectedFilesObservable = SelectedFiles
+            int dummy = 3;
+            var compareOptionsObservable = Observable
+                .Interval(TimeSpan.FromSeconds(3), schedulers.Dispatcher)
+                .StartWith(0)
+                .Select(_ => new CompareOptions()
+                {
+                    Algorithm = DiffAlgorithm.Myers,
+                    ContextLines = dummy++,
+                    IncludeUnmodified = false,
+                    IndentHeuristic = false,
+                    InterhunkLines = 0,
+                    Similarity = new SimilarityOptions()
+                });
+
+            var changedFilesSelectedObservable = SelectedFiles
                 .MakeObservable();
 
             filesDiffObservable
                 .Subscribe(filesDiff => FilesDiff = filesDiff)
                 .DisposeWith(_disposables);
 
-            var addedSelection = selectedFilesObservable
-                .Select(args => args.NewItems)
-                .SkipNull()
-                .WithLatestFrom(OldCommitObservable, (addedSelection, oldCommit) => new { addedSelection = addedSelection
-                    .Cast<TreeEntryChanges>(), oldCommit })
-                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.addedSelection, data.oldCommit, newCommit })
+            var addedSelection = changedFilesSelectedObservable
+                .Select(args => args.NewItems?.Cast<TreeEntryChanges>())
+                .SkipNull();
+
+            var refreshedSelection = compareOptionsObservable
+                .Select(options => new ChangesAndSource(SelectedFiles, options));
+
+            var changedDiffSelection = addedSelection
+                .WithLatestFrom(compareOptionsObservable, (treeChanges, options) => new ChangesAndSource(treeChanges, options))
+                .Merge(refreshedSelection)
+                .WithLatestFrom(OldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
+                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
                 .Select(data => new
                 {
-                    addedSelection = data.addedSelection
-                        .Select(treeEntryChanges => new CancelableChanges(treeEntryChanges))
+                    cancellableChanges = data.changes.Changes
+                        .Select(treeEntryChanges => new CancellableChanges(treeEntryChanges))
                         .ToList(),
                     data.oldCommit,
-                    data.newCommit
+                    data.newCommit,
+                    data.changes.Options
                 })
                 .Publish();
 
-            var addedPatchDiff = addedSelection
+            var addedPatchDiff = changedDiffSelection
                 .ObserveOn(schedulers.ThreadPool)
-                .SelectMany(data => data.addedSelection
-                    .Select(cancelableChanges => 
+                .SelectMany(data => data.cancellableChanges
+                    .Select(cancellableChanges => 
                         data.newCommit == null ?
-                        new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
-                            new Variant<CancelableChanges, CancelableChangesWithError>(new CancelableChangesWithError(cancelableChanges, NoFilesSelectedMessage))) :
-                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, cancelableChanges
+                        new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
+                            new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage))) :
+                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()
                                 .Concat(o.TreeEntryChanges.OldPath.Yield())
                                 .Distinct()
                                 .Where(path => !string.IsNullOrEmpty(path)))
-                            .ToList(), cancelableChanges)))
+                            .ToList(), data.Options, cancellableChanges)))
                 .Select(patchVariant => patchVariant.Visit(
-                    patch => new Variant<IList<FilePatch>, CancelableChangesWithError>(patch.Patch
-                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, patch.CancelableChanges.Cancellation.Token), patchEntry, patch.CancelableChanges))
+                    patch => new Variant<IList<FilePatch>, CancellableChangesWithError>(patch.Patch
+                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, patch.CancellableChanges.Cancellation.Token), patchEntry, patch.CancellableChanges))
                         .ToList()),
                     unsuccess => unsuccess.Visit(
-                        cancelled => new Variant<IList<FilePatch>, CancelableChangesWithError>(new List<FilePatch>()),
-                        error => new Variant<IList<FilePatch>, CancelableChangesWithError>(error))))
+                        cancelled => new Variant<IList<FilePatch>, CancellableChangesWithError>(new List<FilePatch>()),
+                        error => new Variant<IList<FilePatch>, CancellableChangesWithError>(error))))
                 .ObserveOn(schedulers.Dispatcher);
 
-            var removedPatchDíff = selectedFilesObservable
+            var removedPatchDíff = changedFilesSelectedObservable
                 .Select(args => args.OldItems?
                     .Cast<TreeEntryChanges>())
-                .SkipNull();
+                .SkipNull()
+                .Merge(compareOptionsObservable
+                    .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles));
 
-            var runningCalculations = new List<CancelableChanges>();
+            var runningCalculations = new List<CancellableChanges>();
 
-            addedSelection
+            changedDiffSelection
                 .Subscribe(o =>
                 {
-                    foreach (var c in o.addedSelection)
+                    foreach (var c in o.cancellableChanges)
                         runningCalculations.Add(c);
                 })
                 .DisposeWith(_disposables);
@@ -219,7 +205,7 @@ namespace ProTagger.Repo.Diff
                     foreach (var calculation in stoppedCalcuations)
                         calculation.Cancellation.Cancel();
                     foreach (var item in stoppedCalcuations)
-                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancelableChanges == item, e => e.CancelableChanges == item));
+                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == item, e => e.CancellableChanges == item));
                 })
                 .DisposeWith(_disposables);
 
@@ -229,14 +215,14 @@ namespace ProTagger.Repo.Diff
                             {
                                 foreach (var item in newFiles)
                                 {
-                                    if (!item.CancelableChanges.Cancellation.Token.IsCancellationRequested)
-                                        PatchDiff.Add(new Variant<FilePatch, CancelableChangesWithError>(item));
+                                    if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
+                                        PatchDiff.Add(new Variant<FilePatch, CancellableChangesWithError>(item));
                                 }
                             },
                         error =>
                         {
-                            if (!error.CancelableChanges.Cancellation.Token.IsCancellationRequested)
-                                PatchDiff.Add(new Variant<FilePatch, CancelableChangesWithError>(error));
+                            if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)
+                                PatchDiff.Add(new Variant<FilePatch, CancellableChangesWithError>(error));
                         }))
                 .DisposeWith(_disposables);
 
@@ -244,7 +230,7 @@ namespace ProTagger.Repo.Diff
                 .Connect()
                 .DisposeWith(_disposables);
 
-            addedSelection
+            changedDiffSelection
                 .Connect()
                 .DisposeWith(_disposables);
         }

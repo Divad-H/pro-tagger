@@ -10,30 +10,31 @@ namespace ProTagger.Repo.Diff
     class PatchDiff
     {
         public readonly Patch Patch;
-        public readonly CancelableChanges CancelableChanges;
+        public readonly CancellableChanges CancellableChanges;
 
-        private PatchDiff(Patch patch, CancelableChanges cancelableChanges)
-            => (Patch, CancelableChanges) = (patch, cancelableChanges);
+        private PatchDiff(Patch patch, CancellableChanges cancellableChanges)
+            => (Patch, CancellableChanges) = (patch, cancellableChanges);
 
-        internal static Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>> CreateDiff(
+        internal static Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>> CreateDiff(
                 IRepositoryWrapper repository,
                 Commit? oldCommit,
                 Commit newCommit,
                 IEnumerable<string> paths,
-                CancelableChanges cancelableChanges)
+                CompareOptions options,
+                CancellableChanges cancellableChanges)
         {
             try
             {
-                if (cancelableChanges.Cancellation.Token.IsCancellationRequested)
-                    return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
-                        new Variant<CancelableChanges, CancelableChangesWithError>(cancelableChanges));
-                return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
-                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths), cancelableChanges));
+                if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
+                    return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
+                        new Variant<CancellableChanges, CancellableChangesWithError>(cancellableChanges));
+                return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
+                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options), cancellableChanges));
             }
             catch (Exception e)
             {
-                return new Variant<PatchDiff, Variant<CancelableChanges, CancelableChangesWithError>>(
-                    new Variant<CancelableChanges, CancelableChangesWithError>(new CancelableChangesWithError(cancelableChanges, e.Message)));
+                return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
+                    new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, e.Message)));
             }
         }
     }

@@ -2,6 +2,7 @@
 using ProTagger;
 using ProTagger.Utilities;
 using ProTaggerTest.LibGit2Mocks;
+using ProTaggerTest.Mocks;
 using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
@@ -16,12 +17,6 @@ namespace ProTaggerTest
     [TestClass]
     public class PTaggerTest
     {
-        class TestSchedulers : ISchedulers
-        {
-            public IScheduler Dispatcher => Scheduler.Immediate;
-            public IScheduler ThreadPool => Scheduler.Immediate;
-        }
-
         class TestRepositoryFactory : IRepositoryFactory
         {
             public IRepositoryWrapper CreateRepository(string path)

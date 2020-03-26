@@ -13,5 +13,14 @@ namespace ReacitveMvvm
             return o.Where(v => v != null);
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
+
+        public static IObservable<T> SkipNull<T>(this IObservable<T?> o)
+            where T : struct
+        {
+            return o.Where(v => v.HasValue)
+#pragma warning disable CS8629 // Nullable value type may be null.
+                .Select(v => v.Value);
+#pragma warning restore CS8629 // Nullable value type may be null.
+        }
     }
 }

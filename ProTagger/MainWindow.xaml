@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProTagger"
         xmlns:custom="clr-namespace:ProTagger.Wpf"
+        xmlns:configuration="clr-namespace:ProTagger.Configuration"
         xmlns:repo="clr-namespace:ProTagger.Repo"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="1200">
@@ -15,9 +16,11 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}" CommandParameter="Ratte" Grid.Column="1"/>
+            <configuration:CompareOptionsView DataContext="{Binding CompareOptions}" Grid.Column="2"/>
         </Grid>
         <custom:VariantPresenter VariantContent="{Binding Repository}" Style="{StaticResource DefaultErrorView}">
             <custom:VariantPresenter.Variant0Template>

@@ -11,11 +11,12 @@ namespace ProTagger.Repo.Diff
         internal static Variant<IEnumerable<TreeEntryChanges>, string> CreateDiff(
                 IRepositoryWrapper repository,
                 Commit? oldCommit,
-                Commit newCommit)
+                Commit newCommit,
+                CompareOptions compareOptions)
         {
             try
             {
-                var treeChanges = repository.Diff.Compare<TreeChanges>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, new CompareOptions());
+                var treeChanges = repository.Diff.Compare<TreeChanges>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, compareOptions);
                 return new Variant<IEnumerable<TreeEntryChanges>, string>(
                     treeChanges.Added
                         .Concat(treeChanges.Deleted)

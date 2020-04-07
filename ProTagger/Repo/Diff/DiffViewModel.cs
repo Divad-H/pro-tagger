@@ -92,36 +92,25 @@ namespace ProTagger.Repo.Diff
 
         private readonly IRepositoryWrapper _repository;
 
-        public DiffViewModel(IRepositoryWrapper repository, ISchedulers schedulers, IObservable<Commit?> oldCommit, IObservable<Commit?> newCommit)
+        public DiffViewModel(IRepositoryWrapper repository, 
+            ISchedulers schedulers, 
+            IObservable<Commit?> oldCommit, 
+            IObservable<Commit?> newCommit,
+            IObservable<CompareOptions> compareOptions)
         {
             _repository = repository;
 
             OldCommitObservable = oldCommit;
             NewCommitObservable = newCommit;
 
-            var filesDiffObservable = NewCommitObservable
-                .CombineLatest(OldCommitObservable, (newCommit, oldCommit) =>
+            var filesDiffObservable = Observable.CombineLatest(NewCommitObservable, OldCommitObservable, compareOptions,
+                (newCommit, oldCommit, compareOptions) =>
                     newCommit != null ?
-                        FileDiff.CreateDiff(_repository, oldCommit, newCommit)
+                        FileDiff.CreateDiff(_repository, oldCommit, newCommit, compareOptions)
                             .SelectResult(treeEntriesChanges => treeEntriesChanges
                                 .ToList()) :
                         new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
                 .Publish();
-
-            int dummy = 3;
-            var compareOptionsObservable = Observable
-                //.Interval(TimeSpan.FromSeconds(3), schedulers.Dispatcher)
-                .Return(1)
-                .StartWith(0)
-                .Select(_ => new CompareOptions()
-                {
-                    Algorithm = DiffAlgorithm.Myers,
-                    ContextLines = dummy++,
-                    IncludeUnmodified = false,
-                    IndentHeuristic = false,
-                    InterhunkLines = 0,
-                    Similarity = SimilarityOptions.Default
-                });
 
             var changedFilesSelectedObservable = SelectedFiles
                 .MakeObservable();
@@ -134,11 +123,11 @@ namespace ProTagger.Repo.Diff
                 .Select(args => args.NewItems?.Cast<TreeEntryChanges>())
                 .SkipNull();
 
-            var refreshedSelection = compareOptionsObservable
+            var refreshedSelection = compareOptions
                 .Select(options => new ChangesAndSource(SelectedFiles, options));
 
             var changedDiffSelection = addedSelection
-                .WithLatestFrom(compareOptionsObservable, (treeChanges, options) => new ChangesAndSource(treeChanges, options))
+                .WithLatestFrom(compareOptions, (treeChanges, options) => new ChangesAndSource(treeChanges, options))
                 .Merge(refreshedSelection)
                 .WithLatestFrom(OldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
                 .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
@@ -157,7 +146,7 @@ namespace ProTagger.Repo.Diff
                 .Select(args => args.OldItems?
                     .Cast<TreeEntryChanges>())
                 .SkipNull()
-                .Merge(compareOptionsObservable
+                .Merge(compareOptions
                     .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles));
 
             var runningCalculations = new List<CancellableChanges>();

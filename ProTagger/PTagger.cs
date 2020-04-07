@@ -9,6 +9,7 @@ using System.Windows.Input;
 using ReactiveMvvm;
 using ReacitveMvvm;
 using ProTagger.Utilities;
+using LibGit2Sharp;
 
 namespace ProTagger
 {
@@ -45,11 +46,15 @@ namespace ProTagger
 
         public ICommand RefreshCommand { get; }
 
+        public Configuration.CompareOptionsViewModel CompareOptions { get; }
+
         public IObservable<Variant<RepositoryViewModel, string>> RepositoryObservable { get; }
 
         public PTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers)
         {
             _schedulers = schedulers;
+
+            CompareOptions = new Configuration.CompareOptionsViewModel(schedulers, new CompareOptions() { Similarity = SimilarityOptions.Default });
 
             var repositoryPath = this.FromProperty(vm => vm.RepositoryPath);
 
@@ -69,7 +74,7 @@ namespace ProTagger
                     .ObserveOn(schedulers.Dispatcher)
                     .SelectMany(_ => repositoryPath.Take(1))
                     )
-                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, path)))
+                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, path, CompareOptions.CompareOptionsObservable)))
                 .Switch()
                 .SkipNull();
 

@@ -94,11 +94,15 @@ namespace ProTagger
             }
         }
 
-        public static async Task<Variant<RepositoryViewModel, string>?> Create(ISchedulers schedulers, CancellationToken ct, IRepositoryFactory repositoryFactory, string path)
+        public static async Task<Variant<RepositoryViewModel, string>?> Create(ISchedulers schedulers,
+            CancellationToken ct, 
+            IRepositoryFactory repositoryFactory, 
+            string path, 
+            IObservable<CompareOptions> compareOptions)
         {
             try
             {
-                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path));
+                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path, compareOptions));
                 if (ct.IsCancellationRequested)
                 {
                     repositoryViewModel?.Dispose();
@@ -114,7 +118,7 @@ namespace ProTagger
 
         readonly IRepositoryWrapper _repository;
 
-        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path)
+        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path, IObservable<CompareOptions> compareOptions)
         {
             var branches = new List<BranchSelectionViewModel>();
             _repository = repositoryFactory.CreateRepository(path);
@@ -142,7 +146,7 @@ namespace ProTagger
             var secondarySelectedCommit = _graph.SecondarySelectedNodeObservable
                 .Select(node => node?.Commit);
 
-            _diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit);
+            _diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit, compareOptions);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

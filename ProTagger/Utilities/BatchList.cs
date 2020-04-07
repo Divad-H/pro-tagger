@@ -9,7 +9,6 @@ namespace ProTagger.Utilities
     public class BatchList<T> : ICollection<T>, IEnumerable<T>, IEnumerable, IList<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList, INotifyCollectionChanged, IBatchList, IBatchList<T>
     {
         private readonly List<T> _list = new List<T>();
-
         public BatchList() { }
         public BatchList(List<T> items) => _list = items;
         public BatchList(IList<T> items) => _list = new List<T>(items);
@@ -99,16 +98,16 @@ namespace ProTagger.Utilities
 #pragma warning restore CS8601 // Possible null reference assignment.
         }
 
-        public void Modify(IEnumerable itemsToAdd, IEnumerable itemsToRemove)
+        public void Modify(IEnumerable itemsToAdd, IEnumerable itemsToRemove, bool supportsRangeOperations)
         {
-            Modify(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>());
+            Modify(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
         }
-        public void ModifyNoDuplicates(IEnumerable itemsToAdd, IEnumerable itemsToRemove)
+        public void ModifyNoDuplicates(IEnumerable itemsToAdd, IEnumerable itemsToRemove, bool supportsRangeOperations)
         {
-            ModifyNoDuplicates(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>());
+            ModifyNoDuplicates(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
         }
 
-        public void Modify(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove)
+        public void Modify(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
         {
             itemsToRemove = itemsToRemove.Where(item => _list.Contains(item)).ToList();
             foreach (var item in itemsToRemove)
@@ -119,23 +118,23 @@ namespace ProTagger.Utilities
                 return;
             if (!itemsToRemove.Any())
             {
-                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, itemsToAdd.ToList()));
+                CollectionChanged?.Invoke(this, ReplaceIfUnsupported(supportsRangeOperations,
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemsToAdd.ToList())));
                 return;
             }
             if (!itemsToAdd.Any())
             {
-                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Remove, itemsToRemove.ToList()));
+                CollectionChanged?.Invoke(this, ReplaceIfUnsupported(supportsRangeOperations,
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsToRemove.ToList())));
                 return;
             }
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                NotifyCollectionChangedAction.Replace, itemsToAdd.ToList(), itemsToRemove.ToList()));
+            CollectionChanged?.Invoke(this, ReplaceIfUnsupported(supportsRangeOperations,
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, itemsToAdd.ToList(), itemsToRemove.ToList())));
         }
 
-        public void ModifyNoDuplicates(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove)
+        public void ModifyNoDuplicates(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
         {
-            Modify(itemsToAdd.Where(item => !_list.Contains(item)).ToList(), itemsToRemove);
+            Modify(itemsToAdd.Where(item => !_list.Contains(item)).ToList(), itemsToRemove, supportsRangeOperations);
         }
 
         public bool Remove(T item)
@@ -156,12 +155,18 @@ namespace ProTagger.Utilities
 
         public int RemoveAll(Func<T, bool> match)
         {
+            return RemoveAll(match, true);
+        }
+
+        public int RemoveAll(Func<T, bool> match, bool supportsRangeOperations)
+        {
             var itemsToRemove = _list.Where(match).ToList();
             if (!itemsToRemove.Any())
                 return 0;
             foreach (var item in itemsToRemove)
                 _list.Remove(item);
-            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsToRemove));
+            CollectionChanged?.Invoke(this, ReplaceIfUnsupported(supportsRangeOperations,
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, itemsToRemove)));
             return itemsToRemove.Count;
         }
 
@@ -175,6 +180,22 @@ namespace ProTagger.Utilities
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _list.GetEnumerator();
+        }
+
+        private NotifyCollectionChangedEventArgs ReplaceIfUnsupported(bool supportsRangeOperations, NotifyCollectionChangedEventArgs args)
+        {
+            if (supportsRangeOperations)
+                return args;
+            switch (args.Action)
+            {
+                case NotifyCollectionChangedAction.Add when args.NewItems.Count != 1:
+                case NotifyCollectionChangedAction.Remove when args.OldItems.Count != 1:
+                case NotifyCollectionChangedAction.Replace when args.NewItems.Count != 1 || args.OldItems.Count != 1:
+                case NotifyCollectionChangedAction.Move when args.NewItems.Count != 1:
+                    return new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+                default:
+                    return args;
+            }
         }
     }
 }

@@ -21,7 +21,7 @@ namespace ProTagger.Wpf
             if (_listBox.SelectedItems.Count > 0)
                 _listBox.SelectedItems.Clear();
             if (_selectedItems is IBatchList batchList)
-                batchList.ModifyNoDuplicates(_selectedItems, Enumerable.Empty<object>());
+                batchList.ModifyNoDuplicates(_selectedItems, Enumerable.Empty<object>(), true);
             else
                 foreach (var item in _selectedItems)
                     _listBox.SelectedItems.Add(item);
@@ -58,7 +58,7 @@ namespace ProTagger.Wpf
         {
             if (_selectedItems is IBatchList batchList)
             {
-                batchList.ModifyNoDuplicates(e.AddedItems, e.RemovedItems);
+                batchList.ModifyNoDuplicates(e.AddedItems, e.RemovedItems, true);
             }
             else
             {

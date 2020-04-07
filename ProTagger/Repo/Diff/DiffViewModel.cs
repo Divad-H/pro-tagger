@@ -58,7 +58,8 @@ namespace ProTagger.Repo.Diff
         readonly IObservable<Commit?> OldCommitObservable;
         readonly IObservable<Commit?> NewCommitObservable;
         
-        private BatchList<Variant<FilePatch, CancellableChangesWithError>> _patchDiff = new BatchList<Variant<FilePatch, CancellableChangesWithError>>();
+        private BatchList<Variant<FilePatch, CancellableChangesWithError>> _patchDiff 
+            = new BatchList<Variant<FilePatch, CancellableChangesWithError>>();
         public BatchList<Variant<FilePatch, CancellableChangesWithError>> PatchDiff
         {
             get => _patchDiff;
@@ -182,7 +183,7 @@ namespace ProTagger.Repo.Diff
                     foreach (var calculation in stoppedCalcuations)
                         calculation.Cancellation.Cancel();
                     foreach (var item in stoppedCalcuations)
-                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == item, e => e.CancellableChanges == item));
+                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == item, e => e.CancellableChanges == item), false);
                 })
                 .DisposeWith(_disposables);
 

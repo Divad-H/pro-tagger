@@ -58,8 +58,7 @@ namespace ProTagger.Configuration
                         IncludeUnmodified = false,
                         Algorithm = algorithm,
                         IndentHeuristic = indentHeuristic,
-                    })
-                .StartWith(compareOptions);
+                    });
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

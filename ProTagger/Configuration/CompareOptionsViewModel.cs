@@ -1,4 +1,6 @@
 ﻿using LibGit2Sharp;
+using ProTagger.Wpf;
+using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.ComponentModel;
@@ -10,44 +12,9 @@ namespace ProTagger.Configuration
     public class CompareOptionsViewModel : INotifyPropertyChanged
     {
         public IObservable<CompareOptions> CompareOptionsObservable { get; }
-
-        private int _contextLines;
-        public int ContextLines
-        {
-            get => _contextLines;
-            set
-            {
-                if (value == _contextLines)
-                    return;
-                _contextLines = value;
-                NotifyPropertyChanged();
-            }
-        }
-        private int _interhunkLines;
-        public int InterhunkLines
-        {
-            get => _interhunkLines;
-            set
-            {
-                if (value == _interhunkLines)
-                    return;
-                _interhunkLines = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private DiffAlgorithm _algorithm;
-        public DiffAlgorithm Algorithm
-        {
-            get => _algorithm;
-            set
-            {
-                if (value == _algorithm)
-                    return;
-                _algorithm = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public IntegerInputViewModel ContextLinesInput { get; }
+        public IntegerInputViewModel InterhunkLinesInput { get; }
+        public EnumViewModel<DiffAlgorithm> DiffAlgorithm { get; }
 
         private bool _indentHeuristic;
         public bool IndentHeuristic
@@ -61,30 +28,37 @@ namespace ProTagger.Configuration
                 NotifyPropertyChanged();
             }
         }
-        public CompareOptionsViewModel(CompareOptions compareOptions)
+
+        public SimilarityOptionsViewModel SimilarityOptions { get; }
+
+        public CompareOptionsViewModel(ISchedulers schedulers, CompareOptions compareOptions)
         {
-            _contextLines = compareOptions.ContextLines;
-            _interhunkLines = compareOptions.InterhunkLines;
-            _algorithm = compareOptions.Algorithm;
+            ContextLinesInput = new IntegerInputViewModel(schedulers, compareOptions.ContextLines, 0);
+            InterhunkLinesInput = new IntegerInputViewModel(schedulers, compareOptions.InterhunkLines, 0);
+            DiffAlgorithm = new EnumViewModel<DiffAlgorithm>(compareOptions.Algorithm);
             _indentHeuristic = compareOptions.IndentHeuristic;
+            SimilarityOptions = new SimilarityOptionsViewModel(schedulers, compareOptions.Similarity);
 
-            var contextLinesObservable = this.FromProperty(vm => vm.ContextLines);
-            var interhunkLinesObservable = this.FromProperty(vm => vm.InterhunkLines);
-            var algorithmObservable = this.FromProperty(vm => vm.Algorithm);
-            var indentHeuristicObservable = this.FromProperty(vm => vm.IndentHeuristic);
-
-            CompareOptionsObservable = contextLinesObservable
-                .WithLatestFrom(interhunkLinesObservable, (contextLines, interhunkLines) => new { contextLines, interhunkLines })
-                .WithLatestFrom(algorithmObservable, (data, algorithm) => new { data.contextLines, data.interhunkLines, algorithm })
-                .WithLatestFrom(indentHeuristicObservable, (data, indentHeuristic) => new CompareOptions()
-                {
-                    ContextLines = data.contextLines,
-                    InterhunkLines = data.interhunkLines,
-                    Similarity = compareOptions.Similarity,
-                    IncludeUnmodified = compareOptions.IncludeUnmodified,
-                    Algorithm = data.algorithm,
-                    IndentHeuristic = indentHeuristic,
-                })
+            CompareOptionsObservable = Observable
+                .CombineLatest(ContextLinesInput.ValueObservable,
+                    InterhunkLinesInput.ValueObservable,
+                    DiffAlgorithm.ValueObservable,
+                    this.FromProperty(vm => vm.IndentHeuristic),
+                    SimilarityOptions.SimilarityObservable,
+                      (contextLines, 
+                      interhunkLines, 
+                      algorithm, 
+                      indentHeuristic,
+                      similarityOptions) 
+                    => new CompareOptions()
+                    {
+                        ContextLines = contextLines,
+                        InterhunkLines = interhunkLines,
+                        Similarity = similarityOptions,
+                        IncludeUnmodified = false,
+                        Algorithm = algorithm,
+                        IndentHeuristic = indentHeuristic,
+                    })
                 .StartWith(compareOptions);
         }
 

@@ -149,34 +149,36 @@ namespace ProTagger.Repo.Diff
                 .Merge(compareOptions
                     .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles));
 
-            var runningCalculations = new List<CancellableChanges>();
-
             changedDiffSelection
-                .Subscribe(o =>
-                {
-                    foreach (var c in o.cancellableChanges)
-                        runningCalculations.Add(c);
-                })
-                .DisposeWith(_disposables);
-
-            removedPatchDíff
+                .MergeVariant(removedPatchDíff)
+                .Scan(new { activeCalculations = new List<CancellableChanges>(), removedCalculations = new List<CancellableChanges>() }, 
+                    (acc, var) => var.Visit(
+                        added => new { activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToList(),
+                            removedCalculations = new List<CancellableChanges>() },
+                        removed =>
+                        {
+                            var removedCalculations = acc.activeCalculations
+                                .Where(activeCalculation => removed
+                                    .Any(rem => rem == activeCalculation.TreeEntryChanges))
+                                .ToList();
+                            return new { activeCalculations = acc.activeCalculations
+                                .Where(active => !removedCalculations.Contains(active))
+                                .ToList(), removedCalculations };
+                        }
+                    ))
+                .Select(calculations => calculations.removedCalculations)
                 .Subscribe(removed =>
                 {
-                    var stoppedCalcuations = runningCalculations
-                        .Where(runningCalculation => removed
-                            .Any(rem => rem == runningCalculation.TreeEntryChanges))
-                        .ToList();
-                    foreach (var stoppedCalculation in stoppedCalcuations)
-                        runningCalculations.Remove(stoppedCalculation);
-
-                    foreach (var calculation in stoppedCalcuations)
+                    foreach (var calculation in removed)
+                    {
                         calculation.Cancellation.Cancel();
-                    foreach (var item in stoppedCalcuations)
-                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == item, e => e.CancellableChanges == item), false);
+                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == calculation,
+                            e => e.CancellableChanges == calculation), false);
+                    }
                 })
                 .DisposeWith(_disposables);
 
-            var addedPatchDiff = changedDiffSelection
+            changedDiffSelection
                 .ObserveOn(schedulers.ThreadPool)
                 .SelectMany(data => data.cancellableChanges
                     .Select(cancellableChanges =>
@@ -198,9 +200,7 @@ namespace ProTagger.Repo.Diff
                     unsuccess => unsuccess.Visit(
                         cancelled => new Variant<IList<FilePatch>, CancellableChangesWithError>(new List<FilePatch>()),
                         error => new Variant<IList<FilePatch>, CancellableChangesWithError>(error))))
-                .ObserveOn(schedulers.Dispatcher);
-
-            addedPatchDiff
+                .ObserveOn(schedulers.Dispatcher)
                 .Subscribe(added => added.Visit(
                         newFiles => 
                             {

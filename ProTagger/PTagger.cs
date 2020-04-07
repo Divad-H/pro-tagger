@@ -89,9 +89,7 @@ namespace ProTagger
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()

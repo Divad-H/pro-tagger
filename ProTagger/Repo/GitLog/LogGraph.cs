@@ -174,15 +174,11 @@ namespace ProTagger.Repo.GitLog
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()
-        {
-            _disposable.Dispose();
-        }
+            => _disposable.Dispose();
 
         internal static Variant<GraphType, string> CreateGraph(
             IRepositoryWrapper repository, 

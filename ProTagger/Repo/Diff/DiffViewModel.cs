@@ -103,14 +103,17 @@ namespace ProTagger.Repo.Diff
             OldCommitObservable = oldCommit;
             NewCommitObservable = newCommit;
 
-            var filesDiffObservable = Observable.CombineLatest(NewCommitObservable, OldCommitObservable, compareOptions,
-                (newCommit, oldCommit, compareOptions) =>
-                    newCommit != null ?
-                        FileDiff.CreateDiff(_repository, oldCommit, newCommit, compareOptions)
+            var filesDiffObservable = Observable
+                .CombineLatest(NewCommitObservable, OldCommitObservable, compareOptions,
+                    (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
+                .ObserveOn(schedulers.ThreadPool)
+                .Select(o =>
+                    o.newCommit != null ?
+                        FileDiff.CreateDiff(_repository, o.oldCommit, o.newCommit, o.compareOptions)
                             .SelectResult(treeEntriesChanges => treeEntriesChanges
                                 .ToList()) :
                         new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
-                .Publish();
+                .ObserveOn(schedulers.Dispatcher);
 
             var changedFilesSelectedObservable = SelectedFiles
                 .MakeObservable();
@@ -215,10 +218,6 @@ namespace ProTagger.Repo.Diff
                             if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)
                                 PatchDiff.Add(new Variant<FilePatch, CancellableChangesWithError>(error));
                         }))
-                .DisposeWith(_disposables);
-
-            filesDiffObservable
-                .Connect()
                 .DisposeWith(_disposables);
 
             changedDiffSelection

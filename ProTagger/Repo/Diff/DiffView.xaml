@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ProTagger.Repo.Diff"
              xmlns:custom="clr-namespace:ProTagger.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -28,29 +27,50 @@
                 </DataTemplate>
             </custom:VariantPresenter.Variant0Template>
         </custom:VariantPresenter>
-        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding PatchDiff}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
-                            <custom:VariantPresenter.Variant0Template>
-                                <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding PatchEntryChanges.Path}" FontFamily="Consolas"/>
-                                        <ItemsControl ItemsSource="{Binding Hunks}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <custom:PatchDiffFormatter Content="{Binding}"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </custom:VariantPresenter.Variant0Template>
-                        </custom:VariantPresenter>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <ItemsControl ItemsSource="{Binding PatchDiff}"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+                      VirtualizingPanel.ScrollUnit="Pixel"
+                      ScrollViewer.CanContentScroll="True"
+                      Grid.Column="1">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.Template>
+                <ControlTemplate>
+                    <Border BorderThickness="{TemplateBinding Border.BorderThickness}"
+                            Padding="{TemplateBinding Control.Padding}"
+                            BorderBrush="{TemplateBinding Border.BorderBrush}"
+                            Background="{TemplateBinding Panel.Background}"
+                            SnapsToDevicePixels="True">
+                        <ScrollViewer Padding="{TemplateBinding Control.Padding}"
+                                      Focusable="False">
+                            <ItemsPresenter SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
+                        <custom:VariantPresenter.Variant0Template>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PatchEntryChanges.Path}" FontFamily="Consolas"/>
+                                    <ItemsControl ItemsSource="{Binding Hunks}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <custom:PatchDiffFormatter Content="{Binding}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </custom:VariantPresenter.Variant0Template>
+                    </custom:VariantPresenter>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </UserControl>

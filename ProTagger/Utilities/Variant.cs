@@ -55,6 +55,10 @@ namespace ProTagger
             return _value;
         }
 
+        public T1 First => (T1)Value;
+
+        public T2 Second => (T2)Value;
+
         public bool Is<T>()
         {
             return _value is T;

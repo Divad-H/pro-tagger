@@ -15,10 +15,12 @@ namespace ProTaggerTest
             Assert.IsTrue(variant.Is<int>());
             Assert.IsFalse(variant.Is<string>());
             Assert.AreEqual(intVal, variant.Get<int>());
+            Assert.AreEqual(3, variant.First);
             variant.Assign(strVal);
             Assert.IsTrue(variant.Is<string>());
             Assert.IsFalse(variant.Is<int>());
             Assert.AreEqual(strVal, variant.Get<string>());
+            Assert.AreEqual(strVal, variant.Second);
         }
     }
 }

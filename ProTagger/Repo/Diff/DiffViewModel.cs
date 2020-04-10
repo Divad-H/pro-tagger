@@ -1,11 +1,9 @@
 ﻿using LibGit2Sharp;
 using ProTagger.Utilities;
-using ProTagger.Wpf;
 using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Concurrency;

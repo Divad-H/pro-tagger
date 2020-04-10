@@ -55,9 +55,6 @@ namespace ProTagger.Repo.Diff
         const string NoCommitSelectedMessage = "No commit selected.";
         const string NoFilesSelectedMessage = "No files selected.";
 
-        readonly IObservable<Commit?> OldCommitObservable;
-        readonly IObservable<Commit?> NewCommitObservable;
-        
         private BatchList<Variant<FilePatch, CancellableChangesWithError>> _patchDiff 
             = new BatchList<Variant<FilePatch, CancellableChangesWithError>>();
         public BatchList<Variant<FilePatch, CancellableChangesWithError>> PatchDiff
@@ -90,28 +87,19 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        private readonly IRepositoryWrapper _repository;
-
         public DiffViewModel(IRepositoryWrapper repository, 
             ISchedulers schedulers, 
-            IObservable<Commit?> oldCommit, 
-            IObservable<Commit?> newCommit,
+            IObservable<Commit?> oldCommitObservable, 
+            IObservable<Commit?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
-            _repository = repository;
-
-            OldCommitObservable = oldCommit;
-            NewCommitObservable = newCommit;
-
             var filesDiffObservable = Observable
-                .CombineLatest(NewCommitObservable, OldCommitObservable, compareOptions,
+                .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .ObserveOn(schedulers.ThreadPool)
                 .Select(o =>
                     o.newCommit != null ?
-                        FileDiff.CreateDiff(_repository, o.oldCommit, o.newCommit, o.compareOptions)
-                            .SelectResult(treeEntriesChanges => treeEntriesChanges
-                                .ToList()) :
+                        FileDiff.CreateDiff(repository, o.oldCommit, o.newCommit, o.compareOptions) :
                         new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
                 .ObserveOn(schedulers.Dispatcher);
 
@@ -132,8 +120,8 @@ namespace ProTagger.Repo.Diff
             var changedDiffSelection = addedSelection
                 .WithLatestFrom(compareOptions, (treeChanges, options) => new ChangesAndSource(treeChanges, options))
                 .Merge(refreshedSelection)
-                .WithLatestFrom(OldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
-                .WithLatestFrom(NewCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
+                .WithLatestFrom(oldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
+                .WithLatestFrom(newCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
                 .Select(data => new
                 {
                     cancellableChanges = data.changes.Changes
@@ -188,7 +176,7 @@ namespace ProTagger.Repo.Diff
                         data.newCommit == null ?
                         new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
                             new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage))) :
-                        Diff.PatchDiff.CreateDiff(_repository, data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(repository, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()

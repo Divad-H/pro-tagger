@@ -30,16 +30,6 @@ namespace ProTagger.Repo.Diff
             => (CancellableChanges, Error) = (changes, error);
     }
 
-    public class FilePatch
-    {
-        public List<DiffAnalyzer.Hunk> Hunks { get; }
-        public PatchEntryChanges PatchEntryChanges { get; }
-        public CancellableChanges CancellableChanges { get; }
-
-        public FilePatch(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, CancellableChanges cancellableChanges)
-          => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
-    }
-
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
         private class ChangesAndSource
@@ -53,9 +43,9 @@ namespace ProTagger.Repo.Diff
         const string NoCommitSelectedMessage = "No commit selected.";
         const string NoFilesSelectedMessage = "No files selected.";
 
-        private BatchList<Variant<FilePatch, CancellableChangesWithError>> _patchDiff 
-            = new BatchList<Variant<FilePatch, CancellableChangesWithError>>();
-        public BatchList<Variant<FilePatch, CancellableChangesWithError>> PatchDiff
+        private BatchList<Variant<PatchDiff, CancellableChangesWithError>> _patchDiff 
+            = new BatchList<Variant<PatchDiff, CancellableChangesWithError>>();
+        public BatchList<Variant<PatchDiff, CancellableChangesWithError>> PatchDiff
         {
             get => _patchDiff;
             private set
@@ -172,8 +162,8 @@ namespace ProTagger.Repo.Diff
                 .SelectMany(data => data.cancellableChanges
                     .Select(cancellableChanges =>
                         data.newCommit == null ?
-                        new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
-                            new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage))) :
+                        new Variant<IList<PatchDiff>, CancellableChangesWithError>(
+                            new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
                         Diff.PatchDiff.CreateDiff(repository, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
@@ -182,27 +172,21 @@ namespace ProTagger.Repo.Diff
                                 .Distinct()
                                 .Where(path => !string.IsNullOrEmpty(path)))
                             .ToList(), data.Options, cancellableChanges)))
-                .Select(patchVariant => patchVariant.Visit(
-                    patch => new Variant<IList<FilePatch>, CancellableChangesWithError>(patch.Patch
-                        .Select(patchEntry => new FilePatch(DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, patch.CancellableChanges.Cancellation.Token), patchEntry, patch.CancellableChanges))
-                        .ToList()),
-                    unsuccess => unsuccess.Visit(
-                        cancelled => new Variant<IList<FilePatch>, CancellableChangesWithError>(new List<FilePatch>()),
-                        error => new Variant<IList<FilePatch>, CancellableChangesWithError>(error))))
                 .ObserveOn(schedulers.Dispatcher)
-                .Subscribe(added => added.Visit(
+                .Subscribe(added => added
+                    .Visit(
                         newFiles => 
                             {
                                 foreach (var item in newFiles)
                                 {
                                     if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                        PatchDiff.Add(new Variant<FilePatch, CancellableChangesWithError>(item));
+                                        PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(item));
                                 }
                             },
                         error =>
                         {
                             if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                PatchDiff.Add(new Variant<FilePatch, CancellableChangesWithError>(error));
+                                PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(error));
                         }))
                 .DisposeWith(_disposables);
 

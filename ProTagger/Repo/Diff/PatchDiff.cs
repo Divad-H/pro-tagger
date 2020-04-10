@@ -3,38 +3,42 @@ using ProTagger.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ProTagger.Repo.Diff
 {
-    class PatchDiff
+    public class PatchDiff
     {
-        public readonly Patch Patch;
-        public readonly CancellableChanges CancellableChanges;
+        public List<DiffAnalyzer.Hunk> Hunks { get; }
+        public PatchEntryChanges PatchEntryChanges { get; }
+        public CancellableChanges CancellableChanges { get; }
 
-        private PatchDiff(Patch patch, CancellableChanges cancellableChanges)
-            => (Patch, CancellableChanges) = (patch, cancellableChanges);
+        public PatchDiff(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, CancellableChanges cancellableChanges)
+          => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
 
-        internal static Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>> CreateDiff(
-                IRepositoryWrapper repository,
-                Commit? oldCommit,
-                Commit newCommit,
-                IEnumerable<string> paths,
-                CompareOptions options,
-                CancellableChanges cancellableChanges)
+        public static Variant<IList<PatchDiff>, CancellableChangesWithError> CreateDiff(IRepositoryWrapper repository,
+                    Commit? oldCommit,
+                    Commit newCommit,
+                    IEnumerable<string> paths,
+                    CompareOptions options,
+                    CancellableChanges cancellableChanges)
         {
             try
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
-                    return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
-                        new Variant<CancellableChanges, CancellableChangesWithError>(cancellableChanges));
-                return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
-                    new PatchDiff(repository.Diff.Compare<Patch>(oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options), cancellableChanges));
+                    return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
+                using var patch = repository.Diff.Compare<Patch>(
+                    oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options);
+                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(patch
+                        .Select(patchEntry => new PatchDiff(
+                            DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token), 
+                            patchEntry, 
+                            cancellableChanges))
+                        .ToList());
             }
             catch (Exception e)
             {
-                return new Variant<PatchDiff, Variant<CancellableChanges, CancellableChangesWithError>>(
-                    new Variant<CancellableChanges, CancellableChangesWithError>(new CancellableChangesWithError(cancellableChanges, e.Message)));
+                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
+                    new CancellableChangesWithError(cancellableChanges, e.Message));
             }
         }
     }

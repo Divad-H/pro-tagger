@@ -4,6 +4,8 @@ using ProTagger.Utilities;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System;
+using System.Reactive.Disposables;
+using System.Linq;
 
 namespace ProTaggerTest
 {
@@ -53,6 +55,34 @@ namespace ProTaggerTest
             first.OnNext(3);
             Assert.IsTrue(res.Is<int>());
             Assert.AreEqual(3, res.Get<int>());
+        }
+
+        [TestMethod]
+        public void ObservableFirstSecondVariant()
+        {
+            var obs = Observable.Create<Variant<int, string>>(o =>
+            {
+                o.OnNext(new Variant<int, string>(1));
+                o.OnNext(new Variant<int, string>(2));
+                o.OnNext(new Variant<int, string>("3"));
+                o.OnNext(new Variant<int, string>(4));
+                o.OnCompleted();
+                return Disposable.Empty;
+            });
+            var first = obs
+                .FirstVariant()
+                .ToList()
+                .Wait();
+            var second = obs
+                .SecondVariant()
+                .ToList()
+                .Wait();
+            Assert.AreEqual(3, first.Count);
+            Assert.AreEqual(1, first[0]);
+            Assert.AreEqual(2, first[1]);
+            Assert.AreEqual(4, first[2]);
+            Assert.AreEqual(1, second.Count);
+            Assert.AreEqual("3", second[0]);
         }
     }
 }

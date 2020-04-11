@@ -16,11 +16,12 @@
                 <DataTemplate>
                     <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
                                                  SelectionMode="Extended" 
+                                                 VirtualizingPanel.VirtualizationMode="Recycling"
                                                  custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"
                                                  KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}">
                         <custom:ListBoxKeepSelection.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Path}"/>
+                                <custom:SimpleLabel Text="{Binding Path}" Height="16"/>
                             </DataTemplate>
                         </custom:ListBoxKeepSelection.ItemTemplate>
                     </custom:ListBoxKeepSelection>

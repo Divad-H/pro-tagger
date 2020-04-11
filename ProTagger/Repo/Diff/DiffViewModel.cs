@@ -33,14 +33,6 @@ namespace ProTagger.Repo.Diff
 
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
-        private class ChangesAndSource
-        {
-            public IEnumerable<TreeEntryChanges> Changes { get; }
-            public CompareOptions Options { get; }
-            public ChangesAndSource(IEnumerable<TreeEntryChanges> changes, CompareOptions options)
-                => (Changes, Options) = (changes, options);
-        }
-
         const string NoCommitSelectedMessage = "No commit selected.";
         const string NoFilesSelectedMessage = "No files selected.";
 
@@ -63,15 +55,15 @@ namespace ProTagger.Repo.Diff
         public Func<object, object, bool> KeepTreeDiffChangesSelectedRule 
             => (oldFile, newFile) => ((TreeEntryChanges)oldFile).Path == ((TreeEntryChanges)newFile).Path;
 
-        private Variant<List<TreeEntryChanges>, string> _filesDiff = new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage);
-        public Variant<List<TreeEntryChanges>, string> FilesDiff
+        private Variant<List<TreeEntryChanges>, string> _treeDiff = new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage);
+        public Variant<List<TreeEntryChanges>, string> TreeDiff
         {
-            get => _filesDiff;
+            get => _treeDiff;
             set
             {
-                if (_filesDiff == value)
+                if (_treeDiff == value)
                     return;
-                _filesDiff = value;
+                _treeDiff = value;
                 NotifyPropertyChanged();
             }
         }
@@ -82,54 +74,46 @@ namespace ProTagger.Repo.Diff
             IObservable<Commit?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
-            var filesDiffObservable = Observable
+            Observable
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o =>
                     o.newCommit != null ?
-                        FileDiff.CreateDiff(repository, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(repository, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
-                .Switch();
-
-            filesDiffObservable
-                .Subscribe(filesDiff => FilesDiff = filesDiff)
+                .Switch()
+                .Subscribe(filesDiff => TreeDiff = filesDiff)
                 .DisposeWith(_disposables);
 
             var changedFilesSelectedObservable = SelectedFiles
                 .MakeObservable();
 
-            var addedSelection = changedFilesSelectedObservable
+            var changedDiffSelection = changedFilesSelectedObservable
                 .Select(args => args.NewItems?.Cast<TreeEntryChanges>())
-                .SkipNull();
-
-            var refreshedSelection = compareOptions
-                .Select(options => new ChangesAndSource(SelectedFiles, options));
-
-            var changedDiffSelection = addedSelection
-                .WithLatestFrom(compareOptions, (treeChanges, options) => new ChangesAndSource(treeChanges, options))
-                .Merge(refreshedSelection)
+                .SkipNull()
+                .WithLatestFrom(compareOptions, (treeChanges, options) => new { treeChanges , options })
+                .Merge(compareOptions
+                    .Select(options => new { treeChanges = (IEnumerable<TreeEntryChanges>)SelectedFiles, options }))
                 .WithLatestFrom(oldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
                 .WithLatestFrom(newCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
                 .Select(data => new
                 {
-                    cancellableChanges = data.changes.Changes
+                    cancellableChanges = data.changes.treeChanges
                         .Select(treeEntryChanges => new CancellableChanges(treeEntryChanges))
                         .ToList(),
                     data.oldCommit,
                     data.newCommit,
-                    data.changes.Options
+                    data.changes.options
                 })
                 .Publish();
 
-            var removedPatchDíff = changedFilesSelectedObservable
-                .Select(args => args.OldItems?
-                    .Cast<TreeEntryChanges>())
-                .SkipNull()
-                .Merge(compareOptions
-                    .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles));
-
             changedDiffSelection
-                .MergeVariant(removedPatchDíff)
+                .MergeVariant(changedFilesSelectedObservable
+                    .Select(args => args.OldItems?
+                        .Cast<TreeEntryChanges>())
+                    .SkipNull()
+                    .Merge(compareOptions
+                        .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles)))
                 .Scan(new { activeCalculations = new List<CancellableChanges>(), removedCalculations = new List<CancellableChanges>() }, 
                     (acc, var) => var.Visit(
                         added => new { activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToList(),
@@ -171,7 +155,7 @@ namespace ProTagger.Repo.Diff
                                 .Concat(o.TreeEntryChanges.OldPath.Yield())
                                 .Distinct()
                                 .Where(path => !string.IsNullOrEmpty(path)))
-                            .ToList(), data.Options, cancellableChanges)))
+                            .ToList(), data.options, cancellableChanges)))
                 .ObserveOn(schedulers.Dispatcher)
                 .Subscribe(added => added
                     .Visit(

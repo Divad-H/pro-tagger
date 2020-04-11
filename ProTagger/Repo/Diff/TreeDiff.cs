@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProTagger.Repo.Diff
 {
-    static class FileDiff
+    static class TreeDiff
     {
         internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
                 IRepositoryWrapper repository,

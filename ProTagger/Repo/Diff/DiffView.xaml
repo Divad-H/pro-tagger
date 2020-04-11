@@ -11,7 +11,7 @@
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <custom:VariantPresenter VariantContent="{Binding FilesDiff}" Style="{StaticResource DefaultErrorView}">
+        <custom:VariantPresenter VariantContent="{Binding TreeDiff}" Style="{StaticResource DefaultErrorView}">
             <custom:VariantPresenter.Variant0Template>
                 <DataTemplate>
                     <custom:ListBoxKeepSelection ItemsSource="{Binding}" 

@@ -11,6 +11,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ProTagger.Repo.Diff
 {
@@ -84,19 +85,18 @@ namespace ProTagger.Repo.Diff
             var filesDiffObservable = Observable
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
-                .ObserveOn(schedulers.ThreadPool)
                 .Select(o =>
                     o.newCommit != null ?
                         FileDiff.CreateDiff(repository, o.oldCommit, o.newCommit, o.compareOptions) :
-                        new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
-                .ObserveOn(schedulers.Dispatcher);
-
-            var changedFilesSelectedObservable = SelectedFiles
-                .MakeObservable();
+                        Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
+                .Switch();
 
             filesDiffObservable
                 .Subscribe(filesDiff => FilesDiff = filesDiff)
                 .DisposeWith(_disposables);
+
+            var changedFilesSelectedObservable = SelectedFiles
+                .MakeObservable();
 
             var addedSelection = changedFilesSelectedObservable
                 .Select(args => args.NewItems?.Cast<TreeEntryChanges>())

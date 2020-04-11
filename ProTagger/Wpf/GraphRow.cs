@@ -176,7 +176,7 @@ namespace ProTagger.Wpf
             drawingContext.DrawDrawing(_backingStore);
         }
 
-        internal void Render()
+        private void Render()
         {
             using var drawingContext = _backingStore.Open();
             Render(drawingContext);

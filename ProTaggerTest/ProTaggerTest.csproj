@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProTagger\ProTagger.csproj" />
+    <ProjectReference Include="..\ReacitveMvvm\ReacitveMvvm.csproj" />
   </ItemGroup>
 
 </Project>

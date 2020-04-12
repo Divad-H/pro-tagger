@@ -144,7 +144,7 @@ namespace ProTagger
             var secondarySelectedCommit = _graph.SecondarySelectedNodeObservable
                 .Select(node => node?.Commit);
 
-            _diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit, compareOptions);
+            _diff = new DiffViewModel(_repository.Diff, schedulers, secondarySelectedCommit, selectedCommit, compareOptions);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

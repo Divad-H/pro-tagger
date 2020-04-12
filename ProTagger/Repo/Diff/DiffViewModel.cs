@@ -33,8 +33,8 @@ namespace ProTagger.Repo.Diff
 
     public class DiffViewModel : INotifyPropertyChanged, IDisposable
     {
-        const string NoCommitSelectedMessage = "No commit selected.";
-        const string NoFilesSelectedMessage = "No files selected.";
+        public const string NoCommitSelectedMessage = "No commit selected.";
+        public const string NoFilesSelectedMessage = "No files selected.";
 
         private BatchList<Variant<PatchDiff, CancellableChangesWithError>> _patchDiff 
             = new BatchList<Variant<PatchDiff, CancellableChangesWithError>>();
@@ -68,7 +68,7 @@ namespace ProTagger.Repo.Diff
             }
         }
 
-        public DiffViewModel(IRepositoryWrapper repository, 
+        public DiffViewModel(LibGit2Sharp.Diff diff, 
             ISchedulers schedulers, 
             IObservable<Commit?> oldCommitObservable, 
             IObservable<Commit?> newCommitObservable,
@@ -79,7 +79,7 @@ namespace ProTagger.Repo.Diff
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o =>
                     o.newCommit != null ?
-                        Diff.TreeDiff.CreateDiff(repository, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(diff, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
                 .Switch()
                 .Subscribe(filesDiff => TreeDiff = filesDiff)
@@ -148,7 +148,7 @@ namespace ProTagger.Repo.Diff
                         data.newCommit == null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
-                        Diff.PatchDiff.CreateDiff(repository, data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(diff, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()
@@ -160,13 +160,13 @@ namespace ProTagger.Repo.Diff
                 .Subscribe(added => added
                     .Visit(
                         newFiles => 
+                        {
+                            foreach (var item in newFiles)
                             {
-                                foreach (var item in newFiles)
-                                {
-                                    if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                        PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(item));
-                                }
-                            },
+                                if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
+                                    PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(item));
+                            }
+                        },
                         error =>
                         {
                             if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)

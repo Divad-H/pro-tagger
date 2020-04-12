@@ -15,7 +15,7 @@ namespace ProTagger.Repo.Diff
         public PatchDiff(List<DiffAnalyzer.Hunk> hunks, PatchEntryChanges patchEntryChanges, CancellableChanges cancellableChanges)
           => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
 
-        public static Variant<IList<PatchDiff>, CancellableChangesWithError> CreateDiff(IRepositoryWrapper repository,
+        public static Variant<IList<PatchDiff>, CancellableChangesWithError> CreateDiff(LibGit2Sharp.Diff diff,
                     Commit? oldCommit,
                     Commit newCommit,
                     IEnumerable<string> paths,
@@ -26,7 +26,7 @@ namespace ProTagger.Repo.Diff
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
                     return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
-                using var patch = repository.Diff.Compare<Patch>(
+                using var patch = diff.Compare<Patch>(
                     oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options);
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(patch
                         .Select(patchEntry => new PatchDiff(

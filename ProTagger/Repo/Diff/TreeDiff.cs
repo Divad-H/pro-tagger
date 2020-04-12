@@ -10,7 +10,7 @@ namespace ProTagger.Repo.Diff
     static class TreeDiff
     {
         internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
-                IRepositoryWrapper repository,
+                LibGit2Sharp.Diff diff,
                 Commit? oldCommit,
                 Commit newCommit,
                 CompareOptions compareOptions)
@@ -18,18 +18,9 @@ namespace ProTagger.Repo.Diff
                 {
                     try
                     {
-                        using var treeChanges = repository.Diff.Compare<TreeChanges>(
+                        using var treeChanges = diff.Compare<TreeChanges>(
                             oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, compareOptions);
-                        return new Variant<List<TreeEntryChanges>, string>(
-                            treeChanges.Added
-                                .Concat(treeChanges.Deleted)
-                                .Concat(treeChanges.Modified)
-                                .Concat(treeChanges.TypeChanged)
-                                .Concat(treeChanges.Renamed)
-                                .Concat(treeChanges.Copied)
-                                .Concat(treeChanges.Unmodified)
-                                .Concat(treeChanges.Conflicted)
-                                .ToList());
+                        return new Variant<List<TreeEntryChanges>, string>(treeChanges.ToList());
                     }
                     catch (Exception e)
                     {

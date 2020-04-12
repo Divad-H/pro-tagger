@@ -6,7 +6,7 @@ namespace ProTaggerTest.LibGit2Mocks
 {
     class PseudoShaGenerator
     {
-        private SHA1 _sha = new SHA1CryptoServiceProvider();
+        private readonly SHA1 _sha = new SHA1CryptoServiceProvider();
         
         private readonly Random _random = new Random();
         public string Generate() => BitConverter.ToString(_sha.ComputeHash(Enumerable

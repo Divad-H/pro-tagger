@@ -13,6 +13,7 @@ namespace ProTaggerTest.LibGit2Mocks
             _authorAndCommitter = authorAndCommitter;
             _objectId = objectId;
             _parents = parents;
+            _tree = new TreeMock(objectId.Sha);
         }
 
         public override TreeEntry this[string relativePath] => throw new NotImplementedException();
@@ -29,7 +30,8 @@ namespace ProTaggerTest.LibGit2Mocks
         public override Signature Author => _authorAndCommitter;
         public override Signature Committer => _authorAndCommitter;
 
-        public override Tree Tree => throw new NotImplementedException();
+        private readonly Tree _tree;
+        public override Tree Tree => _tree;
 
         private readonly IEnumerable<CommitMock> _parents;
         public override IEnumerable<Commit> Parents => _parents;
@@ -39,5 +41,15 @@ namespace ProTaggerTest.LibGit2Mocks
         private readonly ObjectId _objectId;
         public override ObjectId Id => _objectId;
         public override string Sha => _objectId.Sha;
+
+        public static CommitMock GenerateCommit(PseudoShaGenerator shaGenerator, IEnumerable<CommitMock>? parents, int idx)
+        {
+            return new CommitMock(
+                    $"Message {idx}\n(long)",
+                    $"MessageShort {idx}",
+                    new Signature("john", "jons@e.mail", new DateTimeOffset(DateTime.Now)),
+                    new ObjectId(shaGenerator.Generate()),
+                    parents ?? new List<CommitMock>());
+        }
     }
 }

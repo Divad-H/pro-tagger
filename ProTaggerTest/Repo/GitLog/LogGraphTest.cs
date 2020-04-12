@@ -13,15 +13,6 @@ namespace ProTaggerTest.Repo.GitLog
     [TestClass]
     public class LogGraphTest
     {
-        static CommitMock GenerateCommit(PseudoShaGenerator shaGenerator, IEnumerable<CommitMock>? parents, int idx)
-        {
-            return new CommitMock(
-                    $"Message {idx}\n(long)",
-                    $"MessageShort {idx}",
-                    new Signature("john", "jons@e.mail", new DateTimeOffset(DateTime.Now)),
-                    new ObjectId(shaGenerator.Generate()),
-                    parents ?? new List<CommitMock>());
-        }
         class SimpleRepositoryFactoryMock : IRepositoryFactory
         {
             /// <summary>
@@ -43,12 +34,12 @@ namespace ProTaggerTest.Repo.GitLog
                 var shaGenerator = new PseudoShaGenerator();
                 
                 var commits = new List<CommitMock>();
-                commits.Add(GenerateCommit(shaGenerator, null, 0));
-                commits.Add(GenerateCommit(shaGenerator, commits.Last().Yield().ToList(), 1));
-                commits.Add(GenerateCommit(shaGenerator, commits.First().Yield().ToList(), 2));
-                commits.Add(GenerateCommit(shaGenerator, commits.Skip(1).Take(2).ToList(), 3));
-                commits.Add(GenerateCommit(shaGenerator, commits.Last().Yield().ToList(), 4));
-                commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 0));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Last().Yield().ToList(), 1));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.First().Yield().ToList(), 2));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Skip(1).Take(2).ToList(), 3));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Last().Yield().ToList(), 4));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
 
                 var branches = new List<BranchMock>();
                 branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
@@ -148,10 +139,10 @@ namespace ProTaggerTest.Repo.GitLog
                 var shaGenerator = new PseudoShaGenerator();
 
                 var commits = new List<CommitMock>();
-                commits.Add(GenerateCommit(shaGenerator, null, 0));
-                commits.Add(GenerateCommit(shaGenerator, null, 1));
-                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 2));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 3));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 0));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 1));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.ToList(), 2));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 3));
 
                 var branches = new List<BranchMock>();
                 branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
@@ -225,13 +216,13 @@ namespace ProTaggerTest.Repo.GitLog
                 var shaGenerator = new PseudoShaGenerator();
 
                 var commits = new List<CommitMock>();
-                commits.Add(GenerateCommit(shaGenerator, null, 0));
-                commits.Add(GenerateCommit(shaGenerator, null, 1));
-                commits.Add(GenerateCommit(shaGenerator, null, 2));
-                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 3));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 4));
-                commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
-                commits.Add(GenerateCommit(shaGenerator, commits.SkipLast(2).TakeLast(1).ToList(), 6));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 0));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 1));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 2));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.ToList(), 3));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 4));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.SkipLast(1).TakeLast(1).ToList(), 5));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.SkipLast(2).TakeLast(1).ToList(), 6));
 
                 var branches = new List<BranchMock>();
                 branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
@@ -342,15 +333,15 @@ namespace ProTaggerTest.Repo.GitLog
                 var shaGenerator = new PseudoShaGenerator();
 
                 var commits = new List<CommitMock>();
-                commits.Add(GenerateCommit(shaGenerator, null, 0));
-                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 1));
-                commits.Add(GenerateCommit(shaGenerator, commits.Take(1).ToList(), 2));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 4));
-                commits.Add(GenerateCommit(shaGenerator, commits.Skip(1).Take(1).ToList(), 5));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 6));
-                commits.Add(GenerateCommit(shaGenerator, commits.Skip(3).Take(1).Concat(commits.TakeLast(1)).ToList(), 7));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 8));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 0));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.ToList(), 1));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Take(1).ToList(), 2));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 4));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Skip(1).Take(1).ToList(), 5));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 6));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.Skip(3).Take(1).Concat(commits.TakeLast(1)).ToList(), 7));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(1).ToList(), 8));
 
                 var branches = new List<BranchMock>();
                 branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));
@@ -465,12 +456,12 @@ namespace ProTaggerTest.Repo.GitLog
                 var shaGenerator = new PseudoShaGenerator();
 
                 var commits = new List<CommitMock>();
-                commits.Add(GenerateCommit(shaGenerator, null, 0));
-                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 1));
-                commits.Add(GenerateCommit(shaGenerator, commits.ToList(), 2));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 4));
-                commits.Add(GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 5));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, null, 0));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.ToList(), 1));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.ToList(), 2));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 3));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 4));
+                commits.Add(CommitMock.GenerateCommit(shaGenerator, commits.TakeLast(2).ToList(), 5));
 
                 var branches = new List<BranchMock>();
                 branches.Add(new BranchMock(true, false, "origin", commits.Last(), "master"));

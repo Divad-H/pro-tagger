@@ -9,7 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReacitveMvvm", "ReacitveMvv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProTaggerTest", "ProTaggerTest\ProTaggerTest.csproj", "{A1E5AC3A-896C-4C0D-8B32-1BC6B537278E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMvvmTest", "ReactiveMvvmTest\ReactiveMvvmTest.csproj", "{70EB7C1B-81CA-4EF1-B846-DC5490DDCAC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMvvmTest", "ReactiveMvvmTest\ReactiveMvvmTest.csproj", "{70EB7C1B-81CA-4EF1-B846-DC5490DDCAC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E777E126-B124-4B47-8A36-228385F54BE3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

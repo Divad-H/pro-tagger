@@ -73,14 +73,14 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <custom:VariantPresenter VariantContent="{Binding LogGraphNodes}" Style="{StaticResource DefaultErrorView}" x:Name="LogGraph">
+    <custom:VariantPresenter VariantContent="{Binding LogGraphNodes.Value}" Style="{StaticResource DefaultErrorView}" x:Name="LogGraph">
         <custom:VariantPresenter.Variant0Template>
             <DataTemplate>
                 <custom:ColumnLayoutListView x:Name="OuterListView"
                                              ItemsSource="{Binding}" 
                                              SelectionMode="Single" 
-                                             SelectedItem="{Binding ElementName=LogGraph, Path=DataContext.SelectedNode, Mode=TwoWay}"
-                                             SecondarySelection="{Binding ElementName=LogGraph, Path=DataContext.SecondarySelectedNode, Mode=TwoWay}"
+                                             SelectedItem="{Binding ElementName=LogGraph, Path=DataContext.SelectedNode.Value, Mode=TwoWay}"
+                                             SecondarySelection="{Binding ElementName=LogGraph, Path=DataContext.SecondarySelectedNode.Value, Mode=TwoWay}"
                                              Foreground="{StaticResource br_black}"
                                              VirtualizingStackPanel.VirtualizationMode="Recycling"
                                              ColumnDefinitions="{Binding Source={x:Reference HeaderGrid}, Path=ColumnDefinitions}"

@@ -3,7 +3,14 @@ using System;
 
 namespace ProTagger.Utilities
 {
-    public interface IRepositoryWrapper : IDisposable
+    public interface IRefCount : IDisposable
+    {
+        public IDisposable AddRef();
+
+        public IDisposable? TryAddRef();
+    }
+
+    public interface IRepositoryWrapper : IRefCount
     {
         public ICommitLog QueryCommits(CommitFilter filter);
 

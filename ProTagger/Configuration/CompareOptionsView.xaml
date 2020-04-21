@@ -10,8 +10,8 @@
     <UniformGrid Rows="5">
         <custom:IntegerInputBox DataContext="{Binding ContextLinesInput}"/>
         <custom:IntegerInputBox DataContext="{Binding InterhunkLinesInput}" Grid.Row="1"/>
-        <ComboBox ItemsSource="{Binding DiffAlgorithm.Values}" SelectedItem="{Binding DiffAlgorithm.Value}" Grid.Row="2"/>
-        <CheckBox Content="Indent heuristic" IsChecked="{Binding IndentHeuristic}" Grid.Row="3"/>
+        <ComboBox ItemsSource="{Binding DiffAlgorithm.Values}" SelectedItem="{Binding DiffAlgorithm.Value.Value}" Grid.Row="2"/>
+        <CheckBox Content="Indent heuristic" IsChecked="{Binding IndentHeuristic.Value}" Grid.Row="3"/>
         <ToggleButton x:Name="PopupButton"
                       Content="Similarity Options ⯆"
                       IsChecked="{Binding ElementName=Popup, Path=IsOpen}"
@@ -35,13 +35,13 @@
                Width="200"
                DataContext="{Binding SimilarityOptions}">
             <UniformGrid Rows="7">
-                <ComboBox ItemsSource="{Binding RenameDetectionMode.Values}" SelectedItem="{Binding RenameDetectionMode.Value}" Grid.Row="0"/>
+                <ComboBox ItemsSource="{Binding RenameDetectionMode.Values}" SelectedItem="{Binding RenameDetectionMode.Value.Value}" Grid.Row="0"/>
                 <custom:IntegerInputBox DataContext="{Binding BreakRewriteThresholdInput}" Grid.Row="1"/>
                 <custom:IntegerInputBox DataContext="{Binding CopyThresholdInput}" Grid.Row="2"/>
                 <custom:IntegerInputBox DataContext="{Binding RenameFromRewriteThresholdInput}" Grid.Row="3"/>
                 <custom:IntegerInputBox DataContext="{Binding RenameLimitInput}" Grid.Row="4"/>
                 <custom:IntegerInputBox DataContext="{Binding RenameThresholdInput}" Grid.Row="5"/>
-                <ComboBox ItemsSource="{Binding WhitespaceMode.Values}" SelectedItem="{Binding WhitespaceMode.Value}" Grid.Row="6"/>
+                <ComboBox ItemsSource="{Binding WhitespaceMode.Values}" SelectedItem="{Binding WhitespaceMode.Value.Value}" Grid.Row="6"/>
             </UniformGrid>
         </Popup>
     </UniformGrid>

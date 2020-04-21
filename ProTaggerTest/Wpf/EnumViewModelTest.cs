@@ -21,10 +21,10 @@ namespace ProTaggerTest.Wpf
         {
             var value = TestEnum.Third;
             var vm = new EnumViewModel<TestEnum>(TestEnum.First);
-            using var _ = vm.ValueObservable
+            using var _ = vm.Value
                 .Subscribe(newVal => value = newVal);
             Assert.AreEqual(TestEnum.First, value);
-            vm.Value = TestEnum.Second;
+            vm.Value.OnNext(TestEnum.Second);
             Assert.AreEqual(TestEnum.Second, value);
         }
 

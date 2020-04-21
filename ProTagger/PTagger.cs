@@ -13,53 +13,27 @@ using LibGit2Sharp;
 
 namespace ProTagger
 {
-    public class PTagger : INotifyPropertyChanged, IDisposable
+    public class PTagger : IDisposable
     {
-        private readonly ISchedulers _schedulers;
-
-        private string _repositoryPath = @"G:\Projects\pro-tagger";
-        public string RepositoryPath
-        {
-            get { return _repositoryPath; }
-            set
-            {
-                if (_repositoryPath == value)
-                    return;
-                _repositoryPath = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private Variant<RepositoryViewModel, string> _repository = new Variant<RepositoryViewModel, string>("No repository selected.");
-        public Variant<RepositoryViewModel, string> Repository
-        {
-            get { return _repository; }
-            set
-            {
-                if (_repository == value)
-                    return;
-                (_repository?.Get() as IDisposable)?.Dispose();
-                _repository = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public ViewSubject<string> RepositoryPath { get; }
+        public ViewSubject<Variant<RepositoryViewModel, string>> Repository { get; }
 
         public ICommand RefreshCommand { get; }
 
         public Configuration.CompareOptionsViewModel CompareOptions { get; }
 
-        public IObservable<Variant<RepositoryViewModel, string>> RepositoryObservable { get; }
-
         public PTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers)
         {
-            _schedulers = schedulers;
+            RepositoryPath = new ViewSubject<string>(@"G:\Projects\pro-tagger")
+                .DisposeWith(_disposable);
+            Repository = new ViewSubject<Variant<RepositoryViewModel, string>>(
+                new Variant<RepositoryViewModel, string>("No repository selected."))
+                .DisposeWith(_disposable);
 
             CompareOptions = new Configuration.CompareOptionsViewModel(schedulers, new CompareOptions() { Similarity = SimilarityOptions.Default });
 
-            var repositoryPath = this.FromProperty(vm => vm.RepositoryPath);
-
             var refreshCommand = ReactiveCommand.Create<object, object>(
-                    canExecute: repositoryPath
+                    canExecute: RepositoryPath
                         .Select(path => !string.IsNullOrWhiteSpace(path)),
                     execute: (param) =>
                     {
@@ -68,34 +42,34 @@ namespace ProTagger
                     scheduler: schedulers.Dispatcher)
                 .DisposeWith(_disposable);
 
-            var repository = Observable
-                .Return(_repositoryPath)
-                .Concat(refreshCommand
-                    .ObserveOn(schedulers.Dispatcher)
-                    .SelectMany(_ => repositoryPath.Take(1))
-                    )
-                .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, path, CompareOptions.CompareOptionsObservable)))
-                .Switch()
-                .SkipNull();
+            var repositoryObservable =
+                Observable.Create<Variant<RepositoryViewModel, string>>(o =>
+                {
+                    var serial = new SerialDisposable();
+                    return new CompositeDisposable(
+                        RepositoryPath
+                            .Take(1)
+                            .Concat(refreshCommand
+                                .ObserveOn(schedulers.Dispatcher)
+                                .WithLatestFrom(RepositoryPath, (_, path) => path)
+                                .Select(path => path))
+                            .Select(path => Observable.FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, path, CompareOptions.CompareOptionsObservable)))
+                            .Switch()
+                            .SkipNull()
+                            .Do(x => serial.Disposable = x.Visit(vm => vm, _ => Disposable.Empty))
+                            .Subscribe(o),
+                        serial);
+                });
 
-            RepositoryObservable = repository;
-
-            repository
-                .Subscribe(repository => { if (repository != null) Repository = repository; })
+            repositoryObservable
+                .Subscribe(Repository)
                 .DisposeWith(_disposable);
 
             RefreshCommand = refreshCommand;
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()
-        {
-            (_repository?.Get() as IDisposable)?.Dispose();
-            _disposable.Dispose();
-        }
+            => _disposable.Dispose();
     }
 }

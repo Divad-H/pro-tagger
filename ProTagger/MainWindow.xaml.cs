@@ -27,9 +27,7 @@ namespace ProTagger
         private class RepositoryFactory : IRepositoryFactory
         {
             public IRepositoryWrapper CreateRepository(string path)
-            {
-                return new RepositoryWrapper(path);
-            }
+                => new RepositoryWrapper(path);
         }
 
         public MainWindow()

@@ -2,28 +2,21 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ProTagger.Wpf"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:c="clr-namespace:ProTagger.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="20" d:DesignWidth="200">
     <Grid x:Name="ParentGrid">
+        <Grid.Resources>
+            <c:BoolToBrushConverter x:Key="validToColor" TrueBrush="{StaticResource br_light}" FalseBrush="{StaticResource br_red}"/>
+        </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <RepeatButton Content="-" Command="{Binding Decrease}" Width="{Binding ElementName=ParentGrid, Path=ActualHeight}"/>
-        <TextBox Text="{Binding Text}" Grid.Column="1">
-            <TextBox.Style>
-                <Style TargetType="TextBox">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Valid}" Value="false">
-                            <Setter Property="Background" Value="{StaticResource br_red}"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBox.Style>
-        </TextBox>
+        <TextBox Text="{Binding Text.Value}" Grid.Column="1" Background="{Binding Valid.Value, Converter={StaticResource validToColor}}"/>
         <RepeatButton Content="+" Command="{Binding Increase}" Width="{Binding ElementName=ParentGrid, Path=ActualHeight}" Grid.Column="2"/>
     </Grid>
 </UserControl>

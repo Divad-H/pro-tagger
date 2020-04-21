@@ -10,7 +10,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReacitveMvvm;
 using System.Threading.Tasks;
-using System.Reactive.Subjects;
 
 namespace ProTagger.Repo.GitLog
 {
@@ -90,48 +89,13 @@ namespace ProTagger.Repo.GitLog
         public Commit Commit;
     }
 
-    public class LogGraph : INotifyPropertyChanged, IDisposable
+    public class LogGraph : IDisposable
     {
-        private Variant<GraphType, string> _logGraphNodes;
-        public Variant<GraphType, string> LogGraphNodes
-        {
-            get { return _logGraphNodes; }
-            set
-            {
-                if (_logGraphNodes == value)
-                    return;
-                _logGraphNodes = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public ViewSubject<Variant<GraphType, string>> LogGraphNodes { get; }
 
-        public IObservable<LogGraphNode?> SelectedNodeObservable { get; }
-        private LogGraphNode? _selectedNode;
-        public LogGraphNode? SelectedNode
-        {
-            get { return _selectedNode; }
-            set
-            {
-                if (_selectedNode == value)
-                    return;
-                _selectedNode = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public ViewSubject<LogGraphNode?> SelectedNode { get; }
 
-        public IObservable<LogGraphNode?> SecondarySelectedNodeObservable { get; }
-        private LogGraphNode? _secondarySelectedNode;
-        public LogGraphNode? SecondarySelectedNode
-        {
-            get { return _secondarySelectedNode; }
-            set
-            {
-                if (_secondarySelectedNode == value)
-                    return;
-                _secondarySelectedNode = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public ViewSubject<LogGraphNode?> SecondarySelectedNode { get; }
 
         public Func<object, object?, bool> KeepSelectionRule { get; } = (object1, object2) =>
             {
@@ -144,15 +108,14 @@ namespace ProTagger.Repo.GitLog
 
         public LogGraph(IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
         {
-            _logGraphNodes = new Variant<GraphType, string>(new GraphType());
-
-            var logGraphNodes = 
-                new BehaviorSubject<Variant<GraphType, string>>(new Variant<GraphType, string>("Select a repository."))
+            LogGraphNodes = new ViewSubject<Variant<GraphType, string>>(new Variant<GraphType, string>(new GraphType()))
                 .DisposeWith(_disposable);
+
             selectedBranches
                 .Select(branches => branches.Where(branch => branch.Selected))
                 .Select(branches => Observable.FromAsync(async ct =>
                 {
+                    using var delayDispose = repository.AddRef();
                     var res = await Task.Run(() => CreateGraph(repository, branches));
                     if (ct.IsCancellationRequested)
                         return null;
@@ -161,20 +124,14 @@ namespace ProTagger.Repo.GitLog
                 .Switch()
                 .SkipNull()
                 .Retry()
-                .Subscribe(graphNodes => logGraphNodes.OnNext(graphNodes))
+                .Subscribe(LogGraphNodes)
                 .DisposeWith(_disposable);
 
-            SelectedNodeObservable = this.FromProperty(vm => vm.SelectedNode);
-            SecondarySelectedNodeObservable = this.FromProperty(vm => vm.SecondarySelectedNode);
-
-            logGraphNodes
-                .Subscribe(graphNodes => LogGraphNodes = graphNodes)
+            SelectedNode = new ViewSubject<LogGraphNode?>(null)
+                .DisposeWith(_disposable);
+            SecondarySelectedNode = new ViewSubject<LogGraphNode?>(null)
                 .DisposeWith(_disposable);
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()

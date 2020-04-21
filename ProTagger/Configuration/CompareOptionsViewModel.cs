@@ -4,46 +4,42 @@ using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 
 namespace ProTagger.Configuration
 {
-    public class CompareOptionsViewModel : INotifyPropertyChanged
+    public class CompareOptionsViewModel : IDisposable
     {
         public IObservable<CompareOptions> CompareOptionsObservable { get; }
         public IntegerInputViewModel ContextLinesInput { get; }
         public IntegerInputViewModel InterhunkLinesInput { get; }
         public EnumViewModel<DiffAlgorithm> DiffAlgorithm { get; }
 
-        private bool _indentHeuristic;
-        public bool IndentHeuristic
-        {
-            get => _indentHeuristic;
-            set
-            {
-                if (value == _indentHeuristic)
-                    return;
-                _indentHeuristic = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public SubjectBase<bool> IndentHeuristic { get; }
 
         public SimilarityOptionsViewModel SimilarityOptions { get; }
 
         public CompareOptionsViewModel(ISchedulers schedulers, CompareOptions compareOptions)
         {
-            ContextLinesInput = new IntegerInputViewModel(schedulers, compareOptions.ContextLines, 0);
-            InterhunkLinesInput = new IntegerInputViewModel(schedulers, compareOptions.InterhunkLines, 0);
-            DiffAlgorithm = new EnumViewModel<DiffAlgorithm>(compareOptions.Algorithm);
-            _indentHeuristic = compareOptions.IndentHeuristic;
-            SimilarityOptions = new SimilarityOptionsViewModel(schedulers, compareOptions.Similarity);
+            ContextLinesInput = new IntegerInputViewModel(schedulers, compareOptions.ContextLines, 0)
+                .DisposeWith(_disposable);
+            InterhunkLinesInput = new IntegerInputViewModel(schedulers, compareOptions.InterhunkLines, 0)
+                .DisposeWith(_disposable);
+            DiffAlgorithm = new EnumViewModel<DiffAlgorithm>(compareOptions.Algorithm)
+                .DisposeWith(_disposable);
+            IndentHeuristic = new ViewSubject<bool>(compareOptions.IndentHeuristic)
+                .DisposeWith(_disposable);
+            SimilarityOptions = new SimilarityOptionsViewModel(schedulers, compareOptions.Similarity)
+                .DisposeWith(_disposable);
 
             CompareOptionsObservable = Observable
-                .CombineLatest(ContextLinesInput.ValueObservable,
-                    InterhunkLinesInput.ValueObservable,
-                    DiffAlgorithm.ValueObservable,
-                    this.FromProperty(vm => vm.IndentHeuristic),
+                .CombineLatest(ContextLinesInput.Value,
+                    InterhunkLinesInput.Value,
+                    DiffAlgorithm.Value,
+                    IndentHeuristic,
                     SimilarityOptions.SimilarityObservable,
                       (contextLines, 
                       interhunkLines, 
@@ -61,8 +57,8 @@ namespace ProTagger.Configuration
                     });
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private readonly CompositeDisposable _disposable = new CompositeDisposable();
+        public void Dispose()
+            => _disposable.Dispose();
     }
 }

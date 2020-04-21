@@ -1,4 +1,6 @@
 ﻿using LibGit2Sharp;
+using System;
+using System.Reactive.Disposables;
 
 namespace ProTagger.Utilities
 {
@@ -7,15 +9,16 @@ namespace ProTagger.Utilities
         public RepositoryWrapper(string path)
         {
             _repository = new Repository(path);
-            //_repository.Commits
+            _refCountDisposable = new RefCountDisposable(_repository);
+            _disposable = _refCountDisposable.GetDisposable();
         }
 
         private readonly Repository _repository;
+        private readonly IDisposable _disposable;
+        private readonly RefCountDisposable _refCountDisposable;
 
         public ICommitLog QueryCommits(CommitFilter filter)
-        {
-            return _repository.Commits.QueryBy(filter);
-        }
+            => _repository.Commits.QueryBy(filter);
 
         public BranchCollection Branches => _repository.Branches;
 
@@ -24,8 +27,20 @@ namespace ProTagger.Utilities
         public Diff Diff => _repository.Diff;
 
         public void Dispose()
+            => _disposable.Dispose();
+
+        public IDisposable AddRef()
+            => _refCountDisposable.GetDisposable();
+
+        public IDisposable? TryAddRef()
         {
-            _repository.Dispose();
+            var res = _refCountDisposable.GetDisposable();
+            if (_refCountDisposable.IsDisposed)
+            {
+                res.Dispose();
+                return null;
+            }
+            return res;
         }
     }
 }

@@ -1,8 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ReacitveMvvm;
-using ReactiveMvvm;
 using System;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace ReactiveMvvmTest

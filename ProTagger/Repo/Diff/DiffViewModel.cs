@@ -4,12 +4,10 @@ using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,58 +29,40 @@ namespace ProTagger.Repo.Diff
             => (CancellableChanges, Error) = (changes, error);
     }
 
-    public class DiffViewModel : INotifyPropertyChanged, IDisposable
+    public class DiffViewModel : IDisposable
     {
         public const string NoCommitSelectedMessage = "No commit selected.";
         public const string NoFilesSelectedMessage = "No files selected.";
-
-        private BatchList<Variant<PatchDiff, CancellableChangesWithError>> _patchDiff 
+        
+        public BatchList<Variant<PatchDiff, CancellableChangesWithError>> PatchDiff { get; }
             = new BatchList<Variant<PatchDiff, CancellableChangesWithError>>();
-        public BatchList<Variant<PatchDiff, CancellableChangesWithError>> PatchDiff
-        {
-            get => _patchDiff;
-            private set
-            {
-                if (_patchDiff == value)
-                    return;
-                _patchDiff = value;
-                NotifyPropertyChanged();
-            }
-        }
 
         public BatchList<TreeEntryChanges> SelectedFiles { get; } = new BatchList<TreeEntryChanges>();
 
         public Func<object, object, bool> KeepTreeDiffChangesSelectedRule 
             => (oldFile, newFile) => ((TreeEntryChanges)oldFile).Path == ((TreeEntryChanges)newFile).Path;
 
-        private Variant<List<TreeEntryChanges>, string> _treeDiff = new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage);
-        public Variant<List<TreeEntryChanges>, string> TreeDiff
-        {
-            get => _treeDiff;
-            set
-            {
-                if (_treeDiff == value)
-                    return;
-                _treeDiff = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public ViewSubject<Variant<List<TreeEntryChanges>, string>> TreeDiff { get; }
 
-        public DiffViewModel(LibGit2Sharp.Diff diff, 
+        public DiffViewModel(LibGit2Sharp.Diff diff,
+            IRefCount repositoryRefCounter,
             ISchedulers schedulers, 
             IObservable<Commit?> oldCommitObservable, 
             IObservable<Commit?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
+            TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, string>>(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
+                .DisposeWith(_disposables);
+
             Observable
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o =>
                     o.newCommit != null ?
-                        Diff.TreeDiff.CreateDiff(diff, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, diff, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
                 .Switch()
-                .Subscribe(filesDiff => TreeDiff = filesDiff)
+                .Subscribe(TreeDiff)
                 .DisposeWith(_disposables);
 
             var changedFilesSelectedObservable = SelectedFiles
@@ -94,6 +74,7 @@ namespace ProTagger.Repo.Diff
                 .WithLatestFrom(compareOptions, (treeChanges, options) => new { treeChanges , options })
                 .Merge(compareOptions
                     .Select(options => new { treeChanges = (IEnumerable<TreeEntryChanges>)SelectedFiles, options }))
+                .DistinctUntilChanged()
                 .WithLatestFrom(oldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
                 .WithLatestFrom(newCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
                 .Select(data => new
@@ -148,7 +129,7 @@ namespace ProTagger.Repo.Diff
                         data.newCommit == null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
-                        Diff.PatchDiff.CreateDiff(diff, data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(diff, repositoryRefCounter.TryAddRef(), data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()
@@ -162,10 +143,8 @@ namespace ProTagger.Repo.Diff
                         newFiles => 
                         {
                             foreach (var item in newFiles)
-                            {
                                 if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
                                     PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(item));
-                            }
                         },
                         error =>
                         {
@@ -179,14 +158,8 @@ namespace ProTagger.Repo.Diff
                 .DisposeWith(_disposables);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         public void Dispose()
-        {
-            _disposables.Dispose();
-        }
+            => _disposables.Dispose();
     }
 }

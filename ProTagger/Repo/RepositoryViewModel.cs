@@ -6,11 +6,9 @@ using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,67 +28,30 @@ namespace ProTagger
         }
     }
 
-    public class BranchSelectionViewModel : INotifyPropertyChanged
+    public class BranchSelectionViewModel
     {
-        private BranchSelection _branchSelection;
-        public bool Selected 
-        {
-            get { return _branchSelection.Selected; }
-            set
-            {
-                if (_branchSelection.Selected == value)
-                    return;
-                _branchSelection = new BranchSelection(_branchSelection.LongName,_branchSelection.PrettyName, value);
-                NotifyPropertyChanged();
-            }
-        }
-        public string PrettyName { get { return _branchSelection.PrettyName; } }
+        private readonly BranchSelection _branchSelection;
+        public ViewObservable<bool> Selected { get; }
+        public string PrettyName => _branchSelection.PrettyName;
 
         public IObservable<BranchSelection> BranchSelectionObservable { get; }
 
         public BranchSelectionViewModel(ISchedulers schedulers, Branch branch, bool selected)
         {
+            Selected = new ViewObservable<bool>(selected);
             _branchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
-            BranchSelectionObservable = this
-                .FromProperty(vm => vm.Selected)
-                .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, Selected));
+            BranchSelectionObservable = Selected
+                .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected));
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public class RepositoryViewModel : INotifyPropertyChanged, IDisposable
+    public class RepositoryViewModel : IDisposable
     {
-        private LogGraph _graph;
-        public LogGraph Graph
-        {
-            get { return _graph; }
-            set
-            {
-                if (_graph == value)
-                    return;
-                _graph = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public LogGraph Graph { get; }
 
         public List<BranchSelectionViewModel> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
-
-        private DiffViewModel _diff;
-        public DiffViewModel Diff
-        {
-            get { return _diff; }
-            set
-            {
-                if (_diff == value)
-                    return;
-                _diff = value;
-                NotifyPropertyChanged();
-            }
-        }
+        public DiffViewModel Diff { get; }
 
         public static async Task<Variant<RepositoryViewModel, string>?> Create(ISchedulers schedulers,
             CancellationToken ct, 
@@ -114,12 +75,13 @@ namespace ProTagger
             }
         }
 
-        readonly IRepositoryWrapper _repository;
+        private readonly IRepositoryWrapper _repository;
 
         public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path, IObservable<CompareOptions> compareOptions)
         {
             var branches = new List<BranchSelectionViewModel>();
-            _repository = repositoryFactory.CreateRepository(path);
+            _repository = repositoryFactory.CreateRepository(path)
+                .DisposeWith(_disposables);
             try
             {
                 foreach (var branch in _repository.Branches)
@@ -132,32 +94,25 @@ namespace ProTagger
                 Branches = branches;
                 BranchesObservable = branchesObservable;
 
-                _graph = new LogGraph(_repository, branchesObservable);
+                Graph = new LogGraph(_repository, branchesObservable)
+                    .DisposeWith(_disposables);
             }
             catch (Exception)
             {
-                _repository.Dispose();
+                Dispose();
                 throw;
             }
-            var selectedCommit = _graph.SelectedNodeObservable
+            var selectedCommit = Graph.SelectedNode
                 .Select(node => node?.Commit);
-            var secondarySelectedCommit = _graph.SecondarySelectedNodeObservable
+            var secondarySelectedCommit = Graph.SecondarySelectedNode
                 .Select(node => node?.Commit);
 
-            _diff = new DiffViewModel(_repository.Diff, schedulers, secondarySelectedCommit, selectedCommit, compareOptions);
+            Diff = new DiffViewModel(_repository.Diff, _repository, schedulers, secondarySelectedCommit, selectedCommit, compareOptions)
+                .DisposeWith(_disposables);
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         public void Dispose()
-        {
-            _diff.Dispose();
-            _repository.Dispose();
-            _graph.Dispose();
-            _disposables.Dispose();
-        }
+            => _disposables.Dispose();
     }
 }

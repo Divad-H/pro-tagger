@@ -37,7 +37,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <CheckBox Content="{Binding PrettyName}" 
-                                  IsChecked="{Binding Selected}" />
+                                  IsChecked="{Binding Selected.Value}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

@@ -14,7 +14,7 @@ namespace ProTaggerTest.Configuration
         {
             var schedulers = new TestSchedulers();
             CompareOptions? result = null;
-            var options = new CompareOptionsViewModel(schedulers, new CompareOptions()
+            using var options = new CompareOptionsViewModel(schedulers, new CompareOptions()
             {
                 Algorithm = DiffAlgorithm.Minimal,
                 ContextLines = 3,
@@ -37,27 +37,27 @@ namespace ProTaggerTest.Configuration
             if (result == null)
                 throw new Exception();
             Assert.AreEqual(3, result.ContextLines);
-            options.DiffAlgorithm.Value = DiffAlgorithm.Minimal;
+            options.DiffAlgorithm.Value.OnNext(DiffAlgorithm.Minimal);
             Assert.AreEqual(DiffAlgorithm.Minimal, result.Algorithm);
-            options.ContextLinesInput.Text = "10";
+            options.ContextLinesInput.Text.OnNext("10");
             Assert.AreEqual(10, result.ContextLines);
-            options.IndentHeuristic = false;
+            options.IndentHeuristic.OnNext(false);
             Assert.IsFalse(result.IndentHeuristic);
-            options.InterhunkLinesInput.Text = "11";
+            options.InterhunkLinesInput.Text.OnNext("11");
             Assert.AreEqual(11, result.InterhunkLines);
-            options.SimilarityOptions.BreakRewriteThresholdInput.Text = "12";
+            options.SimilarityOptions.BreakRewriteThresholdInput.Text.OnNext("12");
             Assert.AreEqual(12, result.Similarity.BreakRewriteThreshold);
-            options.SimilarityOptions.CopyThresholdInput.Text = "13";
+            options.SimilarityOptions.CopyThresholdInput.Text.OnNext("13");
             Assert.AreEqual(13, result.Similarity.CopyThreshold);
-            options.SimilarityOptions.RenameDetectionMode.Value = RenameDetectionMode.Exact;
+            options.SimilarityOptions.RenameDetectionMode.Value.OnNext(RenameDetectionMode.Exact);
             Assert.AreEqual(RenameDetectionMode.Exact, result.Similarity.RenameDetectionMode);
-            options.SimilarityOptions.RenameFromRewriteThresholdInput.Text = "14";
+            options.SimilarityOptions.RenameFromRewriteThresholdInput.Text.OnNext("14");
             Assert.AreEqual(14, result.Similarity.RenameFromRewriteThreshold);
-            options.SimilarityOptions.RenameLimitInput.Text = "15";
+            options.SimilarityOptions.RenameLimitInput.Text.OnNext("15");
             Assert.AreEqual(15, result.Similarity.RenameLimit);
-            options.SimilarityOptions.RenameThresholdInput.Text = "16";
+            options.SimilarityOptions.RenameThresholdInput.Text.OnNext("16");
             Assert.AreEqual(16, result.Similarity.RenameThreshold);
-            options.SimilarityOptions.WhitespaceMode.Value = WhitespaceMode.IgnoreAllWhitespace;
+            options.SimilarityOptions.WhitespaceMode.Value.OnNext(WhitespaceMode.IgnoreAllWhitespace);
             Assert.AreEqual(WhitespaceMode.IgnoreAllWhitespace, result.Similarity.WhitespaceMode);
         }
     }

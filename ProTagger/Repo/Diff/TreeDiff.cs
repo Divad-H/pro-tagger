@@ -9,12 +9,15 @@ namespace ProTagger.Repo.Diff
 {
     static class TreeDiff
     {
-        internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
+        internal static async Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
+                IRefCount repositoryRefCounter,
                 LibGit2Sharp.Diff diff,
                 Commit? oldCommit,
                 Commit newCommit,
                 CompareOptions compareOptions)
-            => Task.Run(() =>
+        {
+            using var delayDispose = repositoryRefCounter.AddRef();
+            return await Task.Run(() =>
                 {
                     try
                     {
@@ -27,5 +30,6 @@ namespace ProTagger.Repo.Diff
                         return new Variant<List<TreeEntryChanges>, string>(e.Message);
                     }
                 });
+        }
     }
 }

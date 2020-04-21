@@ -8,10 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
 using ReactiveMvvm;
 using System.Threading;
 using System.Threading.Tasks;
+using ProTagger;
 
 namespace ProTaggerTest.Repo.Diff
 {
@@ -22,13 +22,17 @@ namespace ProTaggerTest.Repo.Diff
         public void CanCreateInstance()
         {
             var diff = new DiffMock(null, null);
-            var oldCommit = Observable.Return((Commit?)null);
-            var newCommit = Observable.Return((Commit?)null);
-            var compareOptions = Observable.Return(new CompareOptions());
+            var oldCommit = Observable.Return((Commit?)null).Concat(Observable.Never<Commit?>());
+            var newCommit = Observable.Return((Commit?)null).Concat(Observable.Never<Commit?>());
+            var compareOptions = Observable.Return(new CompareOptions()).Concat(Observable.Never<CompareOptions>());
 
-            var vm = new DiffViewModel(diff, new TestSchedulers(), oldCommit, newCommit, compareOptions);
-            Assert.IsTrue(vm.TreeDiff.Is<string>());
-            Assert.AreEqual(DiffViewModel.NoCommitSelectedMessage, vm.TreeDiff.Get<string>());
+            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), oldCommit, newCommit, compareOptions);
+            Variant<List<TreeEntryChanges>, string>? value = null;
+            using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
+            if (value == null)
+                throw new Exception("Value was not set.");
+            Assert.IsTrue(value.Is<string>());
+            Assert.AreEqual(DiffViewModel.NoCommitSelectedMessage, value.Get<string>());
         }
 
         [TestMethod]
@@ -51,18 +55,22 @@ namespace ProTaggerTest.Repo.Diff
             var newCommit = Observable.Return(secondCommit);
             var compareOptionsObs = Observable.Return(compareOptions);
 
-            var vm = new DiffViewModel(diff, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
+            Variant<List<TreeEntryChanges>, string>? value = null;
+            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
             using var _ = vm
-                .FromProperty(vm => vm.TreeDiff)
+                .TreeDiff
                 .Subscribe(val =>
                 {
+                    value = val;
                     if (val.Is<List<TreeEntryChanges>>())
                         signal.Release();
                 });
 
-            if (!vm.TreeDiff.Is<List<TreeEntryChanges>>())
+            if (value == null)
+                throw new Exception("TreeDiff was not set.");
+            if (!value.Is<List<TreeEntryChanges>>())
                 await signal.WaitAsync(TimeSpan.FromSeconds(10));
-            Assert.IsTrue(vm.TreeDiff.Is<List<TreeEntryChanges>>());
+            Assert.IsTrue(value.Is<List<TreeEntryChanges>>());
         }
     }
 }

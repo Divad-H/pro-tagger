@@ -16,12 +16,16 @@ namespace ProTagger.Repo.Diff
           => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
 
         public static Variant<IList<PatchDiff>, CancellableChangesWithError> CreateDiff(LibGit2Sharp.Diff diff,
+                    IDisposable? delayDisposeRepository,
                     Commit? oldCommit,
                     Commit newCommit,
                     IEnumerable<string> paths,
                     CompareOptions options,
                     CancellableChanges cancellableChanges)
         {
+            if (delayDisposeRepository == null)
+                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
+                    new CancellableChangesWithError(cancellableChanges, "Repository was disposed."));
             try
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
@@ -30,8 +34,8 @@ namespace ProTagger.Repo.Diff
                     oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options);
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(patch
                         .Select(patchEntry => new PatchDiff(
-                            DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token), 
-                            patchEntry, 
+                            DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token),
+                            patchEntry,
                             cancellableChanges))
                         .ToList());
             }
@@ -39,6 +43,10 @@ namespace ProTagger.Repo.Diff
             {
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                     new CancellableChangesWithError(cancellableChanges, e.Message));
+            }
+            finally
+            {
+                delayDisposeRepository.Dispose();
             }
         }
     }

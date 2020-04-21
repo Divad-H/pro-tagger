@@ -18,11 +18,11 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding RepositoryPath, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Text="{Binding RepositoryPath.Value, UpdateSourceTrigger=PropertyChanged}"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}" CommandParameter="Ratte" Grid.Column="1"/>
             <configuration:CompareOptionsView DataContext="{Binding CompareOptions}" Grid.Column="2"/>
         </Grid>
-        <custom:VariantPresenter VariantContent="{Binding Repository}" Style="{StaticResource DefaultErrorView}">
+        <custom:VariantPresenter VariantContent="{Binding Repository.Value}" Style="{StaticResource DefaultErrorView}">
             <custom:VariantPresenter.Variant0Template>
                 <DataTemplate>
                     <repo:RepositoryView/>

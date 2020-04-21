@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Text;
 
 namespace ReacitveMvvm
 {
@@ -35,10 +34,7 @@ namespace ReacitveMvvm
                     return _value;
                 }
             }
-            set
-            {
-                OnNext(value);
-            }
+            set => OnNext(value);
         }
 
         public override void OnCompleted()

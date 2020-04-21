@@ -49,9 +49,7 @@ namespace ReactiveMvvm
         public event EventHandler? CanExecuteChanged;
 
         public bool CanExecute(object parameter)
-        {
-            return _canExecute;
-        }
+            => _canExecute;
 
         public void Execute(object parameter)
         {
@@ -62,14 +60,10 @@ namespace ReactiveMvvm
         }
 
         public IDisposable Subscribe(IObserver<TOut> observer)
-        {
-            return _executeSubject.Subscribe(observer);
-        }
+            => _executeSubject.Subscribe(observer);
 
         public void Dispose()
-        {
-            _disposable.Dispose();
-        }
+            => _disposable.Dispose();
     }
 
     public static class ReactiveCommand

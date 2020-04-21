@@ -80,8 +80,8 @@ namespace ProTagger.Utilities
                     throw new ArgumentException("Unexpected diff format, cannot parse line numbers.");
                 var tokens = oldNewTokens.Select(token => token.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)).ToList();
                 var firstLineEndIndex = rawHunk.IndexOf('\n');
-                var oldFirstLine = tokens[0].Length > 1 ? int.Parse(tokens[0][0]) : 0;
-                var newFirstLine = tokens[1].Length > 1 ? int.Parse(tokens[1][0]) : 0;
+                var oldFirstLine = tokens[0].Length > 0 ? int.Parse(tokens[0][0]) : 0;
+                var newFirstLine = tokens[1].Length > 0 ? int.Parse(tokens[1][0]) : 0;
                 result.Add(new Hunk(newFirstLine, tokens[1].Length > 1 ? int.Parse(tokens[1][1]) : 0, oldFirstLine, tokens[0].Length > 1 ? int.Parse(tokens[0][1]) : 0,
                     rawHunk.Substring(lineInfoLength + 2, firstLineEndIndex - lineInfoLength - 2).Trim(),
                     ParseHunk(rawHunk.Substring(firstLineEndIndex + "\n".Length), newFirstLine, oldFirstLine, ct)));

@@ -50,10 +50,25 @@ namespace ProTagger.Wpf
             set => throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// DependencyProperty for <see cref="Foreground" /> property.
+        /// </summary>
+        public static readonly DependencyProperty ForegroundProperty =
+                DependencyProperty.Register(
+                        nameof(Foreground),
+                        typeof(Brush),
+                        typeof(SimpleLabel),
+                        new FrameworkPropertyMetadata(
+                                new SolidColorBrush(Colors.Black),
+                                FrameworkPropertyMetadataOptions.AffectsRender));
+
+        /// <summary>
+        /// The Foreground property for the Text.
+        /// </summary>
         public Brush Foreground
         {
-            get => new SolidColorBrush(Colors.Black);
-            set => throw new NotImplementedException();
+            get => (Brush)GetValue(ForegroundProperty);
+            set => SetValue(ForegroundProperty, value);
         }
 
         protected override void OnRender(DrawingContext drawingContext)

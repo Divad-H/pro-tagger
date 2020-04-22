@@ -126,14 +126,15 @@
                             <Setter Property="OverridesDefaultStyle" Value="true" />
                             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
                             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-                            <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
+                            <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
                             <Setter Property="VerticalContentAlignment" Value="Center" />
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListView">
-                                        <ScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}">
+                                        <custom:NotifyAtEndScrollViewer Style="{StaticResource GridViewScrollViewerStyleKey1}"
+                                                                        ScrolledBottomCommand="{Binding ElementName=LogGraph, Path=DataContext.ScrolledBottom}">
                                             <ItemsPresenter />
-                                        </ScrollViewer>
+                                        </custom:NotifyAtEndScrollViewer>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>

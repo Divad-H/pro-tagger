@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace ProTagger.Wpf
 {
@@ -109,6 +110,8 @@ namespace ProTagger.Wpf
             var oldSelection = SelectedItem;
             var oldSecondarySelection = SecondarySelection;
             base.OnItemsChanged(e);
+            if (e.Action != NotifyCollectionChangedAction.Reset)
+                return;
             if (KeepSelectionRule == null || ItemsSource == null)
                 return;
             SelectedItem = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSelection));
@@ -135,8 +138,8 @@ namespace ProTagger.Wpf
 
         public GridPublisher GridUpdatedPublisher
         {
-            get { return (GridPublisher)GetValue(GridUpdatedPublisherProperty); }
-            protected set { SetValue(GridUpdatedPublisherPropertyKey, value); }
+            get => (GridPublisher)GetValue(GridUpdatedPublisherProperty);
+            protected set => SetValue(GridUpdatedPublisherPropertyKey, value);
         }
 
         protected override DependencyObject GetContainerForItemOverride()

@@ -59,8 +59,7 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("master", "master", true),
                                                  new BranchSelection("work", "work", true)
                                              });
-            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
-            var g = graph.Get<List<LogGraphNode>>();
+            var g = graph.ToList();
             Assert.AreEqual(6, g.Count);
 
             var node = g[0];
@@ -160,8 +159,7 @@ namespace ProTaggerTest.Repo.GitLog
                                              {
                                                  new BranchSelection("master", "master", true),
                                              });
-            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
-            var g = graph.Get<List<LogGraphNode>>();
+            var g = graph.ToList();
             Assert.AreEqual(4, g.Count);
 
             var node = g[0];
@@ -244,8 +242,7 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("branch1", "branch1", true),
                                                  new BranchSelection("branch2", "branch2", true),
                                              });
-            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
-            var g = graph.Get<List<LogGraphNode>>();
+            var g = graph.ToList();
             Assert.AreEqual(7, g.Count);
 
             var node = g[0];
@@ -359,8 +356,7 @@ namespace ProTaggerTest.Repo.GitLog
                                              {
                                                  new BranchSelection("master", "master", true),
                                              });
-            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
-            var g = graph.Get<List<LogGraphNode>>();
+            var g = graph.ToList();
             Assert.AreEqual(9, g.Count);
 
             var node = g[0];
@@ -479,8 +475,7 @@ namespace ProTaggerTest.Repo.GitLog
                                              {
                                                  new BranchSelection("master", "master", true),
                                              });
-            Assert.IsTrue(graph.Is<List<LogGraphNode>>(), "Expected result of CreateGraph to be a " + nameof(List<LogGraphNode>));
-            var g = graph.Get<List<LogGraphNode>>();
+            var g = graph.ToList();
             Assert.AreEqual(6, g.Count);
 
             var node = g[0];

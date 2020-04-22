@@ -94,7 +94,7 @@ namespace ProTagger
                 Branches = branches;
                 BranchesObservable = branchesObservable;
 
-                Graph = new LogGraph(_repository, branchesObservable)
+                Graph = new LogGraph(schedulers, _repository, branchesObservable)
                     .DisposeWith(_disposables);
             }
             catch (Exception)

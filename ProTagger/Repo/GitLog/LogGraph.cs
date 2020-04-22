@@ -8,10 +8,12 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReacitveMvvm;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace ProTagger.Repo.GitLog
 {
-    using GraphType = List<LogGraphNode>;
+    using GraphType = ObservableCollection<LogGraphNode>;
     public class LogGraphNode
     {
         /// <summary>
@@ -89,6 +91,14 @@ namespace ProTagger.Repo.GitLog
 
     public class LogGraph : IDisposable
     {
+        private struct NodesData
+        {
+            public int Index;
+            public IList<LogGraphNode> Batch;
+        }
+
+        public ICommand ScrolledBottom { get; }
+
         public ViewSubject<Variant<GraphType, string>> LogGraphNodes { get; }
 
         public ViewSubject<LogGraphNode?> SelectedNode { get; }
@@ -104,25 +114,39 @@ namespace ProTagger.Repo.GitLog
                 return node1.Sha == node2.Sha;
             };
 
-        public LogGraph(IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
+        public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
         {
+            var scrolledBottom = ReactiveCommand.Create<object?, object?>(Observable.Return(true), p => p, schedulers.Dispatcher);
+            ScrolledBottom = scrolledBottom;
+
             LogGraphNodes = new ViewSubject<Variant<GraphType, string>>(new Variant<GraphType, string>(new GraphType()))
                 .DisposeWith(_disposable);
 
             selectedBranches
                 .Select(branches => branches.Where(branch => branch.Selected))
-                .Select(branches => Observable.FromAsync(async ct =>
-                {
-                    using var delayDispose = repository.AddRef();
-                    var res = await Task.Run(() => CreateGraph(repository, branches));
-                    if (ct.IsCancellationRequested)
-                        return null;
-                    return res;
-                }))
+                .Select(branches
+                    => CreateGraph(repository, branches)
+                        .ToObservable(schedulers.ThreadPool)
+                        .Buffer(1000)
+                        .Zip(Observable.Return<object?>(null).Concat(scrolledBottom), (data, _) => data)
+                        .Scan(
+                            new NodesData(){ Index = 0, Batch = new GraphType() },
+                            (last, current) => new NodesData() { Index = last.Index + 1, Batch = current })
+                        .Select(data => new Variant<NodesData, string>(data))
+                        .Catch((Exception e) => Observable.Return(new Variant<NodesData, string>(e.Message)))
+                        .ObserveOn(schedulers.Dispatcher))
                 .Switch()
                 .SkipNull()
-                .Retry()
-                .Subscribe(LogGraphNodes)
+                .Subscribe(var => var.Visit(
+                    data =>
+                    {
+                        if (data.Index == 1)
+                            LogGraphNodes.OnNext(new Variant<GraphType, string>(new GraphType(data.Batch)));
+                        else
+                            foreach (var node in data.Batch)
+                                LogGraphNodes.Value.First.Add(node);
+                    },
+                    error => LogGraphNodes.OnNext(new Variant<GraphType, string>(error))))
                 .DisposeWith(_disposable);
 
             SelectedNode = new ViewSubject<LogGraphNode?>(null)
@@ -135,15 +159,15 @@ namespace ProTagger.Repo.GitLog
         public void Dispose()
             => _disposable.Dispose();
 
-        internal static Variant<GraphType, string> CreateGraph(
+        internal static IEnumerable<LogGraphNode> CreateGraph(
             IRepositoryWrapper repository, 
             IEnumerable<BranchSelection> branches)
         {
-            try
+            using var delayDispose = repository.TryAddRef();
+            if (delayDispose != null)
             {
                 var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
                 var tags = repository.Tags.ToList();
-                var result = new GraphType();
                 var expectedIds = new List<ObjectId?>();
                 var directions = new List<List<int>>();
                 var lastDirections = new List<List<int>>();
@@ -225,11 +249,11 @@ namespace ProTagger.Repo.GitLog
                     }
 
                     if (lastPosition.HasValue && lastCommit != null)
-                        result.Add(new LogGraphNode(
-                            lastPosition.Value, 
-                            CreateGraphDirections(lastDirections, currentDirections), 
-                            lastCommit, 
-                            lastMerge, 
+                        yield return new LogGraphNode(
+                            lastPosition.Value,
+                            CreateGraphDirections(lastDirections, currentDirections),
+                            lastCommit,
+                            lastMerge,
                             selectedBranches
                                 .Where(branch => branch.Tip == lastCommit)
                                 .Select(branch => CreateBranchInfo(branch))
@@ -237,14 +261,14 @@ namespace ProTagger.Repo.GitLog
                             tags
                                 .Where(tag => tag.Target == lastCommit)
                                 .Select(tag => CreateTagInfo(tag))
-                                .ToList()));
+                                .ToList());
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
                     lastCommit = c;
                     lastMerge = parents.Count > 1;
                 }
                 if (lastPosition.HasValue && lastCommit != null)
-                    result.Add(new LogGraphNode(
+                    yield return new LogGraphNode(
                         lastPosition.Value,
                         CreateGraphDirections(lastDirections, new List<List<int>>()),
                         lastCommit,
@@ -256,12 +280,7 @@ namespace ProTagger.Repo.GitLog
                         tags
                             .Where(tag => tag.Target == lastCommit)
                             .Select(tag => CreateTagInfo(tag))
-                            .ToList()));
-                return new Variant<GraphType, string>(result);
-            }
-            catch (Exception e)
-            {
-                return new Variant<GraphType, string>(e.Message);
+                            .ToList());
             }
         }
 

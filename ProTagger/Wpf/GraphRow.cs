@@ -13,8 +13,8 @@ namespace ProTagger.Wpf
     {
         public LogGraphNode Content
         {
-            get { return (LogGraphNode)GetValue(ContentProperty); }
-            set { SetValue(ContentProperty, value); }
+            get => (LogGraphNode)GetValue(ContentProperty);
+            set => SetValue(ContentProperty, value);
         }
         public static readonly DependencyProperty ContentProperty = DependencyProperty.Register(
           nameof(Content), typeof(LogGraphNode), typeof(GraphRow), 
@@ -22,8 +22,8 @@ namespace ProTagger.Wpf
         
         public ColumnDefinitionCollection ColumnDefinitions
         {
-            get { return (ColumnDefinitionCollection)GetValue(ColumnDefinitionsProperty); }
-            set { SetValue(ColumnDefinitionsProperty, value); }
+            get => (ColumnDefinitionCollection)GetValue(ColumnDefinitionsProperty);
+            set => SetValue(ColumnDefinitionsProperty, value);
         }
         public static readonly DependencyProperty ColumnDefinitionsProperty = DependencyProperty.Register(
           nameof(ColumnDefinitions), typeof(ColumnDefinitionCollection), typeof(GraphRow),
@@ -31,8 +31,8 @@ namespace ProTagger.Wpf
 
         public ColumnLayoutListView.GridPublisher GridUpdatedPublisher
         {
-            get { return (ColumnLayoutListView.GridPublisher)GetValue(GridUpdatedPublisherProperty); }
-            set { SetValue(GridUpdatedPublisherProperty, value); }
+            get => (ColumnLayoutListView.GridPublisher)GetValue(GridUpdatedPublisherProperty);
+            set => SetValue(GridUpdatedPublisherProperty, value);
         }
 
         public static readonly DependencyProperty GridUpdatedPublisherProperty = DependencyProperty.Register(
@@ -49,8 +49,8 @@ namespace ProTagger.Wpf
 
         public Brush? Background
         {
-            get { return (Brush?)GetValue(BackgroundProperty); }
-            set { SetValue(BackgroundProperty, value); }
+            get => (Brush?)GetValue(BackgroundProperty);
+            set => SetValue(BackgroundProperty, value);
         }
 
         public static readonly DependencyProperty BackgroundProperty = DependencyProperty.Register(
@@ -59,8 +59,8 @@ namespace ProTagger.Wpf
 
         public Brush? HighlightFill
         {
-            get { return (Brush?)GetValue(HighlightFillProperty); }
-            set { SetValue(HighlightFillProperty, value); }
+            get => (Brush?)GetValue(HighlightFillProperty);
+            set => SetValue(HighlightFillProperty, value);
         }
 
         public static readonly DependencyProperty HighlightFillProperty = DependencyProperty.Register(
@@ -69,8 +69,8 @@ namespace ProTagger.Wpf
 
         public Brush? Fill
         {
-            get { return (Brush?)GetValue(FillProperty); }
-            set { SetValue(FillProperty, value); }
+            get => (Brush?)GetValue(FillProperty);
+            set => SetValue(FillProperty, value);
         }
 
         public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
@@ -79,8 +79,8 @@ namespace ProTagger.Wpf
 
         public Brush Foreground
         {
-            get { return (Brush)GetValue(ForegroundProperty); }
-            set { SetValue(ForegroundProperty, value); }
+            get => (Brush)GetValue(ForegroundProperty);
+            set => SetValue(ForegroundProperty, value);
         }
 
         public static readonly DependencyProperty ForegroundProperty = DependencyProperty.Register(
@@ -89,8 +89,8 @@ namespace ProTagger.Wpf
 
         public Brush LabelBrush
         {
-            get { return (Brush)GetValue(LabelBrushProperty); }
-            set { SetValue(LabelBrushProperty, value); }
+            get => (Brush)GetValue(LabelBrushProperty);
+            set => SetValue(LabelBrushProperty, value);
         }
 
         public static readonly DependencyProperty LabelBrushProperty = DependencyProperty.Register(
@@ -99,8 +99,8 @@ namespace ProTagger.Wpf
 
         public Brush LabelForeground
         {
-            get { return (Brush)GetValue(LabelForegroundProperty); }
-            set { SetValue(LabelForegroundProperty, value); }
+            get => (Brush)GetValue(LabelForegroundProperty);
+            set => SetValue(LabelForegroundProperty, value);
         }
 
         public static readonly DependencyProperty LabelForegroundProperty = DependencyProperty.Register(
@@ -109,8 +109,8 @@ namespace ProTagger.Wpf
 
         public Brush SecondarySelectionBackground
         {
-            get { return (Brush)GetValue(SecondarySelectionBackgroundProperty); }
-            set { SetValue(SecondarySelectionBackgroundProperty, value); }
+            get => (Brush)GetValue(SecondarySelectionBackgroundProperty);
+            set => SetValue(SecondarySelectionBackgroundProperty, value);
         }
 
         public static readonly DependencyProperty SecondarySelectionBackgroundProperty = DependencyProperty.Register(
@@ -119,8 +119,8 @@ namespace ProTagger.Wpf
 
         public Brush HeadBrush
         {
-            get { return (Brush)GetValue(HeadBrushProperty); }
-            set { SetValue(HeadBrushProperty, value); }
+            get => (Brush)GetValue(HeadBrushProperty);
+            set => SetValue(HeadBrushProperty, value);
         }
 
         public static readonly DependencyProperty HeadBrushProperty = DependencyProperty.Register(
@@ -296,10 +296,7 @@ namespace ProTagger.Wpf
         }
 
         private IEnumerable<Tuple<int, int>> MapDirections(IEnumerable<int> subDirection, int i)
-        {
-            foreach (var direction in subDirection)
-                yield return Tuple.Create(direction, i);
-        }
+            => subDirection.Select(direction =>  Tuple.Create(direction, i));
 
         private static void DrawCircle(StreamGeometryContext ctx, double centerX, double centerY, double radius)
         {

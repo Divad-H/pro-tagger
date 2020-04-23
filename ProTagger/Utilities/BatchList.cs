@@ -50,39 +50,25 @@ namespace ProTagger.Utilities
         }
 
         public bool Contains(T item)
-        {
-            return _list.Contains(item);
-        }
+            => _list.Contains(item);
 
         public bool Contains(object? value)
-        {
-            return (_list as IList).Contains(value);
-        }
+            => (_list as IList).Contains(value);
 
         public void CopyTo(T[] array, int arrayIndex)
-        {
-            _list.CopyTo(array, arrayIndex);
-        }
+            => _list.CopyTo(array, arrayIndex);
 
         public void CopyTo(Array array, int index)
-        {
-            (_list as IList).CopyTo(array, index);
-        }
+            => (_list as IList).CopyTo(array, index);
 
         public IEnumerator<T> GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
+            => _list.GetEnumerator();
 
         public int IndexOf(T item)
-        {
-            return _list.IndexOf(item);
-        }
+            => _list.IndexOf(item);
 
         public int IndexOf(object? value)
-        {
-            return (_list as IList).IndexOf(value);
-        }
+            => (_list as IList).IndexOf(value);
 
         public void Insert(int index, T item)
         {
@@ -99,13 +85,9 @@ namespace ProTagger.Utilities
         }
 
         public void Modify(IEnumerable itemsToAdd, IEnumerable itemsToRemove, bool supportsRangeOperations)
-        {
-            Modify(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
-        }
+            => Modify(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
         public void ModifyNoDuplicates(IEnumerable itemsToAdd, IEnumerable itemsToRemove, bool supportsRangeOperations)
-        {
-            ModifyNoDuplicates(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
-        }
+            => ModifyNoDuplicates(itemsToAdd.Cast<T>(), itemsToRemove.Cast<T>(), supportsRangeOperations);
 
         public void Modify(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
         {
@@ -133,9 +115,7 @@ namespace ProTagger.Utilities
         }
 
         public void ModifyNoDuplicates(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
-        {
-            Modify(itemsToAdd.Where(item => !_list.Contains(item)).ToList(), itemsToRemove, supportsRangeOperations);
-        }
+            => Modify(itemsToAdd.Where(item => !_list.Contains(item)).ToList(), itemsToRemove, supportsRangeOperations);
 
         public bool Remove(T item)
         {
@@ -154,9 +134,7 @@ namespace ProTagger.Utilities
         }
 
         public int RemoveAll(Func<T, bool> match)
-        {
-            return RemoveAll(match, true);
-        }
+            => RemoveAll(match, true);
 
         public int RemoveAll(Func<T, bool> match, bool supportsRangeOperations)
         {
@@ -178,9 +156,7 @@ namespace ProTagger.Utilities
         }
 
         IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
+            => _list.GetEnumerator();
 
         private NotifyCollectionChangedEventArgs ReplaceIfUnsupported(bool supportsRangeOperations, NotifyCollectionChangedEventArgs args)
         {

@@ -7,7 +7,6 @@ using ReactiveMvvm;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReacitveMvvm;
-using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -46,8 +45,8 @@ namespace ProTagger.Repo.GitLog
 
         public readonly struct TagInfo
         {
-            public TagInfo(string longName, string shortName) =>
-                (LongName, ShortName) = (longName, shortName);
+            public TagInfo(string longName, string shortName)
+                => (LongName, ShortName) = (longName, shortName);
 
             public string LongName { get; }
             public string ShortName { get; }
@@ -285,25 +284,19 @@ namespace ProTagger.Repo.GitLog
         }
 
         private static List<LogGraphNode.DownwardDirections> CreateGraphDirections(IEnumerable<List<int>> lastDirections, IEnumerable<List<int>> nextDirections)
-        {
-            return lastDirections.GreaterZip(nextDirections,
+            => lastDirections.GreaterZip(nextDirections,
                                              (first, second) => new LogGraphNode.DownwardDirections() { Previous = first, Next = second }, new List<int>(), new List<int>())
                                  .ToList();
-        }
 
         private static LogGraphNode.BranchInfo CreateBranchInfo(Branch branch)
-        {
-            return new LogGraphNode.BranchInfo(
+            => new LogGraphNode.BranchInfo(
                 branch.CanonicalName,
                 branch.FriendlyName,
                 branch.IsRemote,
                 branch.IsCurrentRepositoryHead
             );
-        }
 
         private static LogGraphNode.TagInfo CreateTagInfo(Tag tag)
-        {
-            return new LogGraphNode.TagInfo(tag.CanonicalName, tag.FriendlyName);
-        }
+            => new LogGraphNode.TagInfo(tag.CanonicalName, tag.FriendlyName);
     }
 }

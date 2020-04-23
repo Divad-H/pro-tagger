@@ -71,27 +71,19 @@ namespace ProTagger.Wpf
         }
 
         private static ListViewSelectionBinder? GetSelectionBinder(DependencyObject obj)
-        {
-            return (ListViewSelectionBinder)obj.GetValue(SelectionBinderProperty);
-        }
+            =>  (ListViewSelectionBinder)obj.GetValue(SelectionBinderProperty);
 
         private static void SetSelectionBinder(DependencyObject obj, ListViewSelectionBinder items)
-        {
-            obj.SetValue(SelectionBinderProperty, items);
-        }
+            => obj.SetValue(SelectionBinderProperty, items);
 
         private static readonly DependencyProperty SelectionBinderProperty = 
             DependencyProperty.RegisterAttached("SelectionBinder", typeof(ListViewSelectionBinder), typeof(ListViewSelectionBinder));
 
         public static void SetSelectedItems(DependencyObject elementName, IEnumerable value)
-        {
-            elementName.SetValue(SelectedItemsProperty, value);
-        }
+            => elementName.SetValue(SelectedItemsProperty, value);
 
         public static IEnumerable? GetSelectedItems(DependencyObject elementName)
-        {
-            return (IEnumerable)elementName.GetValue(SelectedItemsProperty);
-        }
+            => (IEnumerable)elementName.GetValue(SelectedItemsProperty);
 
         public static readonly DependencyProperty SelectedItemsProperty = 
             DependencyProperty.RegisterAttached("SelectedItems", typeof(IList), typeof(ListViewSelectionBinder),

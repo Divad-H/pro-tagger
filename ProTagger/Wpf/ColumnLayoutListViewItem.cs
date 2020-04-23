@@ -9,23 +9,19 @@ namespace ProTagger.Wpf
     {
         private ColumnLayoutListView? _listView;
         internal void AddedToListView(ColumnLayoutListView listView)
-        {
-            _listView = listView;
-        }
+            => _listView = listView;
 
         public bool IsSecondarySelected
         {
-            get { return (bool)GetValue(IsSecondarySelectedProperty); }
-            set { SetValue(IsSecondarySelectedProperty, value); }
+            get => (bool)GetValue(IsSecondarySelectedProperty);
+            set => SetValue(IsSecondarySelectedProperty, value);
         }
         public static readonly DependencyProperty IsSecondarySelectedProperty = DependencyProperty.Register(
           nameof(IsSecondarySelected), typeof(bool), typeof(ColumnLayoutListViewItem), new FrameworkPropertyMetadata(false));
 
 
         private bool IsSecondarySelection(MouseButtonEventArgs args)
-        {
-            return args.ChangedButton == MouseButton.Right;
-        }
+            => args.ChangedButton == MouseButton.Right;
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {

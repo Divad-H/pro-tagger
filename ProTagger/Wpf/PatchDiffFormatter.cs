@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
 using static ProTagger.Utilities.DiffAnalyzer;
 
@@ -17,8 +14,8 @@ namespace ProTagger.Wpf
     {
         public Hunk Content
         {
-            get { return (Hunk)GetValue(ContentProperty); }
-            set { SetValue(ContentProperty, value); }
+            get => (Hunk)GetValue(ContentProperty);
+            set => SetValue(ContentProperty, value);
         }
 
         public static readonly DependencyProperty ContentProperty = DependencyProperty.Register(
@@ -29,9 +26,7 @@ namespace ProTagger.Wpf
                 OnContentChanged));
 
         private static void OnContentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((PatchDiffFormatter)d).UpdateContent((Hunk?)e.NewValue);
-        }
+            => ((PatchDiffFormatter)d).UpdateContent((Hunk?)e.NewValue);
 
         private CancellationTokenSource? _cancellationTokenSource = null;
 
@@ -175,23 +170,19 @@ namespace ProTagger.Wpf
         }
 
         static FormattedText CreateText(string text, double pixelsPerDip)
-        {
-            return new FormattedText(
-                        text,
-                        CultureInfo.InvariantCulture,
-                        FlowDirection.LeftToRight,
-                        new Typeface("Consolas"),
-                        10,
-                        Brushes.Black,
-                        pixelsPerDip);
-        }
+            => new FormattedText(
+                text,
+                CultureInfo.InvariantCulture,
+                FlowDirection.LeftToRight,
+                new Typeface("Consolas"),
+                10,
+                Brushes.Black,
+                pixelsPerDip);
 
         protected override Size MeasureOverride(Size availableSize)
-        {
-            return new Size(100,
+            => new Size(100,
                 Content.Diff
                     .Aggregate(0, (count, variant) => variant.Visit(wordDiff => wordDiff.NewText.Count + wordDiff.OldText.Count, unchangedLine => 1) + count) * 10);
-        }
 
         static PatchDiffFormatter()
         {

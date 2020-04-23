@@ -7,9 +7,7 @@ namespace ProTagger
         protected object _value;
 
         protected Variant(object value)
-        {
-            _value = value;
-        }
+            => _value = value;
         
         public object Value => _value;
 
@@ -51,18 +49,14 @@ namespace ProTagger
         }
 
         public object Get()
-        {
-            return _value;
-        }
+            => _value;
 
         public T1 First => (T1)Value;
 
         public T2 Second => (T2)Value;
 
         public bool Is<T>()
-        {
-            return _value is T;
-        }
+            => _value is T;
 
         public Variant<T1, T2> Assign(T1 value)
         {

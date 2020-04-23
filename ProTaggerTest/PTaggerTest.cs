@@ -18,9 +18,7 @@ namespace ProTaggerTest
         class TestRepositoryFactory : IRepositoryFactory
         {
             public IRepositoryWrapper CreateRepository(string path)
-            {
-                return new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()));
-            }
+                => new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()));
         }
 
         [TestMethod]

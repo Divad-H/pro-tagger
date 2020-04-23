@@ -33,10 +33,7 @@ namespace ProTagger
             var refreshCommand = ReactiveCommand.Create<object, object>(
                     canExecute: RepositoryPath
                         .Select(path => !string.IsNullOrWhiteSpace(path)),
-                    execute: (param) =>
-                    {
-                        return param;
-                    },
+                    execute: param => param,
                     scheduler: schedulers.Dispatcher)
                 .DisposeWith(_disposable);
 

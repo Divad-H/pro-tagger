@@ -15,14 +15,10 @@ namespace ProTagger.Wpf
     {
         const double InfiniteDistance = 100000;
         public static ClippingType GetClippingEnabled(DependencyObject obj)
-        {
-            return (ClippingType)obj.GetValue(ClippingEnabledProperty);
-        }
+            => (ClippingType)obj.GetValue(ClippingEnabledProperty);
 
         public static void SetClippingEnabled(DependencyObject obj, ClippingType value)
-        {
-            obj.SetValue(ClippingEnabledProperty, value);
-        }
+            => obj.SetValue(ClippingEnabledProperty, value);
 
         public static readonly DependencyProperty ClippingEnabledProperty =
             DependencyProperty.RegisterAttached("ClippingEnabled", typeof(ClippingType), typeof(BoundsClipper), new PropertyMetadata(ClippingType.None, ClippingEnabledChanged));

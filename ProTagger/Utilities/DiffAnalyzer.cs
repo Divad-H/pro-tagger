@@ -13,24 +13,24 @@ namespace ProTagger.Utilities
             public readonly string Text;
             public readonly bool Unchanged;
 
-            public Token(string text, bool unchanged) =>
-                (Text, Unchanged) = (text, unchanged);
+            public Token(string text, bool unchanged)
+                => (Text, Unchanged) = (text, unchanged);
         }
         public readonly struct ChangedLine
         {
             public readonly int LineNumber;
             public readonly List<Token> Text;
 
-            public ChangedLine(int lineNumber, List<Token> text) =>
-                (LineNumber, Text) = (lineNumber, text);
+            public ChangedLine(int lineNumber, List<Token> text)
+                => (LineNumber, Text) = (lineNumber, text);
         }
         public readonly struct WordDiff
         {
             public readonly List<ChangedLine> NewText;
             public readonly List<ChangedLine> OldText;
 
-            public WordDiff(List<ChangedLine> newText, List<ChangedLine> oldText) =>
-                (NewText, OldText) = (newText, oldText);
+            public WordDiff(List<ChangedLine> newText, List<ChangedLine> oldText)
+                => (NewText, OldText) = (newText, oldText);
         }
 
         public readonly struct UnchangedLine
@@ -39,8 +39,8 @@ namespace ProTagger.Utilities
             public readonly int OldLineNumber;
             public readonly string Text;
 
-            public UnchangedLine(int oldLineNumber, int newLineNumber, string text) =>
-                (NewLineNumber, OldLineNumber, Text) = (newLineNumber, oldLineNumber, text);
+            public UnchangedLine(int oldLineNumber, int newLineNumber, string text)
+                => (NewLineNumber, OldLineNumber, Text) = (newLineNumber, oldLineNumber, text);
         }
 
         public readonly struct Hunk
@@ -132,8 +132,8 @@ namespace ProTagger.Utilities
             public bool Unchanged;
             public int Line;
 
-            public IndexedToken(string text, int line) =>
-                (Text, Unchanged, Line) = (text, true, line);
+            public IndexedToken(string text, int line)
+                => (Text, Unchanged, Line) = (text, true, line);
         }
 
         private struct CurrentBest

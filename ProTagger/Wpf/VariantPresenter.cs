@@ -8,9 +8,7 @@ namespace ProTagger.Wpf
     {
         private readonly VariantPresenter _variantPresenter;
         public VariantTemplateSelector(VariantPresenter variantPresenter)
-        {
-            _variantPresenter = variantPresenter;
-        }
+            => _variantPresenter = variantPresenter;
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
@@ -33,8 +31,8 @@ namespace ProTagger.Wpf
 
         public object VariantContent
         {
-            get { return GetValue(VariantContentProperty); }
-            set { SetValue(VariantContentProperty, value); }
+            get => GetValue(VariantContentProperty);
+            set => SetValue(VariantContentProperty, value);
         }
 
         public static readonly DependencyProperty VariantContentProperty = DependencyProperty.Register(
@@ -49,8 +47,8 @@ namespace ProTagger.Wpf
 
         public DataTemplate Variant0Template
         {
-            get { return (DataTemplate)GetValue(Variant0TemplateProperty); }
-            set { SetValue(Variant0TemplateProperty, value); }
+            get => (DataTemplate)GetValue(Variant0TemplateProperty);
+            set => SetValue(Variant0TemplateProperty, value);
         }
 
         public static readonly DependencyProperty Variant0TemplateProperty = DependencyProperty.Register(
@@ -58,8 +56,8 @@ namespace ProTagger.Wpf
 
         public DataTemplate Variant1Template
         {
-            get { return (DataTemplate)GetValue(Variant1TemplateProperty); }
-            set { SetValue(Variant1TemplateProperty, value); }
+            get => (DataTemplate)GetValue(Variant1TemplateProperty);
+            set => SetValue(Variant1TemplateProperty, value);
         }
 
         public static readonly DependencyProperty Variant1TemplateProperty = DependencyProperty.Register(

@@ -3,7 +3,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace ProTagger.Wpf
 {
@@ -11,16 +10,16 @@ namespace ProTagger.Wpf
     {
         public ColumnDefinitionCollection ColumnDefinitions
         {
-            get { return (ColumnDefinitionCollection)GetValue(ColumnDefinitionsProperty); }
-            set { SetValue(ColumnDefinitionsProperty, value); }
+            get => (ColumnDefinitionCollection)GetValue(ColumnDefinitionsProperty);
+            set => SetValue(ColumnDefinitionsProperty, value);
         }
         public static readonly DependencyProperty ColumnDefinitionsProperty = DependencyProperty.Register(
           nameof(ColumnDefinitions), typeof(ColumnDefinitionCollection), typeof(ColumnLayoutListView), new PropertyMetadata(null));
 
         public object HeaderContent
         {
-            get { return GetValue(HeaderContentProperty); }
-            set { SetValue(HeaderContentProperty, value); }
+            get => GetValue(HeaderContentProperty);
+            set => SetValue(HeaderContentProperty, value);
         }
         public static readonly DependencyProperty HeaderContentProperty = DependencyProperty.Register(
           nameof(HeaderContent), typeof(object), typeof(ColumnLayoutListView), new FrameworkPropertyMetadata(null, OnHeaderContentChanged));
@@ -53,8 +52,8 @@ namespace ProTagger.Wpf
 
         public object? SecondarySelection
         {
-            get { return GetValue(SecondarySelectionProperty); }
-            set { SetValue(SecondarySelectionProperty, value); }
+            get => GetValue(SecondarySelectionProperty);
+            set => SetValue(SecondarySelectionProperty, value);
         }
         public static readonly DependencyProperty SecondarySelectionProperty = DependencyProperty.Register(
           nameof(SecondarySelection), typeof(object), typeof(ColumnLayoutListView), new PropertyMetadata(null));
@@ -73,14 +72,10 @@ namespace ProTagger.Wpf
         }
 
         private static void OnHeaderContentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((ColumnLayoutListView)d).RegisterGridChanged(e.OldValue, e.NewValue);
-        }
+            => ((ColumnLayoutListView)d).RegisterGridChanged(e.OldValue, e.NewValue);
 
         protected override void OnInitialized(EventArgs e)
-        {
-            RegisterGridChanged(null, HeaderContent);
-        }
+            => RegisterGridChanged(null, HeaderContent);
 
         private void RegisterGridChanged(object? oldHeaderContent, object newHeaderContent)
         {
@@ -123,9 +118,7 @@ namespace ProTagger.Wpf
             public event EventHandler? GridUpdated;
 
             public void OnGridUpdated(object? sender, EventArgs e)
-            {
-                GridUpdated?.Invoke(this, new EventArgs());
-            }
+                => GridUpdated?.Invoke(this, new EventArgs());
         }
 
         private static readonly DependencyPropertyKey GridUpdatedPublisherPropertyKey

@@ -29,6 +29,15 @@ namespace ProTagger.Repo.Diff
             => (CancellableChanges, Error) = (changes, error);
     }
 
+    class KeepSelectionComparer : IEqualityComparer<object>
+    {
+        public new bool Equals(object? oldFile, object? newFile)
+            => ((TreeEntryChanges?)oldFile)?.Path == ((TreeEntryChanges?)newFile)?.Path;
+
+        public int GetHashCode(object file)
+            => ((TreeEntryChanges)file).Path.GetHashCode();
+    }
+
     public class DiffViewModel : IDisposable
     {
         public const string NoCommitSelectedMessage = "No commit selected.";
@@ -39,8 +48,7 @@ namespace ProTagger.Repo.Diff
 
         public BatchList<TreeEntryChanges> SelectedFiles { get; } = new BatchList<TreeEntryChanges>();
 
-        public Func<object, object, bool> KeepTreeDiffChangesSelectedRule 
-            => (oldFile, newFile) => ((TreeEntryChanges)oldFile).Path == ((TreeEntryChanges)newFile).Path;
+        public IEqualityComparer<object> KeepTreeDiffChangesSelectedRule { get; } = new KeepSelectionComparer();
 
         public ViewSubject<Variant<List<TreeEntryChanges>, string>> TreeDiff { get; }
 
@@ -95,19 +103,19 @@ namespace ProTagger.Repo.Diff
                     .SkipNull()
                     .Merge(compareOptions
                         .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles)))
-                .Scan(new { activeCalculations = new List<CancellableChanges>(), removedCalculations = new List<CancellableChanges>() }, 
+                .Scan(new { activeCalculations = new HashSet<CancellableChanges>(), removedCalculations = new HashSet<CancellableChanges>() }, 
                     (acc, var) => var.Visit(
-                        added => new { activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToList(),
-                            removedCalculations = new List<CancellableChanges>() },
+                        added => new { activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToHashSet(),
+                            removedCalculations = new HashSet<CancellableChanges>() },
                         removed =>
                         {
+                            var removedSet = removed.ToHashSet();
                             var removedCalculations = acc.activeCalculations
-                                .Where(activeCalculation => removed
-                                    .Any(rem => rem == activeCalculation.TreeEntryChanges))
-                                .ToList();
+                                .Where(activeCalculation => removedSet.Contains(activeCalculation.TreeEntryChanges))
+                                .ToHashSet();
                             return new { activeCalculations = acc.activeCalculations
                                 .Where(active => !removedCalculations.Contains(active))
-                                .ToList(), removedCalculations };
+                                .ToHashSet(), removedCalculations };
                         }
                     ))
                 .Select(calculations => calculations.removedCalculations)

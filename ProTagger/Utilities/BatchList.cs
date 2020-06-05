@@ -91,7 +91,9 @@ namespace ProTagger.Utilities
 
         public void Modify(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
         {
-            itemsToRemove = itemsToRemove.Where(item => _list.Contains(item)).ToList();
+            var removeHashSet = itemsToRemove.ToHashSet();
+            removeHashSet.IntersectWith(_list);
+            itemsToRemove = removeHashSet;
             foreach (var item in itemsToRemove)
                 _list.Remove(item);
             foreach (var item in itemsToAdd)
@@ -115,7 +117,11 @@ namespace ProTagger.Utilities
         }
 
         public void ModifyNoDuplicates(IEnumerable<T> itemsToAdd, IEnumerable<T> itemsToRemove, bool supportsRangeOperations)
-            => Modify(itemsToAdd.Where(item => !_list.Contains(item)).ToList(), itemsToRemove, supportsRangeOperations);
+        {
+            var itemsToAddSet = itemsToAdd.ToHashSet();
+            itemsToAddSet.ExceptWith(_list);
+            Modify(itemsToAddSet, itemsToRemove, supportsRangeOperations);
+        }
 
         public bool Remove(T item)
         {

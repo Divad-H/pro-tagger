@@ -47,11 +47,32 @@ namespace ProTagger.Wpf
 
         private void SelectionChangedViewModel(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            foreach (var item in e.NewItems ?? new object[0])
-                if (!_listBox.SelectedItems.Contains(item))
-                    _listBox.SelectedItems.Add(item);
-            foreach (var item in e.OldItems ?? new object[0])
-                _listBox.SelectedItems.Remove(item);
+            if (_listBox is ListBoxKeepSelection listBox)
+            {
+                var newSelection = _listBox.SelectedItems.Cast<object?>().ToHashSet();
+                if (e.NewItems != null)
+                    newSelection.UnionWith(e.NewItems.Cast<object>());
+                if (e.OldItems != null)
+                    newSelection.ExceptWith(e.OldItems.Cast<object>());
+                listBox.ChangeSelectedItems(newSelection);
+            }
+            else
+            {
+                if (e.NewItems != null)
+                {
+                    var toAdd = e.NewItems.Cast<object>().ToHashSet();
+                    toAdd.ExceptWith(_listBox.SelectedItems.Cast<object>());
+                    foreach (var item in toAdd)
+                        _listBox.SelectedItems.Add(item);
+                }
+                if (e.OldItems != null)
+                {
+                    var toRemove = e.OldItems.Cast<object>().ToHashSet();
+                    toRemove.IntersectWith(_listBox.SelectedItems.Cast<object>());
+                    foreach (var item in toRemove)
+                        _listBox.SelectedItems.Remove(item);
+                }
+            }
         }
 
         private void OnSelectionChangedView(object? sender, SelectionChangedEventArgs e)

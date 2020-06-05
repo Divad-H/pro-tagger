@@ -10,13 +10,13 @@ namespace ProTagger.Wpf
 {
     public class ListBoxKeepSelection : ListBox
     {
-        public Func<object, object, bool>? KeepSelectionRule
+        public IEqualityComparer<object>? KeepSelectionRule
         {
-            get => (Func<object, object, bool>?)GetValue(KeepSelectionRuleProperty);
+            get => (IEqualityComparer<object>?)GetValue(KeepSelectionRuleProperty);
             set => SetValue(KeepSelectionRuleProperty, value);
         }
         public static readonly DependencyProperty KeepSelectionRuleProperty = DependencyProperty.Register(
-          nameof(KeepSelectionRule), typeof(Func<object, object, bool>), typeof(ListBoxKeepSelection), new FrameworkPropertyMetadata(null));
+          nameof(KeepSelectionRule), typeof(IEqualityComparer<object>), typeof(ListBoxKeepSelection), new FrameworkPropertyMetadata(null));
 
         protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
         {
@@ -24,8 +24,14 @@ namespace ProTagger.Wpf
             base.OnItemsChanged(e);
             if (KeepSelectionRule == null || ItemsSource == null)
                 return;
-            foreach (var item in ItemsSource.OfType<object>().Where(item => oldSelection.Find(oldItem => KeepSelectionRule(item, oldItem)) != null))
-                SelectedItems.Add(item);
+            var newSelection = ItemsSource.OfType<object>().ToHashSet(KeepSelectionRule);
+            newSelection.IntersectWith(oldSelection);
+            SetSelectedItems(newSelection);
+        }
+
+        public void ChangeSelectedItems(IEnumerable<object?> selectedItems)
+        {
+            SetSelectedItems(selectedItems);
         }
     }
 }

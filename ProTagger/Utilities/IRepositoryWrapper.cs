@@ -18,6 +18,6 @@ namespace ProTagger.Utilities
         public TagCollection Tags { get; }
 
         public Diff Diff { get; }
-        public Branch Head { get; }
+        public Branch? Head { get; }
     }
 }

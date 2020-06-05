@@ -60,17 +60,24 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("work", "work", true)
                                              });
             var g = graph.ToList();
-            Assert.AreEqual(6, g.Count);
+            Assert.AreEqual(7, g.Count);
 
             var node = g[0];
-            Assert.AreEqual("MessageShort 5", node.MessageShort);
+            Assert.AreEqual("Working tree", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(0, node.Branches.Count);
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 5", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 1, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("master", node.Branches.First().LongName);
 
-            node = g[1];
+            node = g[2];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 1, 2);
@@ -79,28 +86,28 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("work", node.Branches.First().LongName);
 
-            node = g[2];
+            node = g[3];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 2, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[0].Next.Contains(1));
 
-            node = g[3];
+            node = g[4];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
 
-            node = g[4];
+            node = g[5];
             Assert.AreEqual("MessageShort 1", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
 
-            node = g[5];
+            node = g[6];
             Assert.AreEqual("MessageShort 0", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 0);
@@ -160,30 +167,37 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("master", "master", true),
                                              });
             var g = graph.ToList();
-            Assert.AreEqual(4, g.Count);
+            Assert.AreEqual(5, g.Count);
 
             var node = g[0];
-            Assert.AreEqual("MessageShort 3", node.MessageShort);
+            Assert.AreEqual("Working tree", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(0, node.Branches.Count);
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 3", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 1, 1);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("master", node.Branches.First().LongName);
 
-            node = g[1];
+            node = g[2];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 1, 2);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.IsTrue(node.Directions.First().Next.Contains(1));
 
-            node = g[2];
+            node = g[3];
             Assert.AreEqual("MessageShort 1", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 1);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
 
-            node = g[3];
+            node = g[4];
             Assert.AreEqual("MessageShort 0", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 1, 0);
@@ -243,17 +257,25 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("branch2", "branch2", true),
                                              });
             var g = graph.ToList();
-            Assert.AreEqual(7, g.Count);
+            Assert.AreEqual(8, g.Count);
+
 
             var node = g[0];
-            Assert.AreEqual("MessageShort 6", node.MessageShort);
+            Assert.AreEqual("Working tree", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(0, node.Branches.Count);
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 6", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 1, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("master", node.Branches.First().LongName);
 
-            node = g[1];
+            node = g[2];
             Assert.AreEqual("MessageShort 5", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 1, 2);
@@ -262,7 +284,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("branch1", node.Branches.First().LongName);
 
-            node = g[2];
+            node = g[3];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 3);
@@ -272,7 +294,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("branch2", node.Branches.First().LongName);
 
-            node = g[3];
+            node = g[4];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -280,20 +302,20 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[0].Next.Contains(1));
             Assert.IsTrue(node.Directions[0].Next.Contains(2));
 
-            node = g[4];
+            node = g[5];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
 
-            node = g[5];
+            node = g[6];
             Assert.AreEqual("MessageShort 1", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 1);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
 
-            node = g[6];
+            node = g[7];
             Assert.AreEqual("MessageShort 0", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 1, 0);
@@ -357,24 +379,31 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("master", "master", true),
                                              });
             var g = graph.ToList();
-            Assert.AreEqual(9, g.Count);
+            Assert.AreEqual(10, g.Count);
 
             var node = g[0];
-            Assert.AreEqual("MessageShort 8", node.MessageShort);
+            Assert.AreEqual("Working tree", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(0, node.Branches.Count);
+
+            node = g[1];
+            Assert.AreEqual("MessageShort 8", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 1, 1);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("master", node.Branches.First().LongName);
 
-            node = g[1];
+            node = g[2];
             Assert.AreEqual("MessageShort 7", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 1, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[0].Next.Contains(1));
 
-            node = g[2];
+            node = g[3];
             Assert.AreEqual("MessageShort 6", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 2, 3);
@@ -382,7 +411,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
             Assert.IsTrue(node.Directions[1].Next.Contains(2));
 
-            node = g[3];
+            node = g[4];
             Assert.AreEqual("MessageShort 5", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -390,7 +419,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
             Assert.IsTrue(node.Directions[2].Next.Contains(2));
 
-            node = g[4];
+            node = g[5];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -398,7 +427,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
             Assert.IsTrue(node.Directions[2].Next.Contains(2));
 
-            node = g[5];
+            node = g[6];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -406,7 +435,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[0].Next.Contains(1));
             Assert.IsTrue(node.Directions[2].Next.Contains(2));
 
-            node = g[6];
+            node = g[7];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -414,14 +443,14 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
             Assert.IsTrue(node.Directions[2].Next.Contains(0));
 
-            node = g[7];
+            node = g[8];
             Assert.AreEqual("MessageShort 1", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
 
-            node = g[8];
+            node = g[9];
             Assert.AreEqual("MessageShort 0", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 0);
@@ -476,18 +505,25 @@ namespace ProTaggerTest.Repo.GitLog
                                                  new BranchSelection("master", "master", true),
                                              });
             var g = graph.ToList();
-            Assert.AreEqual(6, g.Count);
+            Assert.AreEqual(7, g.Count);
 
             var node = g[0];
+            Assert.AreEqual("Working tree", node.MessageShort);
+            Assert.IsFalse(node.IsMerge);
+            AssertFromToCount(node, 0, 1);
+            Assert.IsTrue(node.Directions[0].Next.Contains(0));
+            Assert.AreEqual(0, node.Branches.Count);
+
+            node = g[1];
             Assert.AreEqual("MessageShort 5", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
-            AssertFromToCount(node, 0, 2);
+            AssertFromToCount(node, 1, 2);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.IsTrue(node.Directions.First().Next.Contains(1));
             Assert.AreEqual(1, node.Branches.Count);
             Assert.AreEqual("master", node.Branches.First().LongName);
 
-            node = g[1];
+            node = g[2];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 2, 3);
@@ -495,7 +531,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
 
-            node = g[2];
+            node = g[3];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -503,7 +539,7 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[0].Next.Contains(1));
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
 
-            node = g[3];
+            node = g[4];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
             Assert.IsTrue(node.IsMerge);
             AssertFromToCount(node, 3, 3);
@@ -511,14 +547,14 @@ namespace ProTaggerTest.Repo.GitLog
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(1));
 
-            node = g[4];
+            node = g[5];
             Assert.AreEqual("MessageShort 1", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 3, 2);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
 
-            node = g[5];
+            node = g[6];
             Assert.AreEqual("MessageShort 0", node.MessageShort);
             Assert.IsFalse(node.IsMerge);
             AssertFromToCount(node, 2, 0);

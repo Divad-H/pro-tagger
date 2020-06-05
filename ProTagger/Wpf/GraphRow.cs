@@ -9,6 +9,7 @@ using System.Windows.Media;
 
 namespace ProTagger.Wpf
 {
+    using TGraphPos = UInt16;
     public class GraphRow : FrameworkElement
     {
         public LogGraphNode Content
@@ -273,7 +274,7 @@ namespace ProTagger.Wpf
         private void DrawGraph(StreamGeometryContext ctx)
         {
             DrawCircle(ctx, (1 + Content.GraphPosition) * HorizontalDistance, ActualHeight / 2, Radius);
-            foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Previous, i)))
+            foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Previous, (TGraphPos)i)))
             {
                 ctx.BeginFigure(
                     new Point((1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance, 0), false, false);
@@ -283,7 +284,7 @@ namespace ProTagger.Wpf
                 else
                     ctx.LineTo(new Point((1 + direction.Item1) * HorizontalDistance, ActualHeight / 2), true, false);
             }
-            foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Next, i)))
+            foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Next, (TGraphPos)i)))
             {
                 ctx.BeginFigure(
                     new Point((1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance, ActualHeight), false, false);
@@ -295,7 +296,7 @@ namespace ProTagger.Wpf
             }
         }
 
-        private IEnumerable<Tuple<int, int>> MapDirections(IEnumerable<int> subDirection, int i)
+        private IEnumerable<Tuple<TGraphPos, TGraphPos>> MapDirections(IEnumerable<TGraphPos> subDirection, TGraphPos i)
             => subDirection.Select(direction =>  Tuple.Create(direction, i));
 
         private static void DrawCircle(StreamGeometryContext ctx, double centerX, double centerY, double radius)

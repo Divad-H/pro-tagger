@@ -12,6 +12,7 @@ using System.Windows.Input;
 
 namespace ProTagger.Repo.GitLog
 {
+    using TGraphPos = UInt16;
     using GraphType = ObservableCollection<LogGraphNode>;
     public class LogGraphNode
     {
@@ -25,11 +26,11 @@ namespace ProTagger.Repo.GitLog
             /// <summary>
             /// Directions of the previous LogGraphNode
             /// </summary>
-            public List<int> Previous;
+            public List<TGraphPos> Previous;
             /// <summary>
             /// Directions of the current LogGraphNode
             /// </summary>
-            public List<int> Next;
+            public List<TGraphPos> Next;
         }
 
         public readonly struct BranchInfo
@@ -53,7 +54,7 @@ namespace ProTagger.Repo.GitLog
         }
 
         public LogGraphNode(
-            int graphPosition, 
+            TGraphPos graphPosition, 
             IList<DownwardDirections> directions, 
             Commit commit, 
             bool isMerge, 
@@ -74,7 +75,7 @@ namespace ProTagger.Repo.GitLog
             Commit = commit;
         }
 
-        public int GraphPosition { get; }
+        public TGraphPos GraphPosition { get; }
         public IList<DownwardDirections> Directions { get; }
         public string MessageShort { get; }
         public string Message { get; }
@@ -135,7 +136,6 @@ namespace ProTagger.Repo.GitLog
                         .Catch((Exception e) => Observable.Return(new Variant<NodesData, string>(e.Message)))
                         .ObserveOn(schedulers.Dispatcher))
                 .Switch()
-                .SkipNull()
                 .Subscribe(var => var.Visit(
                     data =>
                     {
@@ -168,10 +168,10 @@ namespace ProTagger.Repo.GitLog
                 var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
                 var tags = repository.Tags.ToList();
                 var expectedIds = new List<ObjectId?>();
-                var directions = new List<List<int>>();
-                var lastDirections = new List<List<int>>();
+                var directions = new List<List<TGraphPos>>();
+                var lastDirections = new List<List<TGraphPos>>();
 
-                int? lastPosition = null;
+                TGraphPos? lastPosition = null;
                 Commit? lastCommit = null;
                 bool lastMerge = false;
 
@@ -183,25 +183,26 @@ namespace ProTagger.Repo.GitLog
 
                 foreach (Commit c in repository.QueryCommits(commitFilter)/*.Take(1000)*/)
                 {
-                    var nextPosition = expectedIds.FindIndex((id) => id == c.Id);
-                    if (nextPosition == -1)
+                    var foundNextPosition = expectedIds.FindIndex((id) => id == c.Id);
+                    if (foundNextPosition == -1)
                     {
                         // commit without visible children
-                        nextPosition = expectedIds.FindIndex((id) => id == null);
-                        if (nextPosition == -1)
+                        foundNextPosition = expectedIds.FindIndex((id) => id == null);
+                        if (foundNextPosition == -1)
                         {
-                            nextPosition = expectedIds.Count;
+                            foundNextPosition = expectedIds.Count;
                             expectedIds.Add(null);
-                            directions.Add(new List<int>());
+                            directions.Add(new List<TGraphPos>());
                         }
                     }
+                    TGraphPos nextPosition = (TGraphPos)foundNextPosition;
 
                     var currentDirections = directions;
                     directions = currentDirections.Select((dir) => dir.Take(0).ToList()).ToList();
-                    for (int i = 0; i < directions.Count; ++i)
+                    for (TGraphPos i = 0; i < directions.Count; ++i)
                         if (expectedIds[i] != null)
                             directions[i].Add(i);
-                    for (int i = 0; i < currentDirections.Count; ++i)
+                    for (TGraphPos i = 0; i < currentDirections.Count; ++i)
                     {
                         if (expectedIds[i] == c.Id && i != nextPosition)
                         {
@@ -213,15 +214,15 @@ namespace ProTagger.Repo.GitLog
                     }
 
                     var parents = c.Parents.ToList();
-                    int parentIndex = 0;
+                    TGraphPos parentIndex = 0;
 
-                    for (int i = 0; i < expectedIds.Count; ++i)
+                    for (TGraphPos i = 0; i < expectedIds.Count; ++i)
                     {
                         if (expectedIds[i] == c.Id || expectedIds[i] == null)
                         {
                             if (parents.Count > parentIndex)
                             {
-                                int indexToChange = i;
+                                TGraphPos indexToChange = i;
                                 if (expectedIds[i] == null && expectedIds[nextPosition] == c.Id)
                                 {
                                     indexToChange = nextPosition;
@@ -243,8 +244,8 @@ namespace ProTagger.Repo.GitLog
                     for (; parentIndex < parents.Count; ++parentIndex)
                     {
                         expectedIds.Add(parents[parentIndex].Id);
-                        directions.Add(new List<int>());
-                        directions[nextPosition].Add(directions.Count - 1);
+                        directions.Add(new List<TGraphPos>());
+                        directions[nextPosition].Add((TGraphPos)(directions.Count - 1));
                     }
 
                     if (lastPosition.HasValue && lastCommit != null)
@@ -255,11 +256,11 @@ namespace ProTagger.Repo.GitLog
                             lastMerge,
                             selectedBranches
                                 .Where(branch => branch.Tip == lastCommit)
-                                .Select(branch => CreateBranchInfo(branch))
+                                .Select(CreateBranchInfo)
                                 .ToList(),
                             tags
                                 .Where(tag => tag.Target == lastCommit)
-                                .Select(tag => CreateTagInfo(tag))
+                                .Select(CreateTagInfo)
                                 .ToList());
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
@@ -269,24 +270,25 @@ namespace ProTagger.Repo.GitLog
                 if (lastPosition.HasValue && lastCommit != null)
                     yield return new LogGraphNode(
                         lastPosition.Value,
-                        CreateGraphDirections(lastDirections, new List<List<int>>()),
+                        CreateGraphDirections(lastDirections, new List<List<TGraphPos>>()),
                         lastCommit,
                         false,
                         selectedBranches
                             .Where(branch => branch.Tip == lastCommit)
-                            .Select(branch => CreateBranchInfo(branch))
+                            .Select(CreateBranchInfo)
                             .ToList(),
                         tags
                             .Where(tag => tag.Target == lastCommit)
-                            .Select(tag => CreateTagInfo(tag))
+                            .Select(CreateTagInfo)
                             .ToList());
             }
         }
 
-        private static List<LogGraphNode.DownwardDirections> CreateGraphDirections(IEnumerable<List<int>> lastDirections, IEnumerable<List<int>> nextDirections)
-            => lastDirections.GreaterZip(nextDirections,
-                                             (first, second) => new LogGraphNode.DownwardDirections() { Previous = first, Next = second }, new List<int>(), new List<int>())
-                                 .ToList();
+        private static List<LogGraphNode.DownwardDirections> CreateGraphDirections(IEnumerable<List<TGraphPos>> lastDirections, IEnumerable<List<TGraphPos>> nextDirections)
+            => lastDirections
+                .GreaterZip(nextDirections, (first, second)
+                    => new LogGraphNode.DownwardDirections() { Previous = first, Next = second }, new List<TGraphPos>(), new List<TGraphPos>())
+                .ToList();
 
         private static LogGraphNode.BranchInfo CreateBranchInfo(Branch branch)
             => new LogGraphNode.BranchInfo(

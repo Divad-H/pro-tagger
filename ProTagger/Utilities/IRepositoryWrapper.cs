@@ -19,5 +19,6 @@ namespace ProTagger.Utilities
 
         public Diff Diff { get; }
         public Branch? Head { get; }
+        public RepositoryStatus RetrieveStatus(StatusOptions options);
     }
 }

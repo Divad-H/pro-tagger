@@ -28,6 +28,9 @@ namespace ProTagger.Utilities
 
         public Branch? Head => _repository.Head;
 
+        public RepositoryStatus RetrieveStatus(StatusOptions options)
+            => _repository.RetrieveStatus(options);
+
         public void Dispose()
             => _disposable.Dispose();
 

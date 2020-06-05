@@ -44,8 +44,7 @@ namespace ProTagger.Repo.Diff
 
         public ViewSubject<Variant<List<TreeEntryChanges>, string>> TreeDiff { get; }
 
-        public DiffViewModel(LibGit2Sharp.Diff diff,
-            IRefCount repositoryRefCounter,
+        public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
             Branch? head,
             IObservable<Variant<Commit, DiffTargets>?> oldCommitObservable, 
@@ -60,7 +59,7 @@ namespace ProTagger.Repo.Diff
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o => Observable.FromAsync(ct =>
                     o.newCommit != null ?
-                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, ct, diff, head, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(repo, ct, head, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))))
                 .Switch()
                 .Subscribe(TreeDiff)
@@ -130,7 +129,7 @@ namespace ProTagger.Repo.Diff
                         data.newCommit == null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
-                        Diff.PatchDiff.CreateDiff(diff, repositoryRefCounter.TryAddRef(), head, data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(repo.Diff, repo.TryAddRef(), head, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()

@@ -5,24 +5,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 
 namespace ProTagger.Repo.Diff
 {
     static class TreeDiff
     {
         internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
-                IRefCount repositoryRefCounter,
+                IRepositoryWrapper repo,
                 CancellationToken ct,
-                LibGit2Sharp.Diff diff,
                 Branch? head,
                 Variant<Commit, DiffTargets>? oldCommit,
                 Variant<Commit, DiffTargets> newCommit,
                 CompareOptions compareOptions)
         {
-            // TODO: Diff seems to be slower than status. For comparing the working-tree with HEAD, status should be used.
-            // Idea: It might be easier to combine the tree diff between HEAD and the target commmit and the changed files
-            // in git status and pass those into diff. The speed needs to be evaluated in this case.
-            using var delayDispose = repositoryRefCounter.AddRef();
+            using var delayDispose = repo.AddRef();
             return Task.Run(() =>
                 {
                     try
@@ -39,9 +36,20 @@ namespace ProTagger.Repo.Diff
                         var oldTree = oldCommit?.Get<Commit>().Tree;
                         using var treeChanges =
                            newCommit.Visit(
-                               c => diff.Compare<TreeChanges>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, compareOptions),
-                               dt => diff.Compare<TreeChanges>(oldTree ?? head?.Tip.Tree, dt, null, null, compareOptions));
-                        return new Variant<List<TreeEntryChanges>, string>(treeChanges.ToList());
+                               c => repo.Diff.Compare<TreeChanges>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, compareOptions),
+                               dt =>
+                               {
+                                   var changedFiles = repo.RetrieveStatus(new StatusOptions()
+                                    { DetectRenamesInIndex = true, DetectRenamesInWorkDir = true, IncludeUntracked = true, Show = StatusShowOption.WorkDirOnly })
+                                       .Select(s => s.FilePath);
+                                   if (oldTree != null && repo.Head?.Tip.Tree != oldTree)
+                                       changedFiles = changedFiles.Concat(repo.Diff.Compare<TreeChanges>(oldTree, head?.Tip.Tree, compareOptions).Select(tc => tc.Path));
+                                   var changedFilesList = changedFiles.ToList();
+                                   if (!changedFilesList.Any())
+                                       return null;
+                                   return repo.Diff.Compare<TreeChanges>(oldTree ?? head?.Tip.Tree, dt, changedFiles, null, compareOptions);
+                               });
+                        return new Variant<List<TreeEntryChanges>, string>(treeChanges?.ToList() ?? new List<TreeEntryChanges>());
                     }
                     catch (Exception e)
                     {

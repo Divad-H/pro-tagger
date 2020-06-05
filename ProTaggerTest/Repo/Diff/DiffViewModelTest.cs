@@ -25,8 +25,9 @@ namespace ProTaggerTest.Repo.Diff
             var oldCommit = Observable.Return((Variant<Commit, DiffTargets>?)null).Concat(Observable.Never<Variant<Commit, DiffTargets>?>());
             var newCommit = Observable.Return((Variant<Commit, DiffTargets>?)null).Concat(Observable.Never<Variant<Commit, DiffTargets>?>());
             var compareOptions = Observable.Return(new CompareOptions()).Concat(Observable.Never<CompareOptions>());
+            var repo = new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()), null, diff);
 
-            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
+            var vm = new DiffViewModel(repo, new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
             Variant<List<TreeEntryChanges>, string>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
             if (value == null)
@@ -55,9 +56,10 @@ namespace ProTaggerTest.Repo.Diff
             var newCommit = Observable.Return(new Variant<Commit, DiffTargets>(secondCommit));
             var head = new BranchMock(true, false, null, secondCommit, "HEAD");
             var compareOptionsObs = Observable.Return(compareOptions);
+            var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
 
             Variant<List<TreeEntryChanges>, string>? value = null;
-            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
+            var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
             using var _ = vm
                 .TreeDiff
                 .Subscribe(val =>

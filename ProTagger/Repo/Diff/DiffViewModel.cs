@@ -58,10 +58,10 @@ namespace ProTagger.Repo.Diff
             Observable
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
-                .Select(o =>
+                .Select(o => Observable.FromAsync(ct =>
                     o.newCommit != null ?
-                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, diff, head, o.oldCommit, o.newCommit, o.compareOptions) :
-                        Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
+                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, ct, diff, head, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))))
                 .Switch()
                 .Subscribe(TreeDiff)
                 .DisposeWith(_disposables);

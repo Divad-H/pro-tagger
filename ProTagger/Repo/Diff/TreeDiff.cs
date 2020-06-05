@@ -3,6 +3,7 @@ using ProTagger.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProTagger.Repo.Diff
@@ -11,6 +12,7 @@ namespace ProTagger.Repo.Diff
     {
         internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
                 IRefCount repositoryRefCounter,
+                CancellationToken ct,
                 LibGit2Sharp.Diff diff,
                 Branch? head,
                 Variant<Commit, DiffTargets>? oldCommit,
@@ -25,6 +27,8 @@ namespace ProTagger.Repo.Diff
                 {
                     try
                     {
+                        if (ct.IsCancellationRequested)
+                            return new Variant<List<TreeEntryChanges>, string>("The operation was cancelled.");
                         if (oldCommit != null && oldCommit.Is<DiffTargets>())
                             (oldCommit, newCommit) = (newCommit, oldCommit);
                         if (oldCommit != null && oldCommit.Is<DiffTargets>())

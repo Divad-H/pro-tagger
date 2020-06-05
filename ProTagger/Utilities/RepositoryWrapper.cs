@@ -26,6 +26,8 @@ namespace ProTagger.Utilities
 
         public Diff Diff => _repository.Diff;
 
+        public Branch Head => _repository.Head;
+
         public void Dispose()
             => _disposable.Dispose();
 

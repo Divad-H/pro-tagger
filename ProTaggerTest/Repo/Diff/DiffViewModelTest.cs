@@ -22,11 +22,11 @@ namespace ProTaggerTest.Repo.Diff
         public void CanCreateInstance()
         {
             var diff = new DiffMock(null, null);
-            var oldCommit = Observable.Return((Commit?)null).Concat(Observable.Never<Commit?>());
-            var newCommit = Observable.Return((Commit?)null).Concat(Observable.Never<Commit?>());
+            var oldCommit = Observable.Return((Variant<Commit, DiffTargets>?)null).Concat(Observable.Never<Variant<Commit, DiffTargets>?>());
+            var newCommit = Observable.Return((Variant<Commit, DiffTargets>?)null).Concat(Observable.Never<Variant<Commit, DiffTargets>?>());
             var compareOptions = Observable.Return(new CompareOptions()).Concat(Observable.Never<CompareOptions>());
 
-            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), oldCommit, newCommit, compareOptions);
+            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
             Variant<List<TreeEntryChanges>, string>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
             if (value == null)
@@ -51,12 +51,13 @@ namespace ProTaggerTest.Repo.Diff
                 => (oldTree, newTree, CompareOptions) == (firstCommit.Tree, secondCommit.Tree, compareOptions)
                     ? new TreeChangesMock(((TreeEntryChanges)addedFile).Yield().ToList())
                     : throw new Exception("Compare was called with wrong arguments."));
-            var oldCommit = Observable.Return(firstCommit);
-            var newCommit = Observable.Return(secondCommit);
+            var oldCommit = Observable.Return(new Variant<Commit, DiffTargets>(firstCommit));
+            var newCommit = Observable.Return(new Variant<Commit, DiffTargets>(secondCommit));
+            var head = new BranchMock(true, false, null, secondCommit, "HEAD");
             var compareOptionsObs = Observable.Return(compareOptions);
 
             Variant<List<TreeEntryChanges>, string>? value = null;
-            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
+            var vm = new DiffViewModel(diff, new RefCountMock(), new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
             using var _ = vm
                 .TreeDiff
                 .Subscribe(val =>

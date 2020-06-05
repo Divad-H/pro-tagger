@@ -214,7 +214,7 @@ namespace ProTagger.Wpf
             drawingContext.PushClip(new RectangleGeometry(
                 new Rect(0, -10, ColumnDefinitions[0].ActualWidth, ActualHeight + 20)));
             var pen = new Pen(Foreground, 1.5);
-            drawingContext.DrawGeometry(Content.IsMerge ? HighlightFill : Fill, pen, geometry);
+            drawingContext.DrawGeometry(Content.IsMerge ? HighlightFill : Content.Commit.Is<LibGit2Sharp.Commit>() ? Fill : null, pen, geometry);
             drawingContext.Pop();
 
             double left = ColumnDefinitions[0].ActualWidth + ColumnDefinitions[1].ActualWidth;
@@ -232,16 +232,18 @@ namespace ProTagger.Wpf
             drawingContext.Pop();
 
             left += ColumnDefinitions[2].ActualWidth + ColumnDefinitions[3].ActualWidth;
-            DrawTextColumn(drawingContext,
-                Content.Author.When.DateTime.ToString(),
-                left,
-                ColumnDefinitions[4].ActualWidth);
+            if (Content.Commit.Is<LibGit2Sharp.Commit>())
+                DrawTextColumn(drawingContext,
+                    Content.Commit.Get<LibGit2Sharp.Commit>().Author.When.DateTime.ToString(),
+                    left,
+                    ColumnDefinitions[4].ActualWidth);
 
             left += ColumnDefinitions[4].ActualWidth + ColumnDefinitions[5].ActualWidth;
-            DrawTextColumn(drawingContext,
-                Content.Author.Name + " " + Content.Author.Email,
-                left,
-                ColumnDefinitions[6].ActualWidth);
+            if (Content.Commit.Is<LibGit2Sharp.Commit>())
+                DrawTextColumn(drawingContext,
+                    Content.Commit.Get<LibGit2Sharp.Commit>().Author.Name + " " + Content.Commit.Get<LibGit2Sharp.Commit>().Author.Email,
+                    left,
+                    ColumnDefinitions[6].ActualWidth);
 
             left += ColumnDefinitions[6].ActualWidth + ColumnDefinitions[7].ActualWidth;
             DrawTextColumn(drawingContext,

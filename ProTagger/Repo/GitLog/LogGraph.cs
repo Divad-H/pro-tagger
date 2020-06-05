@@ -55,21 +55,15 @@ namespace ProTagger.Repo.GitLog
 
         public LogGraphNode(
             TGraphPos graphPosition, 
-            IList<DownwardDirections> directions, 
-            Commit commit, 
+            IList<DownwardDirections> directions,
+            Variant<Commit, DiffTargets> commit, 
             bool isMerge, 
             IList<BranchInfo> branches,
             IList<TagInfo> tags)
         {
             GraphPosition = graphPosition;
             Directions = directions;
-            MessageShort = commit.MessageShort;
-            Message = commit.Message;
             IsMerge = isMerge;
-            Sha = commit.Sha;
-            ShortSha = Sha.Substring(0, 7);
-            Author = commit.Author;
-            Committer = commit.Committer;
             Branches = branches;
             Tags = tags;
             Commit = commit;
@@ -77,16 +71,18 @@ namespace ProTagger.Repo.GitLog
 
         public TGraphPos GraphPosition { get; }
         public IList<DownwardDirections> Directions { get; }
-        public string MessageShort { get; }
-        public string Message { get; }
+        public string MessageShort
+            => Commit.Visit(commit => commit.MessageShort, diffTarget => "Working tree");
+        public string Message
+            => Commit.Visit(commit => commit.Message, diffTarget => "Working tree");
         public bool IsMerge { get; }
-        public string Sha { get; }
-        public string ShortSha { get; }
-        public Signature Author { get; }
-        public Signature Committer { get; }
+        public string Sha
+            => Commit.Visit(commit => commit.Sha, diffTarget => string.Empty);
+        public string ShortSha
+            => Commit.Visit(commit => commit.Sha.Substring(0, 7), diffTarget => string.Empty);
         public IList<BranchInfo> Branches { get; }
         public IList<TagInfo> Tags { get; }
-        public Commit Commit;
+        public Variant<Commit, DiffTargets> Commit;
     }
 
     public class LogGraph : IDisposable
@@ -165,14 +161,18 @@ namespace ProTagger.Repo.GitLog
             using var delayDispose = repository.TryAddRef();
             if (delayDispose != null)
             {
+                if (repository.Head == null)
+                    yield break;
+
                 var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
                 var tags = repository.Tags.ToList();
-                var expectedIds = new List<ObjectId?>();
-                var directions = new List<List<TGraphPos>>();
+                var expectedIds = new List<ObjectId?>() { repository.Head.Tip.Id };
+
+                var directions = new List<List<TGraphPos>>() { new List<TGraphPos>() { 0 } };
                 var lastDirections = new List<List<TGraphPos>>();
 
-                TGraphPos? lastPosition = null;
-                Commit? lastCommit = null;
+                TGraphPos lastPosition = 0;
+                Variant<Commit, DiffTargets> lastCommit = new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory);
                 bool lastMerge = false;
 
                 var commitFilter = new CommitFilter()
@@ -248,39 +248,37 @@ namespace ProTagger.Repo.GitLog
                         directions[nextPosition].Add((TGraphPos)(directions.Count - 1));
                     }
 
-                    if (lastPosition.HasValue && lastCommit != null)
-                        yield return new LogGraphNode(
-                            lastPosition.Value,
-                            CreateGraphDirections(lastDirections, currentDirections),
-                            lastCommit,
-                            lastMerge,
-                            selectedBranches
-                                .Where(branch => branch.Tip == lastCommit)
-                                .Select(CreateBranchInfo)
-                                .ToList(),
-                            tags
-                                .Where(tag => tag.Target == lastCommit)
-                                .Select(CreateTagInfo)
-                                .ToList());
-                    lastDirections = currentDirections;
-                    lastPosition = nextPosition;
-                    lastCommit = c;
-                    lastMerge = parents.Count > 1;
-                }
-                if (lastPosition.HasValue && lastCommit != null)
                     yield return new LogGraphNode(
-                        lastPosition.Value,
-                        CreateGraphDirections(lastDirections, new List<List<TGraphPos>>()),
+                        lastPosition,
+                        CreateGraphDirections(lastDirections, currentDirections),
                         lastCommit,
-                        false,
+                        lastMerge,
                         selectedBranches
-                            .Where(branch => branch.Tip == lastCommit)
+                            .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
                             .Select(CreateBranchInfo)
                             .ToList(),
                         tags
-                            .Where(tag => tag.Target == lastCommit)
+                            .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
                             .Select(CreateTagInfo)
                             .ToList());
+                    lastDirections = currentDirections;
+                    lastPosition = nextPosition;
+                    lastCommit = new Variant<Commit, DiffTargets>(c);
+                    lastMerge = parents.Count > 1;
+                }
+                yield return new LogGraphNode(
+                    lastPosition,
+                    CreateGraphDirections(lastDirections, new List<List<TGraphPos>>()),
+                    lastCommit,
+                    false,
+                    selectedBranches
+                        .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
+                        .Select(CreateBranchInfo)
+                        .ToList(),
+                    tags
+                        .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
+                        .Select(CreateTagInfo)
+                        .ToList());
             }
         }
 

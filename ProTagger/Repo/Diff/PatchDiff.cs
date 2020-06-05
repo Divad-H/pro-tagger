@@ -16,12 +16,13 @@ namespace ProTagger.Repo.Diff
           => (Hunks, PatchEntryChanges, CancellableChanges) = (hunks, patchEntryChanges, cancellableChanges);
 
         public static Variant<IList<PatchDiff>, CancellableChangesWithError> CreateDiff(LibGit2Sharp.Diff diff,
-                    IDisposable? delayDisposeRepository,
-                    Commit? oldCommit,
-                    Commit newCommit,
-                    IEnumerable<string> paths,
-                    CompareOptions options,
-                    CancellableChanges cancellableChanges)
+                IDisposable? delayDisposeRepository,
+                Branch? head,
+                Variant<Commit, DiffTargets>? oldCommit,
+                Variant<Commit, DiffTargets> newCommit,
+                IEnumerable<string> paths,
+                CompareOptions options,
+                CancellableChanges cancellableChanges)
         {
             if (delayDisposeRepository == null)
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
@@ -30,8 +31,18 @@ namespace ProTagger.Repo.Diff
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
                     return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
-                using var patch = diff.Compare<Patch>(
-                    oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, paths, options);
+
+                if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                    (oldCommit, newCommit) = (newCommit, oldCommit);
+                if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                    return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
+
+                var oldTree = oldCommit?.Get<Commit>().Tree;
+                using var patch =
+                   newCommit.Visit(
+                       c => diff.Compare<Patch>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, paths, options),
+                       dt => diff.Compare<Patch>(oldTree ?? head?.Tip.Tree, dt, paths, null, options));
+                
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(patch
                         .Select(patchEntry => new PatchDiff(
                             DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token),

@@ -9,20 +9,34 @@ namespace ProTagger.Repo.Diff
 {
     static class TreeDiff
     {
-        internal static async Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
+        internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
                 IRefCount repositoryRefCounter,
                 LibGit2Sharp.Diff diff,
-                Commit? oldCommit,
-                Commit newCommit,
+                Branch? head,
+                Variant<Commit, DiffTargets>? oldCommit,
+                Variant<Commit, DiffTargets> newCommit,
                 CompareOptions compareOptions)
         {
+            // TODO: Diff seems to be slower than status. For comparing the working-tree with HEAD, status should be used.
+            // Idea: It might be easier to combine the tree diff between HEAD and the target commmit and the changed files
+            // in git status and pass those into diff. The speed needs to be evaluated in this case.
             using var delayDispose = repositoryRefCounter.AddRef();
-            return await Task.Run(() =>
+            return Task.Run(() =>
                 {
                     try
                     {
-                        using var treeChanges = diff.Compare<TreeChanges>(
-                            oldCommit?.Tree ?? newCommit.Parents.FirstOrDefault()?.Tree, newCommit.Tree, compareOptions);
+                        if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                            (oldCommit, newCommit) = (newCommit, oldCommit);
+                        if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                            return new Variant<List<TreeEntryChanges>, string>(new List<TreeEntryChanges>());
+                        if (newCommit.Is<DiffTargets>() && head == null)
+                            return new Variant<List<TreeEntryChanges>, string>("Did not get HEAD");
+                        
+                        var oldTree = oldCommit?.Get<Commit>().Tree;
+                        using var treeChanges =
+                           newCommit.Visit(
+                               c => diff.Compare<TreeChanges>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, compareOptions),
+                               dt => diff.Compare<TreeChanges>(oldTree ?? head?.Tip.Tree, dt, null, null, compareOptions));
                         return new Variant<List<TreeEntryChanges>, string>(treeChanges.ToList());
                     }
                     catch (Exception e)

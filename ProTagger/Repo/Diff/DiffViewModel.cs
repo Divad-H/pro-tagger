@@ -46,9 +46,10 @@ namespace ProTagger.Repo.Diff
 
         public DiffViewModel(LibGit2Sharp.Diff diff,
             IRefCount repositoryRefCounter,
-            ISchedulers schedulers, 
-            IObservable<Commit?> oldCommitObservable, 
-            IObservable<Commit?> newCommitObservable,
+            ISchedulers schedulers,
+            Branch? head,
+            IObservable<Variant<Commit, DiffTargets>?> oldCommitObservable, 
+            IObservable<Variant<Commit, DiffTargets>?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
             TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, string>>(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
@@ -59,7 +60,7 @@ namespace ProTagger.Repo.Diff
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o =>
                     o.newCommit != null ?
-                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, diff, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(repositoryRefCounter, diff, head, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage)))
                 .Switch()
                 .Subscribe(TreeDiff)
@@ -129,7 +130,7 @@ namespace ProTagger.Repo.Diff
                         data.newCommit == null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
-                        Diff.PatchDiff.CreateDiff(diff, repositoryRefCounter.TryAddRef(), data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(diff, repositoryRefCounter.TryAddRef(), head, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()

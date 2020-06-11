@@ -6,6 +6,9 @@
              xmlns:custom="clr-namespace:ProTagger.Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <custom:SubtractionConverter x:Key="subtractionConverter"/>
+        <custom:HideEqualSizesConverter x:Key="hideEqualSizesConverter"/>
+
         <Color options:Freeze="True" x:Key="col_blue">#566E8D</Color>
         <SolidColorBrush options:Freeze="True" x:Key="br_blue" Color="{StaticResource col_blue}" />
         <Color options:Freeze="True" x:Key="col_lightblue">#FF9CBBE4</Color>
@@ -200,5 +203,141 @@
                 </Setter>
             </Style.Setters>
         </Style>
+
+
+        <Style TargetType="{x:Type TabItem}">
+            <Setter Property="Background" Value="Transparent" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+
+                        <Border x:Name="PART_Border" Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="LightGray">
+                            <ContentPresenter ContentSource="Header" />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="PART_Border" Property="BorderBrush" Value="Black" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type custom:CustomBarTabControl}">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="2"    />
+            <Setter Property="Background" Value="White" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type custom:CustomBarTabControl}">
+                        <Grid ClipToBounds="True" SnapsToDevicePixels="True" KeyboardNavigation.TabNavigation="Local">
+                            
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto">
+                                        <ColumnDefinition.MaxWidth>
+                                            <MultiBinding Converter="{StaticResource subtractionConverter}">
+                                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                <Binding Path="HeaderBarMinWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                            </MultiBinding>
+                                        </ColumnDefinition.MaxWidth>
+                                    </ColumnDefinition>
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <RepeatButton
+                                        x:Name="ScrolltoLeft_Btn"
+                                        Grid.Column="0"
+                                        VerticalAlignment="Top"
+                                        Command="{x:Static ScrollBar.LineLeftCommand}"
+                                        CommandTarget="{Binding ElementName=sv}"
+                                        Content="left">
+                                        <RepeatButton.Visibility>
+                                            <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
+                                                <Binding Path="ActualWidth" ElementName="sv"/>
+                                                <Binding Path="MaxWidth" ElementName="sv"/>
+                                            </MultiBinding>
+                                        </RepeatButton.Visibility>
+                                    </RepeatButton>
+                                    <ScrollViewer x:Name="sv"
+                                                  VerticalScrollBarVisibility="Hidden"
+                                                  HorizontalScrollBarVisibility="Hidden"
+                                                  HorizontalAlignment="Stretch"
+                                                  Width="Auto"
+                                                  custom:ScrollViewerExtension.UseHorizontalScrolling="True"
+                                                  Grid.Column="1">
+                                        <ScrollViewer.MaxWidth>
+                                            <MultiBinding Converter="{StaticResource subtractionConverter}">
+                                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                <Binding Path="HeaderBarMinWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                <Binding Path="ActualWidth" ElementName="ScrolltoLeft_Btn"/>
+                                                <Binding Path="ActualWidth" ElementName="ScrolltoRight_Btn"/>
+                                            </MultiBinding>
+                                        </ScrollViewer.MaxWidth>
+                                        <StackPanel  IsItemsHost="True"
+                                                     Name="HeaderPanel" 
+                                                     Panel.ZIndex="1" 
+                                                     KeyboardNavigation.TabIndex="1"
+                                                     Height="20"
+                                                     Orientation="Horizontal" />
+                                    </ScrollViewer>
+                                    <RepeatButton
+                                        x:Name="ScrolltoRight_Btn"
+                                        Grid.Column="2"
+                                        VerticalAlignment="Top"
+                                        Command="{x:Static ScrollBar.LineRightCommand}"
+                                        CommandTarget="{Binding ElementName=sv}"
+                                        Content="right" >
+                                        <RepeatButton.Visibility>
+                                            <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
+                                                <Binding Path="ActualWidth" ElementName="sv"/>
+                                                <Binding Path="MaxWidth" ElementName="sv"/>
+                                            </MultiBinding>
+                                        </RepeatButton.Visibility>
+                                    </RepeatButton>
+                                </Grid>
+                                <ContentPresenter Content="{TemplateBinding HeaderBarContent}"
+                                                  ContentTemplate="{TemplateBinding HeaderBarContentTemplate}"
+                                                  SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
+                                                  KeyboardNavigation.TabIndex="2" 
+                                                  x:Name="headerBarContentPresenter"
+                                                  Grid.Column="1"/>
+                            </Grid>
+                            <ContentPresenter Content="{TemplateBinding SelectedContent}" 
+                                              ContentTemplate="{TemplateBinding SelectedContentTemplate}" 
+                                              ContentStringFormat="{TemplateBinding SelectedContentStringFormat}" 
+                                              ContentSource="SelectedContent" 
+                                              Name="PART_SelectedContentHost" 
+                                              Margin="2" 
+                                              SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
+                                              KeyboardNavigation.TabIndex="3" 
+                                              KeyboardNavigation.TabNavigation="Local" 
+                                              KeyboardNavigation.DirectionalNavigation="Contained" 
+                                              Grid.Row="1"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="UIElement.IsEnabled" Value="False">
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Application.Resources>
 </Application>

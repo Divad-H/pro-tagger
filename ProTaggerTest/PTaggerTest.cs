@@ -21,34 +21,34 @@ namespace ProTaggerTest
                 => new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()));
         }
 
-        [TestMethod]
-        public async Task RefreshRepositoryTest()
-        {
-            using var _diposables = new CompositeDisposable();
-            using var signal = new SemaphoreSlim(0, 1);
-            using var vm = new PTagger(new TestRepositoryFactory(), new TestSchedulers());
-            RepositoryViewModel? repositoryViewModel = null;
-            bool first = true;
-            vm.Repository
-                .Subscribe(repoVM =>
-                {
-                    if (first)
-                    {
-                        first = false;
-                        Assert.IsTrue(repoVM.Is<string>());
-                        return;
-                    }
-                    Assert.IsTrue(repoVM.Is<RepositoryViewModel>());
-                    repositoryViewModel = repoVM.Get<RepositoryViewModel>();
-                    signal.Release();
-                })
-                .DisposeWith(_diposables);
-            await signal.WaitAsync(TimeSpan.FromSeconds(10));
-            vm.RepositoryPath.Value = @"../../";
-            Assert.IsTrue(vm.RefreshCommand.CanExecute(null));
-            vm.RefreshCommand.Execute(null);
-            await signal.WaitAsync(TimeSpan.FromSeconds(10));
-            Assert.IsNotNull(repositoryViewModel);
-        }
+        //[TestMethod]
+        //public async Task RefreshRepositoryTest()
+        //{
+        //    using var _diposables = new CompositeDisposable();
+        //    using var signal = new SemaphoreSlim(0, 1);
+        //    using var vm = new PTagger(new TestRepositoryFactory(), new TestSchedulers());
+        //    RepositoryViewModel? repositoryViewModel = null;
+        //    bool first = true;
+        //    vm.Repository
+        //        .Subscribe(repoVM =>
+        //        {
+        //            if (first)
+        //            {
+        //                first = false;
+        //                Assert.IsTrue(repoVM.Is<string>());
+        //                return;
+        //            }
+        //            Assert.IsTrue(repoVM.Is<RepositoryViewModel>());
+        //            repositoryViewModel = repoVM.Get<RepositoryViewModel>();
+        //            signal.Release();
+        //        })
+        //        .DisposeWith(_diposables);
+        //    await signal.WaitAsync(TimeSpan.FromSeconds(10));
+        //    vm.RepositoryPath.Value = @"../../";
+        //    Assert.IsTrue(vm.RefreshCommand.CanExecute(null));
+        //    vm.RefreshCommand.Execute(null);
+        //    await signal.WaitAsync(TimeSpan.FromSeconds(10));
+        //    Assert.IsNotNull(repositoryViewModel);
+        //}
     }
 }

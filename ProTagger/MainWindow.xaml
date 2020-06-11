@@ -6,12 +6,75 @@
         xmlns:local="clr-namespace:ProTagger"
         xmlns:custom="clr-namespace:ProTagger.Wpf"
         xmlns:configuration="clr-namespace:ProTagger.Configuration"
-        xmlns:repo="clr-namespace:ProTagger.Repo"
+        xmlns:repo="clr-namespace:ProTagger.Repository"
+        xmlns:repoSelection="clr-namespace:ProTagger.RepositorySelection"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="1200">
     <Window.Resources>
     </Window.Resources>
-    <DockPanel>
+    <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}" x:Name="OuterTabControl" HeaderBarContent="{Binding}">
+        <custom:CustomBarTabControl.HeaderBarContentTemplate>
+            <DataTemplate>
+                <DockPanel MinWidth="200">
+                    <Button Content="+" Command="{Binding NewTabCommand}" DockPanel.Dock="Left" />
+                    <Button Content="Dummy" Command="{Binding NewTabCommand}" DockPanel.Dock="Right" Width="50" />
+                    <Label Content="Ratte" Background="Gray"/>
+                </DockPanel>
+            </DataTemplate>
+        </custom:CustomBarTabControl.HeaderBarContentTemplate>
+        <custom:CustomBarTabControl.ItemTemplate>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <custom:VariantPresenter VariantContent="{Binding}">
+                        <custom:VariantPresenter.Variant0Template>
+                            <DataTemplate>
+                                <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
+                                    <custom:VariantPresenter.Variant0Template>
+                                        <DataTemplate>
+                                            <TextBlock Text="Repo name" />
+                                        </DataTemplate>
+                                    </custom:VariantPresenter.Variant0Template>
+                                </custom:VariantPresenter>
+                            </DataTemplate>
+                        </custom:VariantPresenter.Variant0Template>
+                        <custom:VariantPresenter.Variant1Template>
+                            <DataTemplate>
+                                <TextBlock Text="New Tab" />
+                            </DataTemplate>
+                        </custom:VariantPresenter.Variant1Template>
+                    </custom:VariantPresenter>
+                    <Button Grid.Column="1" Command="{Binding ElementName=OuterTabControl, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}" Content="✖" />
+                </Grid>
+            </DataTemplate>
+        </custom:CustomBarTabControl.ItemTemplate>
+        <custom:CustomBarTabControl.ContentTemplate>
+            <DataTemplate>
+                <custom:VariantPresenter VariantContent="{Binding}">
+                    <custom:VariantPresenter.Variant0Template>
+                        <DataTemplate>
+                            <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
+                                <custom:VariantPresenter.Variant0Template>
+                                    <DataTemplate>
+                                        <repo:RepositoryView/>
+                                    </DataTemplate>
+                                </custom:VariantPresenter.Variant0Template>
+                            </custom:VariantPresenter>
+                        </DataTemplate>
+                    </custom:VariantPresenter.Variant0Template>
+                    <custom:VariantPresenter.Variant1Template>
+                        <DataTemplate>
+                            <repoSelection:RepositorySelectionView />
+                        </DataTemplate>
+                    </custom:VariantPresenter.Variant1Template>
+                </custom:VariantPresenter>
+            </DataTemplate>
+        </custom:CustomBarTabControl.ContentTemplate>
+    </custom:CustomBarTabControl>
+    <!--<DockPanel>
         <Grid DockPanel.Dock="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -29,5 +92,5 @@
                 </DataTemplate>
             </custom:VariantPresenter.Variant0Template>
         </custom:VariantPresenter>
-    </DockPanel>
+    </DockPanel>-->
 </Window>

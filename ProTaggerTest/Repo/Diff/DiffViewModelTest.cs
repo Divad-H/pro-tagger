@@ -70,6 +70,8 @@ namespace ProTaggerTest.Repo.Diff
                 });
 
             if (value is null)
+                value = vm.TreeDiff.Value;
+            if (value is null)
                 throw new Exception("TreeDiff was not set.");
             if (!value.Is<List<TreeEntryChanges>>())
                 await signal.WaitAsync(TimeSpan.FromSeconds(10));

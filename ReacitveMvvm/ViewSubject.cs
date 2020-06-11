@@ -58,8 +58,7 @@ namespace ReacitveMvvm
 
         public override void OnError(Exception error)
         {
-            if (error == null)
-                throw new ArgumentNullException(nameof(error));
+            _ = error ?? throw new ArgumentNullException(nameof(error));
 
             var os = default(IObserver<T>[]);
             lock (_gate)
@@ -103,8 +102,7 @@ namespace ReacitveMvvm
 
         public override IDisposable Subscribe(IObserver<T> observer)
         {
-            if (observer == null)
-                throw new ArgumentNullException(nameof(observer));
+            _ = observer ?? throw new ArgumentNullException(nameof(observer));
 
             var ex = default(Exception);
 

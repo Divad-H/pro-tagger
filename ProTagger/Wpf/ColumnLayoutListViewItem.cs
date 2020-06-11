@@ -25,8 +25,7 @@ namespace ProTagger.Wpf
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
-            if (_listView == null)
-                throw new ArgumentNullException(nameof(_listView));
+            _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
             if (IsSecondarySelection(e))
             {
                 if (!IsSelected)
@@ -44,8 +43,7 @@ namespace ProTagger.Wpf
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            if (_listView == null)
-                throw new ArgumentNullException(nameof(_listView));
+            _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
             if (e.RightButton == MouseButtonState.Pressed)
             {
                 if (!IsSelected)
@@ -59,8 +57,7 @@ namespace ProTagger.Wpf
 
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
-            if (_listView == null)
-                throw new ArgumentNullException(nameof(_listView));
+            _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
             if (IsSecondarySelection(e))
             {
                 if (!IsSelected)

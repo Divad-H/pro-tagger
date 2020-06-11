@@ -44,7 +44,7 @@ namespace ProTagger.Wpf
             {
                 lock (_backingStoreMutex)
                     _backingStore = new DrawingGroup();
-                if (newContent == null)
+                if (newContent is null)
                     return;
 
                 var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;

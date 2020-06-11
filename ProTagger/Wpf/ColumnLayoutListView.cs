@@ -30,17 +30,17 @@ namespace ProTagger.Wpf
         {
             if (_secondarySelectedItem == item)
                 return;
-            if (_secondarySelectedItem != null)
+            if (!(_secondarySelectedItem is null))
                 _secondarySelectedItem.IsSecondarySelected = false;
             _secondarySelectedItem = item;
-            if (_secondarySelectedItem != null)
+            if (!(_secondarySelectedItem is null))
                 _secondarySelectedItem.IsSecondarySelected = true;
             SecondarySelection = _secondarySelectedItem?.Content;
         }
 
         internal void ToggleSecondarySelectItem(ColumnLayoutListViewItem? item)
         {
-            if (_secondarySelectedItem != item || _secondarySelectedItem == null)
+            if (_secondarySelectedItem != item || _secondarySelectedItem is null)
             {
                 SecondarySelectItem(item);
                 return;
@@ -107,7 +107,7 @@ namespace ProTagger.Wpf
             base.OnItemsChanged(e);
             if (e.Action != NotifyCollectionChangedAction.Reset)
                 return;
-            if (KeepSelectionRule == null || ItemsSource == null)
+            if (KeepSelectionRule is null || ItemsSource is null)
                 return;
             SelectedItem = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSelection));
             SecondarySelection = ItemsSource.OfType<object>().FirstOrDefault(item => KeepSelectionRule(item, oldSecondarySelection));

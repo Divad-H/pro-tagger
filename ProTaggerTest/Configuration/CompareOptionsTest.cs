@@ -34,7 +34,7 @@ namespace ProTaggerTest.Configuration
             });
             using var _ = options.CompareOptionsObservable.Subscribe(options => result = options);
             Assert.IsNotNull(result);
-            if (result == null)
+            if (result is null)
                 throw new Exception();
             Assert.AreEqual(3, result.ContextLines);
             options.DiffAlgorithm.Value.OnNext(DiffAlgorithm.Minimal);

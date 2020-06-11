@@ -1,4 +1,4 @@
-﻿using ProTagger.Repo.GitLog;
+﻿using ProTagger.Repository.GitLog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -142,7 +142,7 @@ namespace ProTagger.Wpf
         {
             if (ColumnDefinitions != null)
             {
-                if (_columnWidthBuffer == null)
+                if (_columnWidthBuffer is null)
                     _columnWidthBuffer = ColumnDefinitions.Select(column => column.ActualWidth).ToList();
                 else
                     return true;
@@ -199,7 +199,7 @@ namespace ProTagger.Wpf
 
         private void Render(DrawingContext drawingContext)
         {
-            if (ColumnDefinitions == null)
+            if (ColumnDefinitions is null)
                 return;
             EnsureColumnWidthBuffer();
 

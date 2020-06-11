@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -22,7 +20,7 @@ namespace ProTagger.Wpf
         {
             var oldSelection = SelectedItems.Cast<object>().ToList();
             base.OnItemsChanged(e);
-            if (KeepSelectionRule == null || ItemsSource == null)
+            if (KeepSelectionRule is null || ItemsSource is null)
                 return;
             var newSelection = ItemsSource.OfType<object>().ToHashSet(KeepSelectionRule);
             newSelection.IntersectWith(oldSelection);

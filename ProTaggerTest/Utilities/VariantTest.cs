@@ -67,7 +67,7 @@ namespace ProTaggerTest
             using var _ = merged.Subscribe(m => res = m);
             Assert.IsNull(res);
             first.OnNext(1);
-            if (res == null)
+            if (res is null)
             {
                 Assert.IsNotNull(res);
                 throw new Exception("Unreachable");

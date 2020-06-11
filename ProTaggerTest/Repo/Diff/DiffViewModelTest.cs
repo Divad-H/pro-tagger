@@ -30,7 +30,7 @@ namespace ProTaggerTest.Repo.Diff
             var vm = new DiffViewModel(repo, new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
             Variant<List<TreeEntryChanges>, string>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
-            if (value == null)
+            if (value is null)
                 throw new Exception("Value was not set.");
             Assert.IsTrue(value.Is<string>());
             Assert.AreEqual(DiffViewModel.NoCommitSelectedMessage, value.Get<string>());
@@ -69,7 +69,7 @@ namespace ProTaggerTest.Repo.Diff
                         signal.Release();
                 });
 
-            if (value == null)
+            if (value is null)
                 throw new Exception("TreeDiff was not set.");
             if (!value.Is<List<TreeEntryChanges>>())
                 await signal.WaitAsync(TimeSpan.FromSeconds(10));

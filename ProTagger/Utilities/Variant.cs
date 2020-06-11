@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ProTagger
 {
-    public class Variant
+    public abstract class Variant
     {
-        protected object _value;
+        protected readonly object _value;
 
         protected Variant(object value)
             => _value = value;
@@ -12,9 +13,12 @@ namespace ProTagger
         public object Value => _value;
 
         public virtual int VariantIndex { get; } = 0;
+
+        public override abstract bool Equals(object? obj);
+        public override abstract int GetHashCode();
     }
 
-    public class Variant<T1, T2> : Variant
+    public class Variant<T1, T2> : Variant, IEquatable<Variant>, IEquatable<Variant<T1, T2>>
         where T1 : notnull
         where T2 : notnull
     {
@@ -58,18 +62,32 @@ namespace ProTagger
         public bool Is<T>()
             => _value is T;
 
-        public Variant<T1, T2> Assign(T1 value)
+        public override bool Equals(object? obj)
         {
-            _value = value;
-            return this;
+            if (!(obj is Variant<T1, T2> other))
+                return false;
+            return Equals(other);
         }
 
-        public Variant<T1, T2> Assign(T2 value)
+        public override int GetHashCode()
+            => Value.GetHashCode();
+
+        public bool Equals(Variant? obj)
         {
-            _value = value;
-            return this;
+            if (!(obj is Variant<T1, T2> other))
+                return false;
+            return Equals(other);
         }
+
+        public bool Equals(Variant<T1, T2>? obj)
+            => !(obj is null) && Value.Equals(obj.Value);
 
         public override int VariantIndex => _value is T1 ? 0 : 1;
+
+        public static bool operator ==(Variant<T1, T2>? first, Variant<T1, T2>? second)
+            => first is null ? second is null : first.Equals(second);
+
+        public static bool operator !=(Variant<T1, T2>? first, Variant<T1, T2>? second)
+            => !(first == second);
     }
 }

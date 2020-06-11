@@ -13,20 +13,48 @@ namespace ProTaggerTest
     public class VariantTest
     {
         [TestMethod]
-        public void IntStringVariant()
+        public void CanAssignFirstVariant()
+        {
+            const string strVal = "rat";
+            var variant = new Variant<string, int>(strVal);
+            Assert.IsTrue(variant.Is<string>());
+            Assert.IsFalse(variant.Is<int>());
+            Assert.AreEqual(strVal, variant.Get<string>());
+            Assert.AreEqual(strVal, variant.First);
+        }
+
+        [TestMethod]
+        public void CanAssignSecondVariant()
         {
             const int intVal = 3;
-            const string strVal = "rat";
             var variant = new Variant<string, int>(intVal);
             Assert.IsTrue(variant.Is<int>());
             Assert.IsFalse(variant.Is<string>());
             Assert.AreEqual(intVal, variant.Get<int>());
             Assert.AreEqual(3, variant.Second);
-            variant.Assign(strVal);
-            Assert.IsTrue(variant.Is<string>());
-            Assert.IsFalse(variant.Is<int>());
-            Assert.AreEqual(strVal, variant.Get<string>());
-            Assert.AreEqual(strVal, variant.First);
+        }
+
+        [TestMethod]
+        public void IdenticalVariantsAreEqual()
+        {
+            const string strVal = "rat";
+            var first = new Variant<string, int>(strVal);
+            var second = new Variant<string, int>(strVal);
+            Assert.AreEqual(first, second);
+            Assert.IsTrue(first == second);
+            Assert.IsFalse(first != second);
+        }
+
+        [TestMethod]
+        public void UnidenticalVariantsAreNotEqual()
+        {
+            const string strVal = "rat";
+            const int intVal = 2;
+            var first = new Variant<string, int>(strVal);
+            var second = new Variant<string, int>(intVal);
+            Assert.AreNotEqual(first, second);
+            Assert.IsFalse(first == second);
+            Assert.IsTrue(first != second);
         }
 
         [TestMethod]

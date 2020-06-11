@@ -12,7 +12,7 @@
         Title="MainWindow" Height="450" Width="1200">
     <Window.Resources>
     </Window.Resources>
-    <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}" x:Name="OuterTabControl" HeaderBarContent="{Binding}">
+    <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}" x:Name="OuterTabControl" HeaderBarContent="{Binding}" HeaderBarMinWidth="200">
         <custom:CustomBarTabControl.HeaderBarContentTemplate>
             <DataTemplate>
                 <DockPanel MinWidth="200">

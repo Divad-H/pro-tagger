@@ -9,7 +9,7 @@ using System.Windows.Controls;
 
 namespace ProTagger.Wpf
 {
-    public class CustomBarTabControl : TabControl
+    public class CustomBarTabControl : NonVirtualizingTabControl
     {
         public object? HeaderBarContent
         {
@@ -27,7 +27,8 @@ namespace ProTagger.Wpf
         public static readonly DependencyProperty HeaderBarContentTemplateProperty = DependencyProperty.Register(
           nameof(HeaderBarContentTemplate), typeof(DataTemplate), typeof(CustomBarTabControl), new PropertyMetadata(null));
 
-        public double HeaderBarMinWidth        {
+        public double HeaderBarMinWidth
+        {
             get => (double)GetValue(HeaderBarMinWidthProperty);
             set => SetValue(HeaderBarMinWidthProperty, value);
         }

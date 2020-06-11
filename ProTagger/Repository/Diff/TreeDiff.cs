@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 
-namespace ProTagger.Repo.Diff
+namespace ProTagger.Repository.Diff
 {
     static class TreeDiff
     {
@@ -30,7 +30,7 @@ namespace ProTagger.Repo.Diff
                             (oldCommit, newCommit) = (newCommit, oldCommit);
                         if (oldCommit != null && oldCommit.Is<DiffTargets>())
                             return new Variant<List<TreeEntryChanges>, string>(new List<TreeEntryChanges>());
-                        if (newCommit.Is<DiffTargets>() && head == null)
+                        if (newCommit.Is<DiffTargets>() && head is null)
                             return new Variant<List<TreeEntryChanges>, string>("Did not get HEAD");
                         
                         var oldTree = oldCommit?.Get<Commit>().Tree;

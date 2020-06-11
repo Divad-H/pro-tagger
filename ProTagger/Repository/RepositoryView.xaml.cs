@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace ProTagger.Repo
+namespace ProTagger.Repository
 {
     /// <summary>
     /// Interaction logic for RepositoryView.xaml

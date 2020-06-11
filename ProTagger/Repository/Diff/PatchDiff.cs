@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ProTagger.Repo.Diff
+namespace ProTagger.Repository.Diff
 {
     public class PatchDiff
     {
@@ -24,7 +24,7 @@ namespace ProTagger.Repo.Diff
                 CompareOptions options,
                 CancellableChanges cancellableChanges)
         {
-            if (delayDisposeRepository == null)
+            if (delayDisposeRepository is null)
                 return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                     new CancellableChangesWithError(cancellableChanges, "Repository was disposed."));
             try

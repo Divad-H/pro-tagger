@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace ProTagger.Repo.GitLog
+namespace ProTagger.Repository.GitLog
 {
     /// <summary>
     /// Interaction logic for GitLogView.xaml

@@ -8,12 +8,12 @@ namespace ProTagger.Utilities
     {
         public RepositoryWrapper(string path)
         {
-            _repository = new Repository(path);
+            _repository = new LibGit2Sharp.Repository(path);
             _refCountDisposable = new RefCountDisposable(_repository);
             _disposable = _refCountDisposable.GetDisposable();
         }
 
-        private readonly Repository _repository;
+        private readonly LibGit2Sharp.Repository _repository;
         private readonly IDisposable _disposable;
         private readonly RefCountDisposable _refCountDisposable;
 

@@ -1,6 +1,6 @@
 ﻿using LibGit2Sharp;
-using ProTagger.Repo.Diff;
-using ProTagger.Repo.GitLog;
+using ProTagger.Repository.Diff;
+using ProTagger.Repository.GitLog;
 using ProTagger.Utilities;
 using ReacitveMvvm;
 using ReactiveMvvm;

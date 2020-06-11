@@ -11,7 +11,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ProTagger.Repo.Diff
+namespace ProTagger.Repository.Diff
 {
     public class CancellableChanges
     {
@@ -134,7 +134,7 @@ namespace ProTagger.Repo.Diff
                 .ObserveOn(schedulers.ThreadPool)
                 .SelectMany(data => data.cancellableChanges
                     .Select(cancellableChanges =>
-                        data.newCommit == null ?
+                        data.newCommit is null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
                         Diff.PatchDiff.CreateDiff(repo.Diff, repo.TryAddRef(), head, data.oldCommit, data.newCommit, cancellableChanges

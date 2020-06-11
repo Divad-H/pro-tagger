@@ -11,7 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ProTagger.Repo.Diff
+namespace ProTagger.Repository.Diff
 {
     /// <summary>
     /// Interaction logic for DiffView.xaml

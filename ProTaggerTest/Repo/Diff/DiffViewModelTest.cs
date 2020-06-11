@@ -1,6 +1,6 @@
 ﻿using LibGit2Sharp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ProTagger.Repo.Diff;
+using ProTagger.Repository.Diff;
 using ProTagger.Utilities;
 using ProTaggerTest.LibGit2Mocks;
 using ProTaggerTest.Mocks;

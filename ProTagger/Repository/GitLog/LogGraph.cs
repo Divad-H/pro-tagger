@@ -10,7 +10,7 @@ using ReacitveMvvm;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-namespace ProTagger.Repo.GitLog
+namespace ProTagger.Repository.GitLog
 {
     using TGraphPos = UInt16;
     using GraphType = ObservableCollection<LogGraphNode>;
@@ -103,7 +103,7 @@ namespace ProTagger.Repo.GitLog
 
         public Func<object, object?, bool> KeepSelectionRule { get; } = (object1, object2) =>
             {
-                if (object2 == null)
+                if (object2 is null)
                     return false;
                 var node1 = object1 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
                 var node2 = object2 as LogGraphNode ?? throw new InvalidOperationException("Invalid type.");
@@ -161,7 +161,7 @@ namespace ProTagger.Repo.GitLog
             using var delayDispose = repository.TryAddRef();
             if (delayDispose != null)
             {
-                if (repository.Head == null)
+                if (repository.Head is null)
                     yield break;
 
                 var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
@@ -187,7 +187,7 @@ namespace ProTagger.Repo.GitLog
                     if (foundNextPosition == -1)
                     {
                         // commit without visible children
-                        foundNextPosition = expectedIds.FindIndex((id) => id == null);
+                        foundNextPosition = expectedIds.FindIndex((id) => id is null);
                         if (foundNextPosition == -1)
                         {
                             foundNextPosition = expectedIds.Count;
@@ -218,12 +218,12 @@ namespace ProTagger.Repo.GitLog
 
                     for (TGraphPos i = 0; i < expectedIds.Count; ++i)
                     {
-                        if (expectedIds[i] == c.Id || expectedIds[i] == null)
+                        if (expectedIds[i] == c.Id || expectedIds[i] is null)
                         {
                             if (parents.Count > parentIndex)
                             {
                                 TGraphPos indexToChange = i;
-                                if (expectedIds[i] == null && expectedIds[nextPosition] == c.Id)
+                                if (expectedIds[i] is null && expectedIds[nextPosition] == c.Id)
                                 {
                                     indexToChange = nextPosition;
                                     --i;

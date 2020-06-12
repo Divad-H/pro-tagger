@@ -78,7 +78,7 @@
         </Style>
 
         <Style x:Key="FlatScrollBarPageButton"
-       TargetType="{x:Type RepeatButton}">
+               TargetType="{x:Type RepeatButton}">
             <Setter Property="OverridesDefaultStyle" Value="true" />
             <Setter Property="IsTabStop" Value="false" />
             <Setter Property="Focusable" Value="false" />
@@ -218,7 +218,7 @@
                                 <RowDefinition x:Name="RowDefinition1" Height="*" />
                             </Grid.RowDefinitions>
                             <DockPanel Margin="2,2,0,0" LastChildFill="False">
-                                <TabPanel x:Name="HeaderPanel" Margin="0,0,0,-1" VerticalAlignment="Bottom" Panel.ZIndex="1" DockPanel.Dock="Right"
+                                <TabPanel x:Name="HeaderPanel" VerticalAlignment="Bottom" Panel.ZIndex="1" DockPanel.Dock="Right"
                                           IsItemsHost="True" KeyboardNavigation.TabIndex="1" />
                             </DockPanel>
                             <Border x:Name="ContentPanel" Grid.Row="1" Grid.Column="0"
@@ -241,13 +241,16 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabItem}">
 
-                        <Border x:Name="PART_Border" Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="LightGray">
-                            <ContentPresenter ContentSource="Header" />
+                        <Border x:Name="PART_Border" Background="{StaticResource br_light}" BorderThickness="0.5,0" BorderBrush="{StaticResource br_lightblue}" Padding="3,2,3,1">
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
                         </Border>
 
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="PART_Border" Property="Background" Value="{StaticResource br_lightblue}" />
+                            </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="PART_Border" Property="BorderBrush" Value="Black" />
+                                <Setter TargetName="PART_Border" Property="Background" Value="{StaticResource br_blue}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -256,7 +259,6 @@
         </Style>
 
         <Style TargetType="{x:Type custom:CustomBarTabControl}">
-            <Setter Property="Margin" Value="2" />
             <Setter Property="Padding" Value="2"    />
             <Setter Property="Background" Value="White" />
 
@@ -290,10 +292,12 @@
                                     <RepeatButton
                                         x:Name="ScrolltoLeft_Btn"
                                         Grid.Column="0"
-                                        VerticalAlignment="Top"
+                                        VerticalAlignment="Stretch"
+                                        Width="16"
                                         Command="{x:Static ScrollBar.LineLeftCommand}"
                                         CommandTarget="{Binding ElementName=sv}"
-                                        Content="left">
+                                        Content="M 6 0 L 6 12 L 0 6 Z"
+                                        Style="{StaticResource FlatScrollBarLineButton}" >
                                         <RepeatButton.Visibility>
                                             <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
                                                 <Binding Path="ActualWidth" ElementName="sv"/>
@@ -326,10 +330,12 @@
                                     <RepeatButton
                                         x:Name="ScrolltoRight_Btn"
                                         Grid.Column="2"
-                                        VerticalAlignment="Top"
+                                        VerticalAlignment="Stretch"
+                                        Width="16"
                                         Command="{x:Static ScrollBar.LineRightCommand}"
                                         CommandTarget="{Binding ElementName=sv}"
-                                        Content="right" >
+                                        Content="M 0 0 L 0 12 L 6 6 Z"
+                                        Style="{StaticResource FlatScrollBarLineButton}" >
                                         <RepeatButton.Visibility>
                                             <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
                                                 <Binding Path="ActualWidth" ElementName="sv"/>
@@ -347,22 +353,11 @@
                             </Grid>
                             <Border x:Name="ContentPanel" Grid.Row="1"
                                     Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    BorderBrush="{StaticResource br_blue}"
+                                    BorderThickness="0,2,0,0"
                                     KeyboardNavigation.DirectionalNavigation="Contained" KeyboardNavigation.TabIndex="3" KeyboardNavigation.TabNavigation="Local">
                                 <Grid x:Name="PART_ItemsHolder" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                             </Border>
-                            <!--<ContentPresenter Content="{TemplateBinding SelectedContent}" 
-                                              ContentTemplate="{TemplateBinding SelectedContentTemplate}" 
-                                              ContentStringFormat="{TemplateBinding SelectedContentStringFormat}" 
-                                              ContentSource="SelectedContent" 
-                                              Name="PART_SelectedContentHost" 
-                                              Margin="2" 
-                                              SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
-                                              KeyboardNavigation.TabIndex="3" 
-                                              KeyboardNavigation.TabNavigation="Local" 
-                                              KeyboardNavigation.DirectionalNavigation="Contained" 
-                                              Grid.Row="1"/>-->
                         </Grid>
 
                         <ControlTemplate.Triggers>

@@ -15,10 +15,56 @@
     <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}" x:Name="OuterTabControl" HeaderBarContent="{Binding}" HeaderBarMinWidth="200">
         <custom:CustomBarTabControl.HeaderBarContentTemplate>
             <DataTemplate>
-                <DockPanel MinWidth="200">
-                    <Button Content="+" Command="{Binding NewTabCommand}" DockPanel.Dock="Left" />
+                <DockPanel MinWidth="200" LastChildFill="False">
+                    <Button Command="{Binding NewTabCommand}" Width="20" Margin="5,0" DockPanel.Dock="Left" Padding="4" >
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{StaticResource br_darkgray}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border Background="{TemplateBinding Background}" BorderThickness="0">
+                                                <Path 
+                                                      Margin="2.5"
+                                                      Stroke="{TemplateBinding Foreground}"
+                                                      StrokeThickness="1.5"
+                                                      StrokeStartLineCap="Triangle"
+                                                      StrokeEndLineCap="Triangle"
+                                                      Stretch="Uniform"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Center">
+                                                    <Path.Data>
+                                                        <PathGeometry>
+                                                            <PathGeometry.Figures>
+                                                                <PathFigure StartPoint="-10,0">
+                                                                    <LineSegment Point="10,0"/>
+                                                                </PathFigure>
+                                                                <PathFigure StartPoint="0,-10">
+                                                                    <LineSegment Point="0,10"/>
+                                                                </PathFigure>
+                                                            </PathGeometry.Figures>
+                                                        </PathGeometry>
+                                                    </Path.Data>
+                                                </Path>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource br_lightblue}" />
+                                        <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource br_blue}" />
+                                        <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                     <Button Content="Dummy" Command="{Binding NewTabCommand}" DockPanel.Dock="Right" Width="50" />
-                    <Label Content="Ratte" Background="Gray"/>
                 </DockPanel>
             </DataTemplate>
         </custom:CustomBarTabControl.HeaderBarContentTemplate>
@@ -29,13 +75,28 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
-                    <custom:VariantPresenter VariantContent="{Binding}">
+                    <custom:VariantPresenter VariantContent="{Binding}"
+                                             Margin="0,0,3,0">
                         <custom:VariantPresenter.Variant0Template>
                             <DataTemplate>
                                 <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
                                     <custom:VariantPresenter.Variant0Template>
                                         <DataTemplate>
-                                            <TextBlock Text="Repo name" />
+                                            <TextBlock Text="Repo name" >
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource br_black}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsMouseOver}" Value="True" >
+                                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsSelected}" Value="True" >
+                                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </DataTemplate>
                                     </custom:VariantPresenter.Variant0Template>
                                 </custom:VariantPresenter>
@@ -43,11 +104,78 @@
                         </custom:VariantPresenter.Variant0Template>
                         <custom:VariantPresenter.Variant1Template>
                             <DataTemplate>
-                                <TextBlock Text="New Tab" />
+                                <TextBlock Text="New Tab" >
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource br_black}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsMouseOver}" Value="True" >
+                                                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsSelected}" Value="True" >
+                                                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </DataTemplate>
                         </custom:VariantPresenter.Variant1Template>
                     </custom:VariantPresenter>
-                    <Button Grid.Column="1" Command="{Binding ElementName=OuterTabControl, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}" Content="✖" />
+                    <Button Grid.Column="1"
+                            Command="{Binding ElementName=OuterTabControl, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}"
+                            Width="16"
+                            Height="16"
+                            VerticalContentAlignment="Center"
+                            Foreground="{StaticResource br_light}"
+                            Margin="0,0,0,-2">
+                        <Button.Content>
+                            <Path 
+                                  Margin="2.5"
+                                  Stroke="{StaticResource br_light}"
+                                  StrokeThickness="1.5"
+                                  StrokeStartLineCap="Triangle"
+                                  StrokeEndLineCap="Triangle"
+                                  Stretch="Uniform"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center">
+                                <Path.Data>
+                                    <PathGeometry>
+                                        <PathGeometry.Figures>
+                                            <PathFigure StartPoint="0,0">
+                                                <LineSegment Point="25,25"/>
+                                            </PathFigure>
+                                            <PathFigure StartPoint="0,25">
+                                                <LineSegment Point="25,0"/>
+                                            </PathFigure>
+                                        </PathGeometry.Figures>
+                                    </PathGeometry>
+                                </Path.Data>
+                            </Path>
+                        </Button.Content>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border Background="{TemplateBinding Background}" BorderThickness="0">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource br_darkred}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource br_red}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </Grid>
             </DataTemplate>
         </custom:CustomBarTabControl.ItemTemplate>

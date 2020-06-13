@@ -79,27 +79,21 @@
                                              Margin="0,0,3,0">
                         <custom:VariantPresenter.Variant0Template>
                             <DataTemplate>
-                                <custom:VariantPresenter VariantContent="{Binding}" Style="{StaticResource DefaultErrorView}">
-                                    <custom:VariantPresenter.Variant0Template>
-                                        <DataTemplate>
-                                            <TextBlock Text="Repo name" >
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource br_black}" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsMouseOver}" Value="True" >
-                                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsSelected}" Value="True" >
-                                                                <Setter Property="Foreground" Value="{StaticResource br_light}" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </custom:VariantPresenter.Variant0Template>
-                                </custom:VariantPresenter>
+                                <TextBlock Text="{Binding Value.RepositoryDescription.Name}" >
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource br_black}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsMouseOver}" Value="True" >
+                                                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsSelected}" Value="True" >
+                                                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </DataTemplate>
                         </custom:VariantPresenter.Variant0Template>
                         <custom:VariantPresenter.Variant1Template>

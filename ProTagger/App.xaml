@@ -197,7 +197,7 @@
                 <Setter Property="Variant1Template">
                     <Setter.Value>
                         <DataTemplate>
-                            <TextBlock Text="{Binding}"/>
+                            <TextBlock Text="{Binding Message}"/>
                         </DataTemplate>
                     </Setter.Value>
                 </Setter>

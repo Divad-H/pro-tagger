@@ -11,7 +11,7 @@ namespace ProTagger.Repository.Diff
 {
     static class TreeDiff
     {
-        internal static Task<Variant<List<TreeEntryChanges>, string>> CreateDiff(
+        internal static Task<Variant<List<TreeEntryChanges>, Unexpected>> CreateDiff(
                 IRepositoryWrapper repo,
                 CancellationToken ct,
                 Branch? head,
@@ -25,13 +25,13 @@ namespace ProTagger.Repository.Diff
                     try
                     {
                         if (ct.IsCancellationRequested)
-                            return new Variant<List<TreeEntryChanges>, string>("The operation was cancelled.");
+                            return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("The operation was cancelled."));
                         if (oldCommit != null && oldCommit.Is<DiffTargets>())
                             (oldCommit, newCommit) = (newCommit, oldCommit);
                         if (oldCommit != null && oldCommit.Is<DiffTargets>())
-                            return new Variant<List<TreeEntryChanges>, string>(new List<TreeEntryChanges>());
+                            return new Variant<List<TreeEntryChanges>, Unexpected>(new List<TreeEntryChanges>());
                         if (newCommit.Is<DiffTargets>() && head is null)
-                            return new Variant<List<TreeEntryChanges>, string>("Did not get HEAD");
+                            return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("Did not get HEAD"));
                         
                         var oldTree = oldCommit?.Get<Commit>().Tree;
                         using var treeChanges =
@@ -49,11 +49,11 @@ namespace ProTagger.Repository.Diff
                                        return null;
                                    return repo.Diff.Compare<TreeChanges>(oldTree ?? head?.Tip.Tree, dt, changedFiles, null, compareOptions);
                                });
-                        return new Variant<List<TreeEntryChanges>, string>(treeChanges?.ToList() ?? new List<TreeEntryChanges>());
+                        return new Variant<List<TreeEntryChanges>, Unexpected>(treeChanges?.ToList() ?? new List<TreeEntryChanges>());
                     }
                     catch (Exception e)
                     {
-                        return new Variant<List<TreeEntryChanges>, string>(e.Message);
+                        return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(e.Message));
                     }
                 });
         }

@@ -95,7 +95,7 @@ namespace ProTagger.Repository.GitLog
 
         public ICommand ScrolledBottom { get; }
 
-        public ViewSubject<Variant<GraphType, string>> LogGraphNodes { get; }
+        public ViewSubject<Variant<GraphType, Unexpected>> LogGraphNodes { get; }
 
         public ViewSubject<LogGraphNode?> SelectedNode { get; }
 
@@ -115,7 +115,7 @@ namespace ProTagger.Repository.GitLog
             var scrolledBottom = ReactiveCommand.Create<object?, object?>(Observable.Return(true), p => p, schedulers.Dispatcher);
             ScrolledBottom = scrolledBottom;
 
-            LogGraphNodes = new ViewSubject<Variant<GraphType, string>>(new Variant<GraphType, string>(new GraphType()))
+            LogGraphNodes = new ViewSubject<Variant<GraphType, Unexpected>>(new Variant<GraphType, Unexpected>(new GraphType()))
                 .DisposeWith(_disposable);
 
             selectedBranches
@@ -136,12 +136,12 @@ namespace ProTagger.Repository.GitLog
                     data =>
                     {
                         if (data.Index == 1)
-                            LogGraphNodes.OnNext(new Variant<GraphType, string>(new GraphType(data.Batch)));
+                            LogGraphNodes.OnNext(new Variant<GraphType, Unexpected>(new GraphType(data.Batch)));
                         else
                             foreach (var node in data.Batch)
                                 LogGraphNodes.Value.First.Add(node);
                     },
-                    error => LogGraphNodes.OnNext(new Variant<GraphType, string>(error))))
+                    error => LogGraphNodes.OnNext(new Variant<GraphType, Unexpected>(new Unexpected(error)))))
                 .DisposeWith(_disposable);
 
             SelectedNode = new ViewSubject<LogGraphNode?>(null)

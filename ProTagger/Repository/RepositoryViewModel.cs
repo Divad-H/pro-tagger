@@ -1,6 +1,8 @@
 ﻿using LibGit2Sharp;
+using ProTagger.Repository;
 using ProTagger.Repository.Diff;
 using ProTagger.Repository.GitLog;
+using ProTagger.RepositorySelection;
 using ProTagger.Utilities;
 using ReacitveMvvm;
 using ReactiveMvvm;
@@ -52,35 +54,37 @@ namespace ProTagger
         public List<BranchSelectionViewModel> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
         public DiffViewModel Diff { get; }
+        public RepositoryDescription RepositoryDescription { get; }
 
-        public static async Task<Variant<RepositoryViewModel, string>?> Create(ISchedulers schedulers,
+        public static async Task<Variant<RepositoryViewModel, RepositoryError>?> Create(ISchedulers schedulers,
             CancellationToken ct, 
-            IRepositoryFactory repositoryFactory, 
-            string path, 
+            IRepositoryFactory repositoryFactory,
+            RepositoryDescription description, 
             IObservable<CompareOptions> compareOptions)
         {
             try
             {
-                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, path, compareOptions));
+                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, description, compareOptions));
                 if (ct.IsCancellationRequested)
                 {
                     repositoryViewModel?.Dispose();
                     return null;
                 }
-                return new Variant<RepositoryViewModel, string>(repositoryViewModel);
+                return new Variant<RepositoryViewModel, RepositoryError>(repositoryViewModel);
             }
             catch (Exception e)
             {
-                return new Variant<RepositoryViewModel, string>(e.Message);
+                return new Variant<RepositoryViewModel, RepositoryError>(new RepositoryError(e.Message, description));
             }
         }
 
         private readonly IRepositoryWrapper _repository;
 
-        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, string path, IObservable<CompareOptions> compareOptions)
+        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, RepositoryDescription description, IObservable<CompareOptions> compareOptions)
         {
+            RepositoryDescription = description;
             var branches = new List<BranchSelectionViewModel>();
-            _repository = repositoryFactory.CreateRepository(path)
+            _repository = repositoryFactory.CreateRepository(description.Path)
                 .DisposeWith(_disposables);
             try
             {

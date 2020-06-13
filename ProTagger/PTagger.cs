@@ -10,10 +10,11 @@ using ProTagger.Utilities;
 using LibGit2Sharp;
 using System.Collections.ObjectModel;
 using ProTagger.RepositorySelection;
+using ProTagger.Repository;
 
 namespace ProTagger
 {
-    using TabType = Variant<Variant<RepositoryViewModel, string>, RepositorySelectionViewModel>;
+    using TabType = Variant<Variant<RepositoryViewModel, RepositoryError>, RepositorySelectionViewModel>;
     public class PTagger : IDisposable
     {
         public ObservableCollection<TabType> OpenedRepositories { get; }
@@ -27,7 +28,7 @@ namespace ProTagger
         private static void DisposeTab(TabType  tab)
             => tab.Visit(repoVar => repoVar.Visit(repo => repo.Dispose(), _ => { }), repoSel => repoSel.Dispose());
 
-        public PTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers)
+        public PTagger(IRepositoryFactory repositoryFactory, ISchedulers schedulers, IFileSystem fileSystemService, IObservable<string> pushPathObservable)
         {
             CompareOptions = new Configuration.CompareOptionsViewModel(schedulers, new CompareOptions() { Similarity = SimilarityOptions.Default });
 
@@ -47,8 +48,9 @@ namespace ProTagger
                     .Select(openRepository => new { newTab, openRepository }));
 
             var openRepository = openRepositoryFromTab
-                .SelectMany(openRepo => Observable
-                    .FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, openRepo.openRepository.Path, CompareOptions.CompareOptionsObservable)))
+                .Select(openRepo => openRepo.openRepository)
+                .SelectMany(desc => Observable
+                    .FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, desc, CompareOptions.CompareOptionsObservable)))
                 .SkipNull()
                 .Publish();
 

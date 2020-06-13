@@ -28,12 +28,12 @@ namespace ProTaggerTest.Repo.Diff
             var repo = new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()), null, diff);
 
             var vm = new DiffViewModel(repo, new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
-            Variant<List<TreeEntryChanges>, string>? value = null;
+            Variant<List<TreeEntryChanges>, Unexpected>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
             if (value is null)
                 throw new Exception("Value was not set.");
-            Assert.IsTrue(value.Is<string>());
-            Assert.AreEqual(DiffViewModel.NoCommitSelectedMessage, value.Get<string>());
+            Assert.IsTrue(value.Is<Unexpected>());
+            Assert.AreEqual(DiffViewModel.NoCommitSelectedMessage, value.Get<Unexpected>().Message);
         }
 
         [TestMethod]
@@ -58,7 +58,7 @@ namespace ProTaggerTest.Repo.Diff
             var compareOptionsObs = Observable.Return(compareOptions);
             var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
 
-            Variant<List<TreeEntryChanges>, string>? value = null;
+            Variant<List<TreeEntryChanges>, Unexpected>? value = null;
             var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
             using var _ = vm
                 .TreeDiff

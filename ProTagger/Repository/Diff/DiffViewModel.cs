@@ -50,7 +50,7 @@ namespace ProTagger.Repository.Diff
 
         public IEqualityComparer<object> KeepTreeDiffChangesSelectedRule { get; } = new KeepSelectionComparer();
 
-        public ViewSubject<Variant<List<TreeEntryChanges>, string>> TreeDiff { get; }
+        public ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>> TreeDiff { get; }
 
         public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
@@ -59,7 +59,7 @@ namespace ProTagger.Repository.Diff
             IObservable<Variant<Commit, DiffTargets>?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
-            TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, string>>(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))
+            TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>>(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))
                 .DisposeWith(_disposables);
 
             Observable
@@ -68,7 +68,7 @@ namespace ProTagger.Repository.Diff
                 .Select(o => Observable.FromAsync(ct =>
                     o.newCommit != null ?
                         Diff.TreeDiff.CreateDiff(repo, ct, head, o.oldCommit, o.newCommit, o.compareOptions) :
-                        Task.FromResult(new Variant<List<TreeEntryChanges>, string>(NoCommitSelectedMessage))))
+                        Task.FromResult(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))))
                 .Switch()
                 .Subscribe(TreeDiff)
                 .DisposeWith(_disposables);

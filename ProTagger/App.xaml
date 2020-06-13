@@ -240,19 +240,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabItem}">
-
-                        <Border x:Name="PART_Border" Background="{StaticResource br_light}" BorderThickness="0.5,0" BorderBrush="{StaticResource br_lightblue}" Padding="3,2,3,1">
-                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="PART_Border" Property="Background" Value="{StaticResource br_lightblue}" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="PART_Border" Property="Background" Value="{StaticResource br_blue}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
+                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

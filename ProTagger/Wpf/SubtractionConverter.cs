@@ -22,7 +22,7 @@ namespace ProTagger.Wpf
                     return DependencyProperty.UnsetValue;
                 result -= val;
             }
-            return result;
+            return Math.Max(0.0, result);
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

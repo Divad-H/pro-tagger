@@ -7,5 +7,6 @@ namespace ProTaggerTest.Mocks
     {
         public IScheduler Dispatcher => Scheduler.Immediate;
         public IScheduler ThreadPool => Scheduler.Immediate;
+        public IScheduler Immediate => Scheduler.Immediate;
     }
 }

@@ -13,7 +13,18 @@ namespace ProTaggerTest.Repo.GitLog
     [TestClass]
     public class LogGraphTest
     {
-        class SimpleRepositoryFactoryMock : IRepositoryFactory
+        abstract class RepositoryFactoryMockBase : IRepositoryFactory
+        {
+            public abstract IRepositoryWrapper CreateRepository(string path);
+            public string? DiscoverRepository(string path)
+                => throw new NotImplementedException();
+            public bool IsValidRepository(string path)
+                => throw new NotImplementedException();
+            public string? RepositoryNameFromPath(string path)
+                => throw new NotImplementedException();
+        }
+
+        class SimpleRepositoryFactoryMock : RepositoryFactoryMockBase
         {
             /// <summary>
             /// Expected Graph:
@@ -29,7 +40,7 @@ namespace ProTaggerTest.Repo.GitLog
             /// |/
             /// X    0
             /// </summary>
-            public IRepositoryWrapper CreateRepository(string path)
+            public override IRepositoryWrapper CreateRepository(string path)
             {
                 var shaGenerator = new PseudoShaGenerator();
                 
@@ -125,7 +136,7 @@ namespace ProTaggerTest.Repo.GitLog
                 .Sum(to => to.Count));
         }
 
-        class UnrelatedHistoryRepositoryMock : IRepositoryFactory
+        class UnrelatedHistoryRepositoryMock : RepositoryFactoryMockBase
         {
             /// <summary>
             /// Expected Graph:
@@ -140,7 +151,7 @@ namespace ProTaggerTest.Repo.GitLog
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            public IRepositoryWrapper CreateRepository(string path)
+            public override IRepositoryWrapper CreateRepository(string path)
             {
                 var shaGenerator = new PseudoShaGenerator();
 
@@ -205,7 +216,7 @@ namespace ProTaggerTest.Repo.GitLog
             AssertGraphConsistency(g);
         }
 
-        class ThreeParentRepositoryFactoryMock : IRepositoryFactory
+        class ThreeParentRepositoryFactoryMock : RepositoryFactoryMockBase
         {
             /// <summary>
             /// Expected Graph:
@@ -223,7 +234,7 @@ namespace ProTaggerTest.Repo.GitLog
             /// |    
             /// X      0
             /// </summary>
-            public IRepositoryWrapper CreateRepository(string path)
+            public override IRepositoryWrapper CreateRepository(string path)
             {
                 var shaGenerator = new PseudoShaGenerator();
 
@@ -323,7 +334,7 @@ namespace ProTaggerTest.Repo.GitLog
             AssertGraphConsistency(g);
         }
 
-        class ReusedColumnRepositoryMock : IRepositoryFactory
+        class ReusedColumnRepositoryMock : RepositoryFactoryMockBase
         {
             /// <summary>
             /// Expected Graph:
@@ -347,7 +358,7 @@ namespace ProTaggerTest.Repo.GitLog
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            public IRepositoryWrapper CreateRepository(string path)
+            public override IRepositoryWrapper CreateRepository(string path)
             {
                 var shaGenerator = new PseudoShaGenerator();
 
@@ -458,7 +469,7 @@ namespace ProTaggerTest.Repo.GitLog
             AssertGraphConsistency(g);
         }
 
-        class SwitchingParentOrderRepositoryMock : IRepositoryFactory
+        class SwitchingParentOrderRepositoryMock : RepositoryFactoryMockBase
         {
             /// <summary>
             /// Expected Graph:
@@ -476,7 +487,7 @@ namespace ProTaggerTest.Repo.GitLog
             /// </summary>
             /// <param name="path"></param>
             /// <returns></returns>
-            public IRepositoryWrapper CreateRepository(string path)
+            public override IRepositoryWrapper CreateRepository(string path)
             {
                 var shaGenerator = new PseudoShaGenerator();
 

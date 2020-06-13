@@ -40,15 +40,22 @@ namespace ProTagger
             var newTabObservable = newTabCommand
                 .StartWith((object?)null)
                 .ObserveOn(schedulers.Dispatcher)
-                .Select(_ => new RepositorySelectionViewModel(schedulers))
+                .Select(_ => new RepositorySelectionViewModel(schedulers, repositoryFactory, fileSystemService))
                 .Publish();
 
             var openRepositoryFromTab = newTabObservable
                 .SelectMany(newTab => newTab.OpenRepository
                     .Select(openRepository => new { newTab, openRepository }));
 
+            var pushedRepositoryDesc = pushPathObservable
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(repositoryFactory.DiscoverRepository)
+                .SkipNull()
+                .Select(path => RepositorySelectionViewModel.RepositoryDescriptionFromPath(repositoryFactory, path));
+
             var openRepository = openRepositoryFromTab
                 .Select(openRepo => openRepo.openRepository)
+                .Merge(pushedRepositoryDesc)
                 .SelectMany(desc => Observable
                     .FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, desc, CompareOptions.CompareOptionsObservable)))
                 .SkipNull()

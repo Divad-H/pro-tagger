@@ -6,5 +6,6 @@ namespace ReacitveMvvm
     {
         IScheduler Dispatcher { get; }
         IScheduler ThreadPool { get; }
+        IScheduler Immediate { get; }
     }
 }

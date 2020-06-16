@@ -11,6 +11,9 @@ using LibGit2Sharp;
 using System.Collections.ObjectModel;
 using ProTagger.RepositorySelection;
 using ProTagger.Repository;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ProTagger
 {
@@ -22,6 +25,7 @@ namespace ProTagger
 
         public ICommand NewTabCommand { get; }
         public ICommand CloseTabCommand { get; }
+        public ICommand CloseAllTabsCommand { get; }
 
         public Configuration.CompareOptionsViewModel CompareOptions { get; }
 
@@ -72,9 +76,20 @@ namespace ProTagger
                 .DisposeWith(_disposable);
             CloseTabCommand = closeTabCommand;
 
+            var anyTabOpen = OpenedRepositories
+                .MakeObservable()
+                .Select(_ => OpenedRepositories.Any());
+
+            var closeAllTabsCommand = ReactiveCommand
+                .Create<object?, IList<TabType>>(anyTabOpen, _ => OpenedRepositories.ToList(), schedulers.Dispatcher)
+                .DisposeWith(_disposable);
+            CloseAllTabsCommand = closeAllTabsCommand;
+
             var closeTabObservable = openRepositoryFromTab
                 .Select(openRepo => new TabType(openRepo.newTab))
-                .Merge(closeTabCommand);
+                .Merge(closeTabCommand)
+                .Merge(closeAllTabsCommand
+                    .SelectMany(tabs => tabs));
 
             openTabObservable
                 .Subscribe(tab => OpenedRepositories.Add(tab))

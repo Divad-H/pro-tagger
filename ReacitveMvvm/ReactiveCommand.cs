@@ -11,7 +11,6 @@ namespace ReactiveMvvm
 {
     public class ReactiveCommand<TIn, TOut> : ICommand, IObservable<TOut>, IDisposable
     {
-        private readonly CompositeDisposable _disposable = new CompositeDisposable();
         private readonly ISubject<int> _executionCountSubject = new BehaviorSubject<int>(0);
         private readonly ISubject<TIn, TOut> _executeSubject;
 
@@ -25,7 +24,8 @@ namespace ReactiveMvvm
             canExecuteObservable
                 .CombineLatest(
                     _executionCountSubject.Scan((a, b) => a + b),
-                    (canExec, isExec) => isExec == 0 ? canExec : false)
+                    (canExec, isExec) => isExec == 0 && canExec)
+                .DistinctUntilChanged()
                 .ObserveOn(scheduler)
                 .Subscribe(p =>
                 {
@@ -36,7 +36,9 @@ namespace ReactiveMvvm
 
             _executeSubject = Subject.Create(
                 executeSubject,
-                executeSubject.Publish().Connect(_disposable));
+                executeSubject
+                    .Publish()
+                    .Connect(_disposable));
 
             _executeSubject
                 .Subscribe(
@@ -62,6 +64,7 @@ namespace ReactiveMvvm
         public IDisposable Subscribe(IObserver<TOut> observer)
             => _executeSubject.Subscribe(observer);
 
+        private readonly CompositeDisposable _disposable = new CompositeDisposable();
         public void Dispose()
             => _disposable.Dispose();
     }
@@ -95,6 +98,35 @@ namespace ReactiveMvvm
 
             return new ReactiveCommand<TIn, TOut>(
                 canExecute,
+                Subject.Create(executeSubject, resultObservable),
+                scheduler);
+        }
+
+        public static ReactiveCommand<TIn, TOut> Create<TIn, TOut>(
+            Func<TIn, CancellationToken, Task<TOut>> execute,
+            IScheduler scheduler)
+        {
+            var executeSubject = new Subject<TIn>();
+            var resultObservable = executeSubject
+                .Select(p => Observable.FromAsync(ct => execute(p, ct)))
+                .Switch();
+
+            return new ReactiveCommand<TIn, TOut>(
+                Observable.Return(true),
+                Subject.Create(executeSubject, resultObservable),
+                scheduler);
+        }
+
+        public static ReactiveCommand<TIn, TOut> Create<TIn, TOut>(
+            Func<TIn, TOut> execute,
+            IScheduler scheduler)
+        {
+            var executeSubject = new Subject<TIn>();
+            var resultObservable = executeSubject
+                .Select(p => execute(p));
+
+            return new ReactiveCommand<TIn, TOut>(
+                Observable.Return(true),
                 Subject.Create(executeSubject, resultObservable),
                 scheduler);
         }

@@ -40,7 +40,7 @@ namespace ProTagger.RepositorySelection
                 .DisposeWith(_disposables);
             OpenCommand = openCommand;
 
-            var selectFromFilesystemCommand = ReactiveCommand.Create<object, object>(Observable.Return(true), p => p, schedulers.Dispatcher)
+            var selectFromFilesystemCommand = ReactiveCommand.Create<object, object>(p => p, schedulers.Dispatcher)
                 .DisposeWith(_disposables);
             SelectFromFilesystemCommand = selectFromFilesystemCommand;
 

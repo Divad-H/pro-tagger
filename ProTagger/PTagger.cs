@@ -33,7 +33,7 @@ namespace ProTagger
             CompareOptions = new Configuration.CompareOptionsViewModel(schedulers, new CompareOptions() { Similarity = SimilarityOptions.Default });
 
             var newTabCommand = ReactiveCommand
-                .Create<object?, object?>(Observable.Return(true), p => p, schedulers.Dispatcher)
+                .Create<object?, object?>(p => p, schedulers.Dispatcher)
                 .DisposeWith(_disposable);
             NewTabCommand = newTabCommand;
 
@@ -68,7 +68,7 @@ namespace ProTagger
                     .ObserveOn(schedulers.Dispatcher));
 
             var closeTabCommand = ReactiveCommand
-                .Create<TabType, TabType>(Observable.Return(true), tab => tab, schedulers.Dispatcher)
+                .Create<TabType, TabType>(tab => tab, schedulers.Dispatcher)
                 .DisposeWith(_disposable);
             CloseTabCommand = closeTabCommand;
 

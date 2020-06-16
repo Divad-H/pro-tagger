@@ -112,7 +112,7 @@ namespace ProTagger.Repository.GitLog
 
         public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
         {
-            var scrolledBottom = ReactiveCommand.Create<object?, object?>(Observable.Return(true), p => p, schedulers.Dispatcher);
+            var scrolledBottom = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
             ScrolledBottom = scrolledBottom;
 
             LogGraphNodes = new ViewSubject<Variant<GraphType, Unexpected>>(new Variant<GraphType, Unexpected>(new GraphType()))

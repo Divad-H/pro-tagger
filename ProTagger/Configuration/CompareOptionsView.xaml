@@ -7,7 +7,7 @@
              xmlns:custom="clr-namespace:ProTagger.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <UniformGrid Rows="5">
+    <UniformGrid Rows="5" Background="{StaticResource br_light}">
         <custom:IntegerInputBox DataContext="{Binding ContextLinesInput}"/>
         <custom:IntegerInputBox DataContext="{Binding InterhunkLinesInput}" Grid.Row="1"/>
         <ComboBox ItemsSource="{Binding DiffAlgorithm.Values}" SelectedItem="{Binding DiffAlgorithm.Value.Value}" Grid.Row="2"/>

@@ -240,7 +240,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabItem}">
-                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
+                        <ContentPresenter ContentSource="Header" VerticalAlignment="Bottom" />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

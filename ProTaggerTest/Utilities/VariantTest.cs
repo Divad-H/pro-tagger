@@ -13,7 +13,7 @@ namespace ProTaggerTest
     public class VariantTest
     {
         [TestMethod]
-        public void CanAssignFirstVariant()
+        public void CanCreateFirstVariant()
         {
             const string strVal = "rat";
             var variant = new Variant<string, int>(strVal);
@@ -24,7 +24,7 @@ namespace ProTaggerTest
         }
 
         [TestMethod]
-        public void CanAssignSecondVariant()
+        public void CanCreateSecondVariant()
         {
             const int intVal = 3;
             var variant = new Variant<string, int>(intVal);

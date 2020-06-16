@@ -104,11 +104,15 @@ namespace ProTagger
                 .SelectMany(e => (string[])e.Data.GetData(DataFormats.FileDrop))
                 .SkipNull();
 
-            DataContext = new PTagger(
+            var pTagger = new PTagger(
                 new RepositoryFactory(),
                 new Schedulers(DispatcherScheduler.Current, Scheduler.Default, Scheduler.Immediate),
                 new FileSystemService(this),
                 dropObservable);
+
+            Closed += (sender, args) => pTagger.Dispose();
+            DataContext = pTagger;
+
             InitializeComponent();
         }
     }

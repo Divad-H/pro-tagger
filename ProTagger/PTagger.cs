@@ -11,7 +11,6 @@ using LibGit2Sharp;
 using System.Collections.ObjectModel;
 using ProTagger.RepositorySelection;
 using ProTagger.Repository;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -89,7 +88,7 @@ namespace ProTagger
                 .Select(openRepo => new TabType(openRepo.newTab))
                 .Merge(closeTabCommand)
                 .Merge(closeAllTabsCommand
-                    .SelectMany(tabs => tabs));
+                    .Many());
 
             openTabObservable
                 .Subscribe(tab => OpenedRepositories.Add(tab))

@@ -1,8 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Windows;
 
 namespace ReacitveMvvm
 {
@@ -20,5 +19,8 @@ namespace ReacitveMvvm
 #pragma warning disable CS8629 // Nullable value type may be null.
                 .Select(v => v.Value);
 #pragma warning restore CS8629 // Nullable value type may be null.
+
+        public static IObservable<T> Many<T>(this IObservable<IEnumerable<T>> o)
+            => o.SelectMany(c => c);
     }
 }

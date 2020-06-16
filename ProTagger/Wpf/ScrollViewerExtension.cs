@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace ProTagger.Wpf
 {
@@ -15,7 +14,7 @@ namespace ProTagger.Wpf
             ScrollViewer? scrollViewer = dependencyObject as ScrollViewer;
             _ = scrollViewer ?? throw new ArgumentException("Element is not a ScrollViewer");
 
-            scrollViewer.PreviewMouseWheel += delegate (object sender, MouseWheelEventArgs args)
+            scrollViewer.PreviewMouseWheel += (sender, args) => 
             {
                 if (args.Delta < 0)
                     scrollViewer.LineRight();
@@ -23,7 +22,6 @@ namespace ProTagger.Wpf
                     scrollViewer.LineLeft();
             };
         }
-
 
         public static void SetUseHorizontalScrolling(ScrollViewer element, bool value)
             => element.SetValue(UseHorizontalScrollingProperty, value);

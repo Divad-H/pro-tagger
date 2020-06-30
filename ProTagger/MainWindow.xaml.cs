@@ -115,5 +115,14 @@ namespace ProTagger
 
             InitializeComponent();
         }
+
+        private void CloseCommandHandler(object sender, RoutedEventArgs e)
+            => Close();
+
+        private void MinimizeCommandHandler(object sender, RoutedEventArgs e)
+            => WindowState = WindowState.Minimized;
+
+        private void MaximizeCommandHandler(object sender, RoutedEventArgs e)
+            => WindowState = WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
     }
 }

@@ -9,7 +9,9 @@
         xmlns:repo="clr-namespace:ProTagger.Repository"
         xmlns:repoSelection="clr-namespace:ProTagger.RepositorySelection"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="1200">
+        Title="MainWindow" Height="720" Width="1280"
+        ResizeMode="CanResize"
+        x:Name="mainWindow">
     <Window.Resources>
 
         <Style TargetType="ButtonBase" x:Key="tabHeaderButton">
@@ -27,12 +29,191 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="CaptionButtonStyle" TargetType="Button" BasedOn="{StaticResource tabHeaderButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="{TemplateBinding Background}" Width="44" Height="32">
+                            <TextBlock Text="{TemplateBinding Content}" FontFamily="Segoe MDL2 Assets" FontSize="10" FontWeight="DemiBold"
+                                   Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   RenderOptions.ClearTypeHint="Auto" TextOptions.TextRenderingMode="Aliased"  TextOptions.TextFormattingMode="Display"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MinimizeButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Setter Property="Content" Value="&#xE949;"/>
+        </Style>
+
+        <Style x:Key="MaximizeButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Setter Property="Content" Value="&#xE739;"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=mainWindow, Path=WindowState}" Value="Maximized">
+                    <Setter Property="Content" Value="&#xE923;"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Setter Property="Content" Value="&#xE711;"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource br_darkred}" />
+                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource br_red}" />
+                    <Setter Property="Foreground" Value="{StaticResource br_light}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
-    <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}" x:Name="OuterTabControl" HeaderBarContent="{Binding}" HeaderBarMinWidth="200">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="32"
+                      GlassFrameThickness="0,0,0,1"
+                      ResizeBorderThickness="5">
+        </WindowChrome>
+    </WindowChrome.WindowChrome>
+    <custom:CustomBarTabControl ItemsSource="{Binding OpenedRepositories}"
+                                x:Name="OuterTabControl"
+                                HeaderBarContent="{Binding}"
+                                HeaderBarMinWidth="260">
+        <custom:CustomBarTabControl.Style>
+            <Style TargetType="custom:CustomBarTabControl">
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="2"    />
+                <Setter Property="Background" Value="White" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type custom:CustomBarTabControl}">
+                            <Grid ClipToBounds="True" SnapsToDevicePixels="True" KeyboardNavigation.TabNavigation="Local">
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto">
+                                            <ColumnDefinition.MaxWidth>
+                                                <MultiBinding Converter="{StaticResource subtractionConverter}">
+                                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                    <Binding Path="HeaderBarMinWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                </MultiBinding>
+                                            </ColumnDefinition.MaxWidth>
+                                        </ColumnDefinition>
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <RepeatButton
+                                        x:Name="ScrolltoLeft_Btn"
+                                        Grid.Column="0"
+                                        Width="16"
+                                        Height="20"
+                                        VerticalAlignment="Bottom"
+                                        Command="{x:Static ScrollBar.LineLeftCommand}"
+                                        CommandTarget="{Binding ElementName=sv}"
+                                        Content="M 6 0 L 6 12 L 0 6 Z"
+                                        Style="{StaticResource FlatScrollBarLineButton}"
+                                        WindowChrome.IsHitTestVisibleInChrome="True">
+                                            <RepeatButton.Visibility>
+                                                <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
+                                                    <Binding Path="ActualWidth" ElementName="sv"/>
+                                                    <Binding Path="MaxWidth" ElementName="sv"/>
+                                                </MultiBinding>
+                                            </RepeatButton.Visibility>
+                                        </RepeatButton>
+                                        <ScrollViewer x:Name="sv"
+                                                  VerticalScrollBarVisibility="Hidden"
+                                                  HorizontalScrollBarVisibility="Hidden"
+                                                  HorizontalAlignment="Stretch"
+                                                  Width="Auto"
+                                                  custom:ScrollViewerExtension.UseHorizontalScrolling="True"
+                                                  Grid.Column="1">
+                                            <ScrollViewer.MaxWidth>
+                                                <MultiBinding Converter="{StaticResource subtractionConverter}">
+                                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                    <Binding Path="HeaderBarMinWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                    <Binding Path="ActualWidth" ElementName="ScrolltoLeft_Btn"/>
+                                                    <Binding Path="ActualWidth" ElementName="ScrolltoRight_Btn"/>
+                                                </MultiBinding>
+                                            </ScrollViewer.MaxWidth>
+                                            <StackPanel  IsItemsHost="True"
+                                                     Name="HeaderPanel" 
+                                                     Panel.ZIndex="1" 
+                                                     KeyboardNavigation.TabIndex="1"
+                                                     Height="20"
+                                                     VerticalAlignment="Bottom"
+                                                     Orientation="Horizontal"/>
+                                        </ScrollViewer>
+                                        <RepeatButton
+                                        x:Name="ScrolltoRight_Btn"
+                                        Grid.Column="2"
+                                        Width="16"
+                                        Height="20"
+                                        VerticalAlignment="Bottom"
+                                        Command="{x:Static ScrollBar.LineRightCommand}"
+                                        CommandTarget="{Binding ElementName=sv}"
+                                        Content="M 0 0 L 0 12 L 6 6 Z"
+                                        Style="{StaticResource FlatScrollBarLineButton}"
+                                        WindowChrome.IsHitTestVisibleInChrome="True" >
+                                            <RepeatButton.Visibility>
+                                                <MultiBinding Converter="{StaticResource hideEqualSizesConverter}">
+                                                    <Binding Path="ActualWidth" ElementName="sv"/>
+                                                    <Binding Path="MaxWidth" ElementName="sv"/>
+                                                </MultiBinding>
+                                            </RepeatButton.Visibility>
+                                        </RepeatButton>
+                                    </Grid>
+                                    <ContentPresenter Content="{TemplateBinding HeaderBarContent}"
+                                                  ContentTemplate="{TemplateBinding HeaderBarContentTemplate}"
+                                                  SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
+                                                  KeyboardNavigation.TabIndex="2" 
+                                                  x:Name="headerBarContentPresenter"
+                                                  Grid.Column="1"/>
+                                </Grid>
+                                <Border x:Name="ContentPanel" Grid.Row="1"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{StaticResource br_blue}"
+                                    BorderThickness="0,2,0,0"
+                                    KeyboardNavigation.DirectionalNavigation="Contained" KeyboardNavigation.TabIndex="3" KeyboardNavigation.TabNavigation="Local">
+                                    <Grid x:Name="PART_ItemsHolder" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </Border>
+                            </Grid>
+
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="UIElement.IsEnabled" Value="False">
+                                    <Setter Property="TextElement.Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=WindowState}" Value="Maximized">
+                        <Setter Property="Margin" Value="5" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </custom:CustomBarTabControl.Style>
         <custom:CustomBarTabControl.HeaderBarContentTemplate>
             <DataTemplate>
-                <DockPanel MinWidth="200" LastChildFill="False">
-                    <Button Command="{Binding NewTabCommand}" Width="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ActualHeight}" Height="20" Margin="5,0" DockPanel.Dock="Left" Padding="4" >
+                <DockPanel MinWidth="260" LastChildFill="False" Height="32" >
+                    <Button Command="{Binding NewTabCommand}"
+                            Width="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ActualHeight}"
+                            Height="20"
+                            Margin="5,12,5,0"
+                            DockPanel.Dock="Left"
+                            Padding="4"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource tabHeaderButton}">
                                 <Setter Property="Template">
@@ -68,9 +249,27 @@
                             </Style>
                         </Button.Style>
                     </Button>
-                    <Button Content="Dummy" Command="{Binding NewTabCommand}" DockPanel.Dock="Right" Width="50" />
+                    <Button Style="{StaticResource CloseButtonStyle}"
+                            DockPanel.Dock="Right"
+                            Click="CloseCommandHandler"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <Button Style="{StaticResource MaximizeButtonStyle}"
+                            DockPanel.Dock="Right"
+                            Click="MaximizeCommandHandler"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <Button Style="{StaticResource MinimizeButtonStyle}"
+                            DockPanel.Dock="Right"
+                            Click="MinimizeCommandHandler"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <Button Content="Dummy" Command="{Binding NewTabCommand}" DockPanel.Dock="Right" Width="50" WindowChrome.IsHitTestVisibleInChrome="True"/>
 
-                    <ToggleButton x:Name="PopupButton" IsChecked="{Binding ElementName=Popup, Path=IsOpen}" DockPanel.Dock="Right" Height="20" Width="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ActualHeight}" >
+                    <ToggleButton x:Name="PopupButton"
+                                  IsChecked="{Binding ElementName=Popup, Path=IsOpen}"
+                                  DockPanel.Dock="Right"
+                                  Height="20"
+                                  Margin="5,12,5,0"
+                                  Width="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ActualHeight}"
+                                  WindowChrome.IsHitTestVisibleInChrome="True">
                         <ToggleButton.Style>
                             <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource tabHeaderButton}">
                                 <Setter Property="Template">
@@ -134,7 +333,11 @@
         </custom:CustomBarTabControl.HeaderBarContentTemplate>
         <custom:CustomBarTabControl.ItemTemplate>
             <DataTemplate>
-                <Border x:Name="PART_Border" BorderThickness="0.5,0" BorderBrush="{StaticResource br_lightblue}" Padding="3,2,3,1">
+                <Border x:Name="PART_Border"
+                        BorderThickness="0.5,0"
+                        BorderBrush="{StaticResource br_lightblue}"
+                        Padding="3,2,3,1"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -182,12 +385,13 @@
                             </custom:VariantPresenter.Variant1Template>
                         </custom:VariantPresenter>
                         <Button Grid.Column="1"
-                            Command="{Binding ElementName=OuterTabControl, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}"
-                            Width="16"
-                            Height="16"
-                            VerticalContentAlignment="Center"
-                            Foreground="{StaticResource br_light}"
-                            Margin="0,0,0,-2">
+                                Command="{Binding ElementName=OuterTabControl, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}"
+                                Width="16"
+                                Height="16"
+                                VerticalContentAlignment="Center"
+                                Foreground="{StaticResource br_light}"
+                                Margin="0,0,0,-2"
+                                WindowChrome.IsHitTestVisibleInChrome="True">
                             <Button.Content>
                                 <Path 
                                   Margin="2.5"
@@ -249,7 +453,7 @@
                                 <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=IsSelected}" Value="True" >
                                     <Setter Property="Background" Value="{StaticResource br_blue}" />
                                 </DataTrigger>
-                            </Style.Triggers>   
+                            </Style.Triggers>
                         </Style>
                     </Border.Style>
                 </Border>
@@ -278,23 +482,4 @@
             </DataTemplate>
         </custom:CustomBarTabControl.ContentTemplate>
     </custom:CustomBarTabControl>
-    <!--<DockPanel>
-        <Grid DockPanel.Dock="Top">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding RepositoryPath.Value, UpdateSourceTrigger=PropertyChanged}"/>
-            <Button Content="Refresh" Command="{Binding RefreshCommand}" CommandParameter="Ratte" Grid.Column="1"/>
-            <configuration:CompareOptionsView DataContext="{Binding CompareOptions}" Grid.Column="2"/>
-        </Grid>
-        <custom:VariantPresenter VariantContent="{Binding Repository.Value}" Style="{StaticResource DefaultErrorView}">
-            <custom:VariantPresenter.Variant0Template>
-                <DataTemplate>
-                    <repo:RepositoryView/>
-                </DataTemplate>
-            </custom:VariantPresenter.Variant0Template>
-        </custom:VariantPresenter>
-    </DockPanel>-->
 </Window>

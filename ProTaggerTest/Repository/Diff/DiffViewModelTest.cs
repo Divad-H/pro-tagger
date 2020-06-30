@@ -8,12 +8,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using ReactiveMvvm;
 using System.Threading;
 using System.Threading.Tasks;
 using ProTagger;
 
-namespace ProTaggerTest.Repo.Diff
+namespace ProTaggerTest.Repository.Diff
 {
     [TestClass]
     public class DiffViewModelTest

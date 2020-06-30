@@ -1,5 +1,4 @@
-﻿using LibGit2Sharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProTagger;
 using ProTagger.Repository.GitLog;
 using ProTagger.Utilities;
@@ -8,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ProTaggerTest.Repo.GitLog
+namespace ProTaggerTest.Repository.GitLog
 {
     [TestClass]
     public class LogGraphTest

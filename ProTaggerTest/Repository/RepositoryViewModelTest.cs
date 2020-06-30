@@ -2,8 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProTagger;
 using ProTagger.RepositorySelection;
-using ProTagger.Utilities;
-using ProTaggerTest.LibGit2Mocks;
 using ProTaggerTest.Mocks;
 using System;
 using System.Collections.Generic;

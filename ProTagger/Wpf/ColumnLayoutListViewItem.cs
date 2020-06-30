@@ -20,53 +20,19 @@ namespace ProTagger.Wpf
           nameof(IsSecondarySelected), typeof(bool), typeof(ColumnLayoutListViewItem), new FrameworkPropertyMetadata(false));
 
 
-        private bool IsSecondarySelection(MouseButtonEventArgs args)
-            => args.ChangedButton == MouseButton.Right;
-
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
-            if (IsSecondarySelection(e))
+            if (e.ChangedButton == MouseButton.Left
+                && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control
+                && !IsSelected
+                && _listView.SelectedItem != null)
             {
-                if (!IsSelected)
-                {
-                    if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
-                        _listView.ToggleSecondarySelectItem(this);
-                    else
-                        _listView.SecondarySelectItem(this);
-                }
+                _listView.ToggleSecondarySelectItem(this);
                 e.Handled = true;
                 return;
             }
             base.OnMouseDown(e);
-        }
-
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
-            if (e.RightButton == MouseButtonState.Pressed)
-            {
-                if (!IsSelected)
-                    if ((Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
-                    _listView.SecondarySelectItem(this);
-                e.Handled = true;
-                return;
-            }
-            base.OnMouseMove(e);
-        }
-
-        protected override void OnMouseUp(MouseButtonEventArgs e)
-        {
-            _ = _listView ?? throw new ArgumentNullException(nameof(_listView));
-            if (IsSecondarySelection(e))
-            {
-                if (!IsSelected)
-                    if ((Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
-                    _listView.SecondarySelectItem(this);
-                e.Handled = true;
-                return;
-            }
-            base.OnMouseUp(e);
         }
 
         protected override void OnSelected(RoutedEventArgs e)

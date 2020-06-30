@@ -158,6 +158,9 @@
                                                             LabelForeground="{StaticResource br_light}"
                                                             SnapsToDevicePixels="False"/>
                                         <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource br_lightblue}" />
+                                            </Trigger>
                                             <Trigger Property="IsSecondarySelected" Value="True">
                                                 <Setter Property="Background" Value="{StaticResource br_darkred}" />
                                                 <Setter Property="Foreground" Value="{StaticResource br_light}" />

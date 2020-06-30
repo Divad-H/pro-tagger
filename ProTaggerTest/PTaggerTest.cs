@@ -1,10 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProTagger;
 using ProTagger.RepositorySelection;
-using ProTagger.Utilities;
-using ProTaggerTest.LibGit2Mocks;
 using ProTaggerTest.Mocks;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -13,21 +10,6 @@ namespace ProTaggerTest
     [TestClass]
     public class PTaggerTest
     {
-        class TestRepositoryFactory : IRepositoryFactory
-        {
-            public IRepositoryWrapper CreateRepository(string path)
-                => new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()));
-
-            public string? DiscoverRepository(string path)
-                => path;
-
-            public bool IsValidRepository(string path)
-                => true;
-
-            public string? RepositoryNameFromPath(string path)
-                => "Repository name";
-        }
-
         [TestMethod]
         public void CanCreatePTagger()
         {

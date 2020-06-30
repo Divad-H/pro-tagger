@@ -26,6 +26,7 @@ namespace ProTaggerTest.Repository
                 Observable.Return(new CompareOptions()));
             Assert.IsTrue(res.Is<RepositoryViewModel>());
             using var repo = res.Get<RepositoryViewModel>();
+            Assert.AreEqual(repositoryDescription, repo.RepositoryDescription);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace ProTagger
         public DiffViewModel Diff { get; }
         public RepositoryDescription RepositoryDescription { get; }
 
-        public static async Task<Variant<RepositoryViewModel, RepositoryError>?> Create(ISchedulers schedulers,
+        public static async Task<Variant<RepositoryViewModel, RepositoryError>> Create(ISchedulers schedulers,
             CancellationToken ct, 
             IRepositoryFactory repositoryFactory,
             RepositoryDescription description, 
@@ -68,7 +68,7 @@ namespace ProTagger
                 if (ct.IsCancellationRequested)
                 {
                     repositoryViewModel?.Dispose();
-                    return null;
+                    return new Variant<RepositoryViewModel, RepositoryError>(new RepositoryError("Cancelled", description));
                 }
                 return new Variant<RepositoryViewModel, RepositoryError>(repositoryViewModel);
             }

@@ -61,7 +61,6 @@ namespace ProTagger
                 .Merge(pushedRepositoryDesc)
                 .SelectMany(desc => Observable
                     .FromAsync(ct => RepositoryViewModel.Create(schedulers, ct, repositoryFactory, desc, CompareOptions.CompareOptionsObservable)))
-                .SkipNull()
                 .Publish();
 
             var openTabObservable = newTabObservable

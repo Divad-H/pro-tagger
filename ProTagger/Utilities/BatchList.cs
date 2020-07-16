@@ -37,9 +37,7 @@ namespace ProTagger.Utilities
         public int Add(object? value)
         {
             var res = (_list as IList).Add(value);
-#pragma warning disable CS8601 // Possible null reference assignment.
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (T)value));
-#pragma warning restore CS8601 // Possible null reference assignment.
             return res;
         }
 
@@ -79,9 +77,7 @@ namespace ProTagger.Utilities
         public void Insert(int index, object? value)
         {
             (_list as IList).Insert(index, value);
-#pragma warning disable CS8601 // Possible null reference assignment.
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (T)value, index));
-#pragma warning restore CS8601 // Possible null reference assignment.
         }
 
         public void Modify(IEnumerable itemsToAdd, IEnumerable itemsToRemove, bool supportsRangeOperations)
@@ -134,9 +130,7 @@ namespace ProTagger.Utilities
         public void Remove(object? value)
         {
             (_list as IList).Remove(value);
-#pragma warning disable CS8601 // Possible null reference assignment.
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, (T)value));
-#pragma warning restore CS8601 // Possible null reference assignment.
         }
 
         public int RemoveAll(Func<T, bool> match)

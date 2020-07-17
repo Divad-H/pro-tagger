@@ -52,6 +52,8 @@ namespace ProTagger.Repository.Diff
 
         public ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>> TreeDiff { get; }
 
+        public ViewSubject<Variant<string, Commit>> SelectionInfo { get; }
+
         public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
             Branch? head,
@@ -60,6 +62,24 @@ namespace ProTagger.Repository.Diff
             IObservable<CompareOptions> compareOptions)
         {
             TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>>(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))
+                .DisposeWith(_disposables);
+
+            SelectionInfo = new ViewSubject<Variant<string, Commit>>(new Variant<string, Commit>(NoCommitSelectedMessage))
+                .DisposeWith(_disposables);
+
+            string toString(Variant<Commit, DiffTargets> variant)
+                => variant.Visit(commit => commit.Sha, diffTarget => diffTarget == DiffTargets.Index ? "index" : "working tree");
+
+            Observable
+                .CombineLatest(newCommitObservable, oldCommitObservable,
+                    (newCommit, oldCommit) => newCommit is null ?
+                        new Variant<string, Commit>(NoCommitSelectedMessage) :
+                        oldCommit is null ?
+                            newCommit.Visit(
+                                commit => new Variant<string, Commit>(commit),
+                                _ => new Variant<string, Commit>("Displaying changes of the working tree.")) :
+                            new Variant<string, Commit>($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))
+                .Subscribe(SelectionInfo)
                 .DisposeWith(_disposables);
 
             Observable

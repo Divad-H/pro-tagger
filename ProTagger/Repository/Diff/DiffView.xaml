@@ -11,67 +11,106 @@
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <custom:VariantPresenter VariantContent="{Binding TreeDiff.Value}" Style="{StaticResource DefaultErrorView}">
-            <custom:VariantPresenter.Variant0Template>
-                <DataTemplate>
-                    <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
-                                                 SelectionMode="Extended" 
-                                                 VirtualizingPanel.VirtualizationMode="Recycling"
-                                                 custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"
-                                                 KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}">
-                        <custom:ListBoxKeepSelection.ItemContainerStyle>
-                            <Style TargetType="{x:Type ListBoxItem}">
-                                <Setter Property="SnapsToDevicePixels" Value="True"/>
-                                <Setter Property="Padding" Value="4,1"/>
-                                <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-                                <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="{StaticResource br_black}"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                                <custom:SimpleLabel x:Name="Label" Text="{Binding Path}" Height="16" Foreground="{TemplateBinding Foreground}"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <MultiTrigger>
-                                                    <MultiTrigger.Conditions>
-                                                        <Condition Property="IsMouseOver" Value="True"/>
-                                                    </MultiTrigger.Conditions>
-                                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_lightblue}"/>
-                                                </MultiTrigger>
-                                                <MultiTrigger>
-                                                    <MultiTrigger.Conditions>
-                                                        <Condition Property="Selector.IsSelectionActive" Value="False"/>
-                                                        <Condition Property="IsSelected" Value="True"/>
-                                                    </MultiTrigger.Conditions>
-                                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
-                                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                </MultiTrigger>
-                                                <MultiTrigger>
-                                                    <MultiTrigger.Conditions>
-                                                        <Condition Property="Selector.IsSelectionActive" Value="True"/>
-                                                        <Condition Property="IsSelected" Value="True"/>
-                                                    </MultiTrigger.Conditions>
-                                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
-                                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                </MultiTrigger>
-                                                <Trigger Property="IsEnabled" Value="False">
-                                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_gray}"/>
-                                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </custom:ListBoxKeepSelection.ItemContainerStyle>
-                    </custom:ListBoxKeepSelection>
-                </DataTemplate>
-            </custom:VariantPresenter.Variant0Template>
-        </custom:VariantPresenter>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MaxHeight="200"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <custom:VariantPresenter VariantContent="{Binding SelectionInfo.Value}">
+                <custom:VariantPresenter.Variant0Template>
+                    <DataTemplate>
+                        <FlowDocumentScrollViewer>
+                            <FlowDocument FontSize="12" FontFamily="Consolas" PagePadding="5" TextAlignment="Left">
+                                <Paragraph Margin="5">
+                                    <Run Text="{Binding ., Mode=OneWay}"/>
+                                </Paragraph>
+                            </FlowDocument>
+                        </FlowDocumentScrollViewer>
+                    </DataTemplate>
+                </custom:VariantPresenter.Variant0Template>
+                <custom:VariantPresenter.Variant1Template>
+                    <DataTemplate>
+                        <FlowDocumentScrollViewer>
+                            <FlowDocument FontSize="12" FontFamily="Consolas" PagePadding="5" TextAlignment="Left">
+                                <Paragraph Margin="5">
+                                    <Run Text="Commit: " FontWeight="Bold"/><Run Text="{Binding Sha, Mode=OneWay}"/><LineBreak/>
+                                    <Run Text="Author: " FontWeight="Bold"/><Run Text="{Binding Author, Mode=OneWay}"/><LineBreak/>
+                                    <Run Text="Authoring date: " FontWeight="Bold"/><Run Text="{Binding Author.When, Mode=OneWay}"/><LineBreak/>
+                                    <Run Text="Committer: " FontWeight="Bold"/><Run Text="{Binding Committer, Mode=OneWay}"/><LineBreak/>
+                                    <Run Text="Commit date: " FontWeight="Bold"/><Run Text="{Binding Committer.When, Mode=OneWay}"/><LineBreak/>
+                                </Paragraph>
+                                <Paragraph Margin="5">
+                                    <Run Text="{Binding Message, Mode=OneWay}"/>
+                                </Paragraph>
+                            </FlowDocument>
+                        </FlowDocumentScrollViewer>
+                    </DataTemplate>
+                </custom:VariantPresenter.Variant1Template>
+            </custom:VariantPresenter>
+            <custom:VariantPresenter VariantContent="{Binding TreeDiff.Value}"
+                                     Style="{StaticResource DefaultErrorView}"
+                                     Grid.Row="1">
+                <custom:VariantPresenter.Variant0Template>
+                    <DataTemplate>
+                        <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
+                                                     SelectionMode="Extended" 
+                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                     custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"
+                                                     KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}">
+                            <custom:ListBoxKeepSelection.ItemContainerStyle>
+                                <Style TargetType="{x:Type ListBoxItem}">
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                    <Setter Property="Padding" Value="4,1"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                                    <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{StaticResource br_black}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                                <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                                                    <custom:SimpleLabel x:Name="Label" Text="{Binding Path}" Height="16" Foreground="{TemplateBinding Foreground}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="IsMouseOver" Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_lightblue}"/>
+                                                    </MultiTrigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                                            <Condition Property="IsSelected" Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                                    </MultiTrigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="Selector.IsSelectionActive" Value="True"/>
+                                                            <Condition Property="IsSelected" Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                                    </MultiTrigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_gray}"/>
+                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </custom:ListBoxKeepSelection.ItemContainerStyle>
+                        </custom:ListBoxKeepSelection>
+                    </DataTemplate>
+                </custom:VariantPresenter.Variant0Template>
+            </custom:VariantPresenter>
+        </Grid>
         <ItemsControl ItemsSource="{Binding PatchDiff}"
                       VirtualizingStackPanel.IsVirtualizing="True"
                       VirtualizingPanel.ScrollUnit="Pixel"

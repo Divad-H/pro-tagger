@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ProTagger;
+using System.Reactive.Subjects;
 
 namespace ProTaggerTest.Repository.Diff
 {
@@ -59,8 +60,7 @@ namespace ProTaggerTest.Repository.Diff
 
             Variant<List<TreeEntryChanges>, Unexpected>? value = null;
             var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
-            using var _ = vm
-                .TreeDiff
+            using var _ = vm.TreeDiff
                 .Subscribe(val =>
                 {
                     value = val;
@@ -75,6 +75,37 @@ namespace ProTaggerTest.Repository.Diff
             if (!value.Is<List<TreeEntryChanges>>())
                 await signal.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.IsTrue(value.Is<List<TreeEntryChanges>>());
+        }
+
+        [TestMethod]
+        public void UpdatesSelectionInfo()
+        {
+            var shaGenerator = new PseudoShaGenerator();
+            var firstCommit = CommitMock.GenerateCommit(shaGenerator, null, 0);
+            var secondCommit = CommitMock.GenerateCommit(shaGenerator, firstCommit.Yield(), 1);
+            var diff = new DiffMock(null, null);
+            var head = new BranchMock(true, false, null, secondCommit, "HEAD");
+            var compareOptions = new CompareOptions();
+            var compareOptionsObs = Observable.Return(compareOptions);
+            var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
+            using var oldCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
+            using var newCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
+            using var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
+            var selectionInfo = new List<Variant<string, Commit>>();
+            using var _ = vm.SelectionInfo
+                .Subscribe(info => selectionInfo.Add(info));
+            newCommit.OnNext(new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory));
+            oldCommit.OnNext(new Variant<Commit, DiffTargets>(secondCommit));
+            newCommit.OnNext(new Variant<Commit, DiffTargets>(firstCommit));
+            oldCommit.OnNext(null);
+
+            Assert.AreEqual(5, selectionInfo.Count);
+            Assert.AreEqual(0, selectionInfo[0].VariantIndex);
+            Assert.AreEqual(0, selectionInfo[1].VariantIndex);
+            Assert.AreEqual(0, selectionInfo[2].VariantIndex);
+            Assert.AreEqual(0, selectionInfo[3].VariantIndex);
+            Assert.AreEqual(1, selectionInfo[4].VariantIndex);
+            Assert.AreEqual(firstCommit, selectionInfo[4].Second);
         }
     }
 }

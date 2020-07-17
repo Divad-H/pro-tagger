@@ -42,8 +42,7 @@ namespace ProTagger.Wpf
         {
             try
             {
-                lock (_backingStoreMutex)
-                    _backingStore = new DrawingGroup();
+                _backingStore = new DrawingGroup();
                 if (newContent is null)
                     return;
 
@@ -71,14 +70,10 @@ namespace ProTagger.Wpf
         static readonly Brush NewHighlightBrush = new SolidColorBrush(Color.FromArgb(125, 0, 255, 0));
         static readonly Brush NewNormalBrush = new SolidColorBrush(Color.FromArgb(50, 0, 255, 0));
 
-        private readonly object _backingStoreMutex = new object();
         private DrawingGroup _backingStore = new DrawingGroup();
 
         protected override void OnRender(DrawingContext drawingContext)
-        {
-            lock(_backingStoreMutex)
-                drawingContext.DrawDrawing(_backingStore);
-        }
+            => drawingContext.DrawDrawing(_backingStore);
 
         private static void Render(DrawingContext drawingContext, Hunk content, double pixelsPerDip, CancellationToken ct)
         { 

@@ -185,17 +185,20 @@ namespace ProTagger.Wpf
 
         private static readonly Typeface _typeface = new Typeface("Consolas");
 
-        private FormattedText CreateText(string text, Brush foreground)
-        {
-            return new FormattedText(
+        private FormattedText CreateText(string text, Brush foreground, double maxWidth, TextTrimming textTrimming)
+            => new FormattedText(
                 text,
                 CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 _typeface,
                 12,
                 foreground,
-                VisualTreeHelper.GetDpi(this).PixelsPerDip);
-        }
+                VisualTreeHelper.GetDpi(this).PixelsPerDip)
+            {
+                MaxTextWidth = Math.Max(0.0, maxWidth),
+                MaxLineCount = 1,
+               Trimming = textTrimming,
+            };
 
         private void Render(DrawingContext drawingContext)
         {
@@ -207,29 +210,31 @@ namespace ProTagger.Wpf
                 drawingContext.DrawRectangle(Background, null, new Rect(0, 0, ActualWidth, ActualHeight));
 
             var geometry = new StreamGeometry { FillRule = FillRule.EvenOdd };
+            bool clipNeeded;
             using (StreamGeometryContext ctx = geometry.Open())
-                DrawGraph(ctx);
+                DrawGraph(ctx, ColumnDefinitions[0].ActualWidth, out clipNeeded);
             geometry.Freeze();
 
-            drawingContext.PushClip(new RectangleGeometry(
-                new Rect(0, -10, ColumnDefinitions[0].ActualWidth, ActualHeight + 20)));
             var pen = new Pen(Foreground, 1.5);
+            if (clipNeeded)
+                drawingContext.PushClip(new RectangleGeometry(new Rect(0, -10, ColumnDefinitions[0].ActualWidth, ActualHeight + 20)));
             drawingContext.DrawGeometry(Content.IsMerge ? HighlightFill : Content.Commit.Is<LibGit2Sharp.Commit>() ? Fill : null, pen, geometry);
-            drawingContext.Pop();
+            if (clipNeeded)
+                drawingContext.Pop();
 
             double left = ColumnDefinitions[0].ActualWidth + ColumnDefinitions[1].ActualWidth;
             double offset = 0;
 
-            drawingContext.PushClip(new RectangleGeometry(
-                new Rect(left, 0, ColumnDefinitions[2].ActualWidth, ActualHeight)));
             foreach (var branch in Content.Branches)
-                offset += DrawLabel(drawingContext, "⟨⟨ " + branch.ShortName, left + offset, branch.IsHead ? HeadBrush : LabelBrush);
+                offset += DrawLabel(drawingContext, "⟨⟨ " + branch.ShortName, left + offset, ColumnDefinitions[2].ActualWidth - offset, branch.IsHead ? HeadBrush : LabelBrush);
             foreach (var tag in Content.Tags)
-                offset += DrawLabel(drawingContext, "🏷️ " + tag.ShortName, left + offset, LabelBrush);
+                offset += DrawLabel(drawingContext, "🏷 " + tag.ShortName, left + offset, ColumnDefinitions[2].ActualWidth - offset, LabelBrush);
 
-            var formattedText = CreateText(Content.MessageShort, Foreground);
-            drawingContext.DrawText(formattedText, new Point(left + offset, 0));
-            drawingContext.Pop();
+            if (ColumnDefinitions[2].ActualWidth - offset > 0)
+            {
+                var formattedText = CreateText(Content.MessageShort, Foreground, ColumnDefinitions[2].ActualWidth - offset, TextTrimming.WordEllipsis);
+                drawingContext.DrawText(formattedText, new Point(left + offset, 0));
+            }
 
             left += ColumnDefinitions[2].ActualWidth + ColumnDefinitions[3].ActualWidth;
             if (Content.Commit.Is<LibGit2Sharp.Commit>())
@@ -252,9 +257,12 @@ namespace ProTagger.Wpf
                 ColumnDefinitions[8].ActualWidth);
         }
 
-        private double DrawLabel(DrawingContext ctx, string name, double left, Brush background)
+        private double DrawLabel(DrawingContext ctx, string name, double left, double maxWidth, Brush background)
         {
-            var formattedText = CreateText(name, LabelForeground);
+            const double margin = 5.0;
+            if (maxWidth <= 2 * margin)
+                return 0.0;
+            var formattedText = CreateText(name, LabelForeground, maxWidth - 2 * margin, TextTrimming.CharacterEllipsis);
             var textWidth = formattedText.Width;
             ctx.DrawRectangle(background, null, new Rect(left, 1, textWidth + 10, ActualHeight - 2));
             ctx.DrawText(formattedText, new Point(left + 5, 0));
@@ -262,44 +270,50 @@ namespace ProTagger.Wpf
         }
 
         private void DrawTextColumn(DrawingContext ctx, string text, double left, double width)
-        {
-            var formattedText = CreateText(text, Foreground);
-            ctx.PushClip(new RectangleGeometry(
-                new Rect(left, 0, width, ActualHeight)));
-            ctx.DrawText(formattedText, new Point(left, 0));
-            ctx.Pop();
-        }
+            => ctx.DrawText(CreateText(text, Foreground, width, TextTrimming.CharacterEllipsis), new Point(left, 0));
 
         private const double HorizontalDistance = 10;
         private const double Radius = 3.5;
 
-        private void DrawGraph(StreamGeometryContext ctx)
+        private void DrawGraph(StreamGeometryContext ctx, double maxWidth, out bool clipNeeded)
         {
-            DrawCircle(ctx, (1 + Content.GraphPosition) * HorizontalDistance, ActualHeight / 2, Radius);
+            clipNeeded = false;
+            var centerX = (1 + Content.GraphPosition) * HorizontalDistance;
+            DrawCircle(ctx, centerX, ActualHeight / 2, Radius);
+            if (centerX + Radius > maxWidth)
+                clipNeeded = true;
             foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Previous, (TGraphPos)i)))
             {
+                var halfX = (1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance;
+                var x = (1 + direction.Item1) * HorizontalDistance;
+                if (halfX > maxWidth || x > maxWidth)
+                    clipNeeded = true;
                 ctx.BeginFigure(
-                    new Point((1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance, 0), false, false);
-                ctx.LineTo(new Point((1 + direction.Item1) * HorizontalDistance, ActualHeight / 10), true, false);
+                    new Point(halfX, 0), false, false);
+                ctx.LineTo(new Point(x, ActualHeight / 10), true, false);
                 if (direction.Item1 == Content.GraphPosition)
-                    ctx.LineTo(new Point((1 + direction.Item1) * HorizontalDistance, ActualHeight / 2 - Radius), true, false);
+                    ctx.LineTo(new Point(x, ActualHeight / 2 - Radius), true, false);
                 else
-                    ctx.LineTo(new Point((1 + direction.Item1) * HorizontalDistance, ActualHeight / 2), true, false);
+                    ctx.LineTo(new Point(x, ActualHeight / 2), true, false);
             }
             foreach (var direction in Content.Directions.SelectMany((subDirection, i) => MapDirections(subDirection.Next, (TGraphPos)i)))
             {
+                var halfX = (1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance;
+                var x = (1 + direction.Item2) * HorizontalDistance;
+                if (halfX > maxWidth || x > maxWidth)
+                    clipNeeded = true;
                 ctx.BeginFigure(
-                    new Point((1 + 0.5 * (direction.Item1 + direction.Item2)) * HorizontalDistance, ActualHeight), false, false);
-                ctx.LineTo(new Point((1 + direction.Item2) * HorizontalDistance, ActualHeight / 2.5 + ActualHeight / 2), true, false);
+                    new Point(halfX, ActualHeight), false, false);
+                ctx.LineTo(new Point(x, ActualHeight / 2.5 + ActualHeight / 2), true, false);
                 if (direction.Item2 == Content.GraphPosition)
-                    ctx.LineTo(new Point((1 + direction.Item2) * HorizontalDistance, ActualHeight / 2 + Radius), true, false);
+                    ctx.LineTo(new Point(x, ActualHeight / 2 + Radius), true, false);
                 else
-                    ctx.LineTo(new Point((1 + direction.Item2) * HorizontalDistance, ActualHeight / 2), true, false);
+                    ctx.LineTo(new Point(x, ActualHeight / 2), true, false);
             }
         }
 
         private IEnumerable<Tuple<TGraphPos, TGraphPos>> MapDirections(IEnumerable<TGraphPos> subDirection, TGraphPos i)
-            => subDirection.Select(direction =>  Tuple.Create(direction, i));
+            => subDirection.Select(direction => Tuple.Create(direction, i));
 
         private static void DrawCircle(StreamGeometryContext ctx, double centerX, double centerY, double radius)
         {

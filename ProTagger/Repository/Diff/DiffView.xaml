@@ -145,7 +145,15 @@
                                     <ItemsControl ItemsSource="{Binding Hunks}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <custom:PatchDiffFormatter Content="{Binding}"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <custom:FlowDocumentViewer>
+                                                        <custom:PatchDiffFormatter Content="{Binding}"
+                                                                                   FontFamily="Consolas"
+                                                                                   FontSize="12"
+                                                                                   TextAlignment="Left"
+                                                                                   MaxPageWidth="100000"/>
+                                                    </custom:FlowDocumentViewer>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

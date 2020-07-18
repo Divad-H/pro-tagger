@@ -145,15 +145,19 @@
                                     <ItemsControl ItemsSource="{Binding Hunks}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <custom:FlowDocumentViewer>
-                                                        <custom:PatchDiffFormatter Content="{Binding}"
-                                                                                   FontFamily="Consolas"
-                                                                                   FontSize="12"
-                                                                                   TextAlignment="Left"
-                                                                                   MaxPageWidth="100000"/>
-                                                    </custom:FlowDocumentViewer>
-                                                </StackPanel>
+                                                <custom:MouseWheelIgnoringScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+                                                    <Border Width="{Binding Path=EffectiveWidth, ElementName=documentViewer}" HorizontalAlignment="Left">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <custom:FlowDocumentViewer x:Name="documentViewer">
+                                                                <custom:PatchDiffFormatter Content="{Binding}"
+                                                                                       FontFamily="Consolas"
+                                                                                       FontSize="12"
+                                                                                       TextAlignment="Left"
+                                                                                       MaxPageWidth="100000"/>
+                                                            </custom:FlowDocumentViewer>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </custom:MouseWheelIgnoringScrollViewer>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

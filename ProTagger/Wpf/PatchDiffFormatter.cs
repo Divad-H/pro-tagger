@@ -37,7 +37,7 @@ namespace ProTagger.Wpf
             table.Columns.Add(new TableColumn() { Width = new GridLength(lineNumberTableWidth, GridUnitType.Pixel) });
             table.Columns.Add(new TableColumn() { Width = new GridLength(1, GridUnitType.Auto) });
             var tableRowGroup = new TableRowGroup();
-            var paragraph = new Paragraph();
+            Paragraph paragraph = new Paragraph();
             var removedLineParagraph = new Paragraph();
             var addedLineParagraph = new Paragraph();
 
@@ -47,6 +47,22 @@ namespace ProTagger.Wpf
                 if (str.Length > 5)
                     str = "…" + str.Substring(str.Length - 4, 4);
                 return new Run(str + "\n");
+            }
+
+            List<Run> lineEndings = new List<Run>();
+            var currentIndex = 0;
+
+            void addRun(Run run)
+            {
+                currentIndex += run.Text.Length;
+                paragraph.Inlines.Add(run);
+            }
+            void endLine()
+            {
+                var newLine = new Run("\n");
+                paragraph.Inlines.Add(newLine);
+                lineEndings.Add(newLine);
+                var s = newLine.ContentStart.GetTextInRun(LogicalDirection.Forward);
             }
 
             foreach (var variant in content.Value.Diff)
@@ -59,8 +75,8 @@ namespace ProTagger.Wpf
                         removedLineParagraph.Inlines.Add(lineNumberFormatted);
                         addedLineParagraph.Inlines.Add(new Run("\n"));
                         foreach (var token in oldLine.Text)
-                            paragraph.Inlines.Add(new Run(token.Text) { Background = token.Unchanged ? OldNormalBrush : OldHighlightBrush });
-                        paragraph.Inlines.Add(new Run("\n"));
+                            addRun(new Run(token.Text) { Background = token.Unchanged ? OldNormalBrush : OldHighlightBrush });
+                        endLine();
                     }
                     foreach (var newLine in wordDiff.NewText)
                     {
@@ -69,25 +85,32 @@ namespace ProTagger.Wpf
                         lineNumberFormatted.Foreground = NewForegroundBrush;
                         addedLineParagraph.Inlines.Add(lineNumberFormatted);
                         foreach (var token in newLine.Text)
-                            paragraph.Inlines.Add(new Run(token.Text) { Background = token.Unchanged ? NewNormalBrush : NewHighlightBrush });
-                        paragraph.Inlines.Add(new Run("\n"));
+                            addRun(new Run(token.Text) { Background = token.Unchanged ? NewNormalBrush : NewHighlightBrush });
+                        endLine();
                     }
                 },
                 unchangedLine =>
                 {
                     removedLineParagraph.Inlines.Add(formatLineNumber(unchangedLine.OldLineNumber));
                     addedLineParagraph.Inlines.Add(new Run(unchangedLine.NewLineNumber.ToString() + "\n"));
-                    paragraph.Inlines.Add(new Run(unchangedLine.Text + "\n"));
+                    addRun(new Run(unchangedLine.Text));
+                    endLine();
                 });
 
             var tableRow = new TableRow();
             tableRow.Cells.Add(new TableCell(removedLineParagraph));
             tableRow.Cells.Add(new TableCell(addedLineParagraph));
-            tableRow.Cells.Add(new TableCell(paragraph));
+            ContentTableCell = new TableCell(paragraph);
+            tableRow.Cells.Add(ContentTableCell);
             tableRowGroup.Rows.Add(tableRow);
             table.RowGroups.Add(tableRowGroup);
             Blocks.Add(table);
+
+            LineEndings = lineEndings;
         }
+
+        public List<Run>? LineEndings;
+        public TableCell? ContentTableCell;
 
         static readonly Brush OldHighlightBrush = new SolidColorBrush(Color.FromArgb(125, 255, 0, 0));
         static readonly Brush OldNormalBrush = new SolidColorBrush(Color.FromArgb(50, 255, 0, 0));

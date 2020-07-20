@@ -9,6 +9,7 @@
         <custom:SubtractionConverter x:Key="subtractionConverter"/>
         <custom:NegationConverter x:Key="negationConverter"/>
         <custom:HideEqualSizesConverter x:Key="hideEqualSizesConverter"/>
+        <custom:ChangeKindToIconConverter x:Key="changeKindToIconConverter"/>
 
         <Color options:Freeze="True" x:Key="col_blue">#566E8D</Color>
         <SolidColorBrush options:Freeze="True" x:Key="br_blue" Color="{StaticResource col_blue}" />

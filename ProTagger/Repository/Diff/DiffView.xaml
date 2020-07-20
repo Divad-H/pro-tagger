@@ -71,7 +71,15 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="{x:Type ListBoxItem}">
                                                 <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                                    <custom:SimpleLabel x:Name="Label" Text="{Binding Path}" Height="16" Foreground="{TemplateBinding Foreground}"/>
+                                                    <TextBlock x:Name="Label" Height="16" Foreground="{TemplateBinding Foreground}">
+                                                        <Run Text="{Binding Status, Converter={StaticResource changeKindToIconConverter}, Mode=OneTime}"
+                                                             BaselineAlignment="Center"
+                                                             FontFamily="Segoe MDL2 Assets"
+                                                             FontWeight="Bold"
+                                                             ToolTip="{Binding Status, Mode=OneTime}"/>
+                                                        <Run Text=" " />
+                                                        <Run Text="{Binding Path, Mode=OneTime}" FontFamily="Consolas"/>
+                                                    </TextBlock>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <MultiTrigger>

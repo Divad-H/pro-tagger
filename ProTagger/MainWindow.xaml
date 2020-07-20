@@ -58,7 +58,7 @@
         </Style>
 
         <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
-            <Setter Property="Content" Value="&#xE711;"/>
+            <Setter Property="Content" Value="&#xE8BB;"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource br_darkred}" />
@@ -344,7 +344,7 @@
                                 Margin="0,0,0,-2"
                                 WindowChrome.IsHitTestVisibleInChrome="True">
                             <Button.Content>
-                                <TextBlock Text="&#xE711;" FontSize="14" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource br_light}"/>
+                                <TextBlock Text="&#xE8BB;" FontSize="10" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{StaticResource br_light}"/>
                             </Button.Content>
                             <Button.Style>
                                 <Style TargetType="Button">

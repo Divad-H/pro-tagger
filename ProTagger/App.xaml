@@ -7,6 +7,7 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <custom:SubtractionConverter x:Key="subtractionConverter"/>
+        <custom:NegationConverter x:Key="negationConverter"/>
         <custom:HideEqualSizesConverter x:Key="hideEqualSizesConverter"/>
 
         <Color options:Freeze="True" x:Key="col_blue">#566E8D</Color>

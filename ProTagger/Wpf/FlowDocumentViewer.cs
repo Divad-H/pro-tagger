@@ -18,17 +18,17 @@ namespace ProTagger.Wpf
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {}
 
-        private static readonly DependencyPropertyKey EffectiveWidthPropertyKey
-            = DependencyProperty.RegisterReadOnly(nameof(EffectiveWidth), typeof(double), typeof(FlowDocumentViewer),
+        private static readonly DependencyPropertyKey ContentWidthPropertyKey
+            = DependencyProperty.RegisterReadOnly(nameof(ContentWidth), typeof(double), typeof(FlowDocumentViewer),
                 new FrameworkPropertyMetadata(10.0, FrameworkPropertyMetadataOptions.None));
 
-        public static readonly DependencyProperty EffectiveWidthProperty
-            = EffectiveWidthPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty ContentWidthProperty
+            = ContentWidthPropertyKey.DependencyProperty;
 
-        public double EffectiveWidth
+        public double ContentWidth
         {
-            get => (double)GetValue(EffectiveWidthProperty);
-            protected set => SetValue(EffectiveWidthPropertyKey, value);
+            get => (double)GetValue(ContentWidthProperty);
+            protected set => SetValue(ContentWidthPropertyKey, value);
         }
 
         private void OnLoaded(object? sender, EventArgs e)
@@ -40,7 +40,7 @@ namespace ProTagger.Wpf
             if (document.ContentTableCell is null)
                 return;
 
-            EffectiveWidth = document.LineEndings
+            ContentWidth = document.LineEndings
                 .Select(lineEnding => lineEnding.ContentStart.GetCharacterRect(LogicalDirection.Forward).Right)
                 .Max()
                   + Padding.Left + Padding.Right;

@@ -89,8 +89,8 @@
                     <custom:ColumnLayoutListView.HeaderContent>
                         <Border BorderBrush="{StaticResource br_lightblue}" BorderThickness="0,0,0,0.5" Margin="0,0,0,3">
                             <Grid Focusable="false"
-                                Height="16"
-                                Name="HeaderGrid">
+                                  Height="16"
+                                  Name="HeaderGrid">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*" MinWidth="30"/>
                                     <ColumnDefinition Width="Auto"/>

@@ -114,11 +114,11 @@
         <ItemsControl ItemsSource="{Binding PatchDiff}"
                       VirtualizingStackPanel.IsVirtualizing="True"
                       VirtualizingPanel.ScrollUnit="Pixel"
-                      ScrollViewer.CanContentScroll="True"
+                      custom:WidthCollectorScrollViewer.CanContentScroll="True"
                       Grid.Column="1">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <VirtualizingStackPanel />
+                    <VirtualizingStackPanel/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.Template>
@@ -128,10 +128,64 @@
                             BorderBrush="{TemplateBinding Border.BorderBrush}"
                             Background="{TemplateBinding Panel.Background}"
                             SnapsToDevicePixels="True">
-                        <ScrollViewer Padding="{TemplateBinding Control.Padding}"
-                                      Focusable="False">
+                        <custom:WidthCollectorScrollViewer Padding="{TemplateBinding Control.Padding}"
+                                                           Focusable="False"
+                                                           HorizontalScrollBarVisibility="Auto"
+                                                           VerticalScrollBarVisibility="Auto"
+                                                           CanContentScroll="True">
+                            <custom:WidthCollectorScrollViewer.Style>
+                                <Style TargetType="{x:Type custom:WidthCollectorScrollViewer}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type custom:WidthCollectorScrollViewer}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+
+                                                    <Canvas ClipToBounds="True" x:Name="contentCanvas">
+                                                        <Border 
+                                                                ClipToBounds="True"
+                                                                Height="{Binding Path=ActualHeight, RelativeSource={RelativeSource TemplatedParent}}">
+                                                            <Border.RenderTransform>
+                                                                <TranslateTransform X="{Binding Path=CustomHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource negationConverter}}"/>
+                                                            </Border.RenderTransform>
+                                                            <ScrollContentPresenter CanHorizontallyScroll="False"
+                                                                                    CanContentScroll="True"/>
+                                                        </Border>
+                                                    </Canvas>
+
+                                                    <ScrollBar x:Name="PART_VerticalScrollBar"
+                                                               Grid.Column="1"
+                                                               Value="{TemplateBinding VerticalOffset}"
+                                                               Maximum="{TemplateBinding ScrollableHeight}"
+                                                               ViewportSize="{TemplateBinding ViewportHeight}"
+                                                               Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                                                    <ScrollBar Orientation="Horizontal"
+                                                               Grid.Row="1"
+                                                               Value="{Binding Path=CustomHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                                               ViewportSize="{Binding ActualWidth, ElementName=contentCanvas}"
+                                                               Visibility="Visible">
+                                                        <ScrollBar.Maximum>
+                                                            <MultiBinding Converter="{StaticResource subtractionConverter}">
+                                                                <Binding Path="ContentWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                                <Binding Path="ActualWidth" ElementName="contentCanvas"/>
+                                                            </MultiBinding>
+                                                        </ScrollBar.Maximum>
+                                                    </ScrollBar>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </custom:WidthCollectorScrollViewer.Style>
                             <ItemsPresenter SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
-                        </ScrollViewer>
+                        </custom:WidthCollectorScrollViewer>
                     </Border>
                 </ControlTemplate>
             </ItemsControl.Template>
@@ -145,19 +199,13 @@
                                     <ItemsControl ItemsSource="{Binding Hunks}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <custom:MouseWheelIgnoringScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
-                                                    <Border Width="{Binding Path=EffectiveWidth, ElementName=documentViewer}" HorizontalAlignment="Left">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <custom:FlowDocumentViewer x:Name="documentViewer">
-                                                                <custom:PatchDiffFormatter Content="{Binding}"
-                                                                                       FontFamily="Consolas"
-                                                                                       FontSize="12"
-                                                                                       TextAlignment="Left"
-                                                                                       MaxPageWidth="100000"/>
-                                                            </custom:FlowDocumentViewer>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </custom:MouseWheelIgnoringScrollViewer>
+                                                <custom:FlowDocumentViewer custom:WidthCollectorScrollViewer.Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ContentWidth}">
+                                                    <custom:PatchDiffFormatter Content="{Binding}"
+                                                                               FontFamily="Consolas"
+                                                                               FontSize="12"
+                                                                               TextAlignment="Left"
+                                                                               MaxPageWidth="100000"/>
+                                                </custom:FlowDocumentViewer>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

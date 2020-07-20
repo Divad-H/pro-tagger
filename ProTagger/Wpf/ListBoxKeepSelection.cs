@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ProTagger.Utilities;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
@@ -25,11 +26,11 @@ namespace ProTagger.Wpf
             var newSelection = ItemsSource.OfType<object>().ToHashSet(KeepSelectionRule);
             newSelection.IntersectWith(oldSelection);
             SetSelectedItems(newSelection);
+            if (!newSelection.Any() && Items.Count > 0)
+                SetSelectedItems(Items[0].Yield());
         }
 
         public void ChangeSelectedItems(IEnumerable<object?> selectedItems)
-        {
-            SetSelectedItems(selectedItems);
-        }
+            => SetSelectedItems(selectedItems);
     }
 }

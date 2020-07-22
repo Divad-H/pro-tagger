@@ -33,14 +33,14 @@
                         <FlowDocumentScrollViewer>
                             <FlowDocument FontSize="12" FontFamily="Consolas" PagePadding="5" TextAlignment="Left">
                                 <Paragraph Margin="5">
-                                    <Run Text="Commit: " FontWeight="Bold"/><Run Text="{Binding Sha, Mode=OneWay}"/><LineBreak/>
-                                    <Run Text="Author: " FontWeight="Bold"/><Run Text="{Binding Author, Mode=OneWay}"/><LineBreak/>
-                                    <Run Text="Authoring date: " FontWeight="Bold"/><Run Text="{Binding Author.When, Mode=OneWay}"/><LineBreak/>
-                                    <Run Text="Committer: " FontWeight="Bold"/><Run Text="{Binding Committer, Mode=OneWay}"/><LineBreak/>
-                                    <Run Text="Commit date: " FontWeight="Bold"/><Run Text="{Binding Committer.When, Mode=OneWay}"/><LineBreak/>
+                                    <Run Text="Commit: " FontWeight="Bold"/><Run Text="{Binding Sha, Mode=OneTime}"/><LineBreak/>
+                                    <Run Text="Author: " FontWeight="Bold"/><Run Text="{Binding Author, Mode=OneTime}"/><LineBreak/>
+                                    <Run Text="Authoring date: " FontWeight="Bold"/><Run Text="{Binding Author.When, Mode=OneTime}"/><LineBreak/>
+                                    <Run Text="Committer: " FontWeight="Bold"/><Run Text="{Binding Committer, Mode=OneTime}"/><LineBreak/>
+                                    <Run Text="Commit date: " FontWeight="Bold"/><Run Text="{Binding Committer.When, Mode=OneTime}"/><LineBreak/>
                                 </Paragraph>
                                 <Paragraph Margin="5">
-                                    <Run Text="{Binding Message, Mode=OneWay}"/>
+                                    <Run Text="{Binding Message, Mode=OneTime}"/>
                                 </Paragraph>
                             </FlowDocument>
                         </FlowDocumentScrollViewer>
@@ -119,7 +119,8 @@
                 </custom:VariantPresenter.Variant0Template>
             </custom:VariantPresenter>
         </Grid>
-        <ItemsControl ItemsSource="{Binding PatchDiff}"
+        <ItemsControl Margin="0,-2,0,0"
+                      ItemsSource="{Binding PatchDiff}"
                       VirtualizingStackPanel.IsVirtualizing="True"
                       VirtualizingPanel.ScrollUnit="Pixel"
                       custom:WidthCollectorScrollViewer.CanContentScroll="True"
@@ -203,17 +204,70 @@
                         <custom:VariantPresenter.Variant0Template>
                             <DataTemplate>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding PatchEntryChanges.Path}" FontFamily="Consolas"/>
+                                    <Rectangle Width="100000" Height="2" Fill="{StaticResource br_blue}"/>
+                                    <TextBlock Height="16" Margin="10,5" FontWeight="SemiBold">
+                                        <Run Text="{Binding PatchEntryChanges.Status, Converter={StaticResource changeKindToIconConverter}, Mode=OneTime}"
+                                             BaselineAlignment="Center"
+                                             FontFamily="Segoe MDL2 Assets"
+                                             FontWeight="Bold"
+                                             ToolTip="{Binding PatchEntryChanges.Status, Mode=OneTime}"/>
+                                        <Run Text=" " />
+                                        <Run Text="{Binding PatchEntryChanges.Path, Mode=OneTime}" FontFamily="Consolas"/>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding PatchEntryChanges.Status, Mode=OneTime}" Value="Renamed">
+                                                        <Setter Property="ToolTip">
+                                                            <Setter.Value>
+                                                                <TextBlock FontFamily="Consolas">
+                                                                    <Run Text="{Binding PatchEntryChanges.OldPath, Mode=OneTime, StringFormat='Renamed from {0}'}"/><Run Text="{Binding PatchEntryChanges.Path, Mode=OneTime, StringFormat=' to {0}.'}"/>
+                                                                </TextBlock>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <Rectangle Width="100000" Height="0.5" Fill="{StaticResource br_blue}"/>
                                     <ItemsControl ItemsSource="{Binding Hunks}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <custom:FlowDocumentViewer custom:WidthCollectorScrollViewer.Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ContentWidth}">
-                                                    <custom:PatchDiffFormatter Content="{Binding}"
-                                                                               FontFamily="Consolas"
-                                                                               FontSize="12"
-                                                                               TextAlignment="Left"
-                                                                               MaxPageWidth="100000"/>
-                                                </custom:FlowDocumentViewer>
+                                                <StackPanel>
+                                                    <Rectangle Width="100000" Height="0.5" Fill="{StaticResource br_blue}"/>
+                                                    <TextBlock Margin="10,5" FontFamily="Consolas" Foreground="{StaticResource br_blue}">
+                                                        <Run>
+                                                            <Run.Text>
+                                                                <MultiBinding Converter="{StaticResource getItemNumberConverter}" StringFormat="Hunk {0} | " Mode="OneTime">
+                                                                    <Binding Path="." Mode="OneTime"/>
+                                                                    <Binding RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}" Path="ItemsSource" Mode="OneTime"/>
+                                                                </MultiBinding>
+                                                            </Run.Text>
+                                                        </Run><Run Text="{Binding OldBeginLine, StringFormat='Old Lines: {0}', Mode=OneTime}" Foreground="{StaticResource br_darkred}"/><Run Foreground="{StaticResource br_darkred}">
+                                                            <Run.Text>
+                                                                <MultiBinding Converter="{StaticResource additionConverter}" StringFormat="-{0} " Mode="OneTime">
+                                                                    <Binding Path="OldBeginLine" Mode="OneTime"/>
+                                                                    <Binding Path="OldHunkLength" Mode="OneTime"/>
+                                                                </MultiBinding>
+                                                            </Run.Text>
+                                                        </Run><Run Text="| "></Run><Run Text="{Binding NewBeginLine, StringFormat='New Lines: {0}', Mode=OneTime}" Foreground="{StaticResource br_darkgreen}"/><Run Foreground="{StaticResource br_darkgreen}">
+                                                            <Run.Text>
+                                                                <MultiBinding Converter="{StaticResource additionConverter}" StringFormat="-{0}" Mode="OneTime">
+                                                                    <Binding Path="NewBeginLine" Mode="OneTime"/>
+                                                                    <Binding Path="NewHunkLength" Mode="OneTime"/>
+                                                                </MultiBinding>
+                                                            </Run.Text>
+                                                        </Run>
+                                                    </TextBlock>
+                                                    <Rectangle Width="100000" Height="0.5" Fill="{StaticResource br_blue}"/>
+                                                    <custom:FlowDocumentViewer custom:WidthCollectorScrollViewer.Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=ContentWidth}">
+                                                        <custom:PatchDiffFormatter Content="{Binding}"
+                                                                                   FontFamily="Consolas"
+                                                                                   FontSize="12"
+                                                                                   TextAlignment="Left"
+                                                                                   MaxPageWidth="100000"/>
+                                                    </custom:FlowDocumentViewer>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

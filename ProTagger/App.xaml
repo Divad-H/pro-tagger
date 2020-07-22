@@ -7,9 +7,11 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <custom:SubtractionConverter x:Key="subtractionConverter"/>
+        <custom:AdditionConverter x:Key="additionConverter"/>
         <custom:NegationConverter x:Key="negationConverter"/>
         <custom:HideEqualSizesConverter x:Key="hideEqualSizesConverter"/>
         <custom:ChangeKindToIconConverter x:Key="changeKindToIconConverter"/>
+        <custom:GetItemNumberConverter x:Key="getItemNumberConverter"/>
 
         <Color options:Freeze="True" x:Key="col_blue">#566E8D</Color>
         <SolidColorBrush options:Freeze="True" x:Key="br_blue" Color="{StaticResource col_blue}" />
@@ -30,6 +32,8 @@
         <SolidColorBrush options:Freeze="True" x:Key="br_darkred" Color="{StaticResource col_darkred}" />
         <Color options:Freeze="True" x:Key="col_black">#000000</Color>
         <SolidColorBrush options:Freeze="True" x:Key="br_black" Color="{StaticResource col_black}" />
+        <Color options:Freeze="True" x:Key="col_darkgreen">#FF2D862D</Color>
+        <SolidColorBrush options:Freeze="True" x:Key="br_darkgreen" Color="{StaticResource col_darkgreen}" />
 
         <!-- Scroll Bar -->
         <Style x:Key="FlatScrollBarLineButton" TargetType="{x:Type RepeatButton}">

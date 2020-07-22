@@ -45,10 +45,10 @@ namespace ProTagger.Utilities
 
         public readonly struct Hunk
         {
-            public readonly int NewBeginLine;
-            public readonly int NewHunkLength;
-            public readonly int OldBeginLine;
-            public readonly int OldHunkLength;
+            public int NewBeginLine { get; }
+            public int NewHunkLength { get; }
+            public int OldBeginLine { get; }
+            public int OldHunkLength { get; }
             public readonly string AdditionalInfo;
 
             public readonly List<Variant<WordDiff, UnchangedLine>> Diff;

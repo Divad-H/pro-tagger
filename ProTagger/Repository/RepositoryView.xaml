@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ToggleButton x:Name="PopupButton"
@@ -44,6 +45,7 @@
         </Popup>
 
         <logview:GitLogView Grid.Row="1" DataContext="{Binding Graph}"/>
-        <diffview:DiffView Grid.Row="2" DataContext="{Binding Diff}"/>
+        <Border Grid.Row="2" Background="{StaticResource br_blue}" Height="2"/>
+        <diffview:DiffView Grid.Row="3" DataContext="{Binding Diff}"/>
     </Grid>
 </UserControl>

@@ -64,8 +64,7 @@
                                        Maximum="{TemplateBinding ScrollableHeight}"
                                        ViewportSize="{TemplateBinding ViewportHeight}"
                                        Value="{TemplateBinding VerticalOffset}"
-                                       Visibility="Visible"
-                                       Style="{StaticResource FlatScrollBar}"/>
+                                       Visibility="Visible"/>
 
                         </Grid>
                     </ControlTemplate>

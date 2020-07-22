@@ -15,6 +15,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MaxHeight="200"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <custom:VariantPresenter VariantContent="{Binding SelectionInfo.Value}">
@@ -48,9 +49,10 @@
                     </DataTemplate>
                 </custom:VariantPresenter.Variant1Template>
             </custom:VariantPresenter>
+            <Rectangle Height="1" Grid.Row="1" Fill="{StaticResource br_blue}"/>
             <custom:VariantPresenter VariantContent="{Binding TreeDiff.Value}"
                                      Style="{StaticResource DefaultErrorView}"
-                                     Grid.Row="1">
+                                     Grid.Row="2">
                 <custom:VariantPresenter.Variant0Template>
                     <DataTemplate>
                         <custom:ListBoxKeepSelection ItemsSource="{Binding}" 

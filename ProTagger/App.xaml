@@ -292,5 +292,20 @@
             </Setter>
         </Style>
 
+        <Style TargetType="{x:Type ListBox}" x:Key="noBorderListBoxStyle">
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="OverridesDefaultStyle" Value="true" />
+            <Setter Property="MinWidth" Value="120" />
+            <Setter Property="MinHeight" Value="95" />
+            <Setter Property="Template">
+                <Setter.Value> 
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer Margin="0" Focusable="false" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" CanContentScroll="True">
+                            <VirtualizingStackPanel IsItemsHost="True" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

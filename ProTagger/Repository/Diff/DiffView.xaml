@@ -55,7 +55,8 @@
                                      Grid.Row="2">
                 <custom:VariantPresenter.Variant0Template>
                     <DataTemplate>
-                        <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
+                        <custom:ListBoxKeepSelection Style="{StaticResource noBorderListBoxStyle}"
+                                                     ItemsSource="{Binding}" 
                                                      SelectionMode="Extended" 
                                                      VirtualizingPanel.VirtualizationMode="Recycling"
                                                      custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"

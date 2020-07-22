@@ -164,7 +164,10 @@ namespace ProTagger.Repository.GitLog
                 if (repository.Head is null)
                     yield break;
 
-                var selectedBranches = branches.Select(branch => repository.Branches[branch.LongName]).ToList();
+                var selectedBranches = branches
+                    .Select(branch => repository.Branches[branch.LongName])
+                    .Where(branch => !(branch is null))
+                    .ToList();
                 var tags = repository.Tags.ToList();
                 var expectedIds = new List<ObjectId?>() { repository.Head.Tip.Id };
 

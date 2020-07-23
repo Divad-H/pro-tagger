@@ -87,6 +87,13 @@ namespace ProTagger.Repository.GitLog
 
     public class LogGraph : IDisposable
     {
+        public class NoBranchSelected : Exception
+        {
+            public NoBranchSelected(string message)
+                : base(message)
+            { }
+        }
+
         private struct NodesData
         {
             public int Index;
@@ -126,7 +133,7 @@ namespace ProTagger.Repository.GitLog
                         .Buffer(1000)
                         .Zip(Observable.Return<object?>(null).Concat(scrolledBottom), (data, _) => data)
                         .Scan(
-                            new NodesData(){ Index = 0, Batch = new GraphType() },
+                            new NodesData() { Index = 0, Batch = new GraphType() },
                             (last, current) => new NodesData() { Index = last.Index + 1, Batch = current })
                         .Select(data => new Variant<NodesData, string>(data))
                         .Catch((Exception e) => Observable.Return(new Variant<NodesData, string>(e.Message)))
@@ -170,22 +177,31 @@ namespace ProTagger.Repository.GitLog
                     .ToList();
                 var tags = repository.Tags.ToList();
                 var allBranches = repository.Branches.ToList();
-                var expectedIds = new List<ObjectId?>() { repository.Head.Tip.Id };
-
-                var directions = new List<List<TGraphPos>>() { new List<TGraphPos>() { 0 } };
-                var lastDirections = new List<List<TGraphPos>>();
-
-                TGraphPos lastPosition = 0;
-                Variant<Commit, DiffTargets> lastCommit = new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory);
-                bool lastMerge = false;
 
                 var commitFilter = new CommitFilter()
                 {
                     SortBy = CommitSortStrategies.Topological,
                     IncludeReachableFrom = selectedBranches
                 };
+                var query = repository.QueryCommits(commitFilter);
 
-                foreach (Commit c in repository.QueryCommits(commitFilter)/*.Take(1000)*/)
+                bool headSelected = selectedBranches.Any(branch => branch.IsCurrentRepositoryHead);
+                var firstCommit = headSelected ? null : query.FirstOrDefault();
+                if (!headSelected && firstCommit is null)
+                    throw new NoBranchSelected("No branch is selected.");
+
+                var expectedIds = firstCommit is null ? new List<ObjectId?>() { repository.Head.Tip.Id } : firstCommit.Parents.Select(c => c.Id).ToList<ObjectId?>();
+
+                var directions = new List<List<TGraphPos>>() { headSelected ? new List<TGraphPos>() { 0 } : expectedIds.Select((_, i) => (TGraphPos)i).ToList() };
+                for (int i = 1; i < directions.First().Count; ++i)
+                    directions.Add(new List<TGraphPos>());
+                var lastDirections = new List<List<TGraphPos>>();
+
+                TGraphPos lastPosition = 0;
+                Variant<Commit, DiffTargets> lastCommit = firstCommit is null ? new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory) : new Variant<Commit, DiffTargets>(firstCommit);
+                bool lastMerge = expectedIds.Count > 1;
+
+                foreach (Commit c in query.Skip(headSelected ? 0 : 1))
                 {
                     var foundNextPosition = expectedIds.FindIndex((id) => id == c.Id);
                     if (foundNextPosition == -1)
@@ -251,7 +267,6 @@ namespace ProTagger.Repository.GitLog
                         directions.Add(new List<TGraphPos>());
                         directions[nextPosition].Add((TGraphPos)(directions.Count - 1));
                     }
-
                     yield return new LogGraphNode(
                         lastPosition,
                         CreateGraphDirections(lastDirections, currentDirections),

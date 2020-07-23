@@ -169,6 +169,7 @@ namespace ProTagger.Repository.GitLog
                     .Where(branch => !(branch is null))
                     .ToList();
                 var tags = repository.Tags.ToList();
+                var allBranches = repository.Branches.ToList();
                 var expectedIds = new List<ObjectId?>() { repository.Head.Tip.Id };
 
                 var directions = new List<List<TGraphPos>>() { new List<TGraphPos>() { 0 } };
@@ -256,7 +257,7 @@ namespace ProTagger.Repository.GitLog
                         CreateGraphDirections(lastDirections, currentDirections),
                         lastCommit,
                         lastMerge,
-                        selectedBranches
+                        allBranches
                             .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
                             .Select(CreateBranchInfo)
                             .ToList(),
@@ -274,7 +275,7 @@ namespace ProTagger.Repository.GitLog
                     CreateGraphDirections(lastDirections, new List<List<TGraphPos>>()),
                     lastCommit,
                     false,
-                    selectedBranches
+                    allBranches
                         .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
                         .Select(CreateBranchInfo)
                         .ToList(),

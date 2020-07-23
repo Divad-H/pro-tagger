@@ -64,7 +64,7 @@ namespace ProTaggerTest.Repository
             Assert.AreEqual(1, selectedBranches.Where(b => b.Selected).Count());
             Assert.AreEqual(7, logGraphNodes.Count); // The mock doesn't filter unreachable commits.
             var nodesWithBranch = logGraphNodes.Where(c => c.Branches.Any());
-            Assert.AreEqual(1, nodesWithBranch.Count());
+            Assert.AreEqual(2, nodesWithBranch.Count());
             Assert.AreEqual("master", nodesWithBranch.First().Branches.First().ShortName);
             work.Selected.Value = true;
             Assert.AreEqual(2, logGraphNodes.Where(c => c.Branches.Any()).Count());

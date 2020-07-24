@@ -13,6 +13,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ProTagger
 {
@@ -32,16 +33,16 @@ namespace ProTagger
 
     public class BranchSelectionViewModel
     {
-        private readonly BranchSelection _branchSelection;
+        public readonly BranchSelection BranchSelection;
         public ViewObservable<bool> Selected { get; }
-        public string PrettyName => _branchSelection.PrettyName;
+        public string PrettyName => BranchSelection.PrettyName;
 
         public IObservable<BranchSelection> BranchSelectionObservable { get; }
 
-        public BranchSelectionViewModel(ISchedulers schedulers, Branch branch, bool selected)
+        public BranchSelectionViewModel(Branch branch, bool selected)
         {
             Selected = new ViewObservable<bool>(selected);
-            _branchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
+            BranchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
             BranchSelectionObservable = Selected
                 .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected));
         }
@@ -51,10 +52,11 @@ namespace ProTagger
     {
         public LogGraph Graph { get; }
 
-        public List<BranchSelectionViewModel> Branches { get; }
+        public ViewSubject<IList<BranchSelectionViewModel>> Branches { get; }
         public IObservable<IList<BranchSelection>> BranchesObservable { get; }
         public DiffViewModel Diff { get; }
         public RepositoryDescription RepositoryDescription { get; }
+        public ICommand RefreshCommand { get; }
 
         public static async Task<Variant<RepositoryViewModel, RepositoryError>> Create(ISchedulers schedulers,
             CancellationToken ct, 
@@ -82,23 +84,59 @@ namespace ProTagger
 
         public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, RepositoryDescription description, IObservable<CompareOptions> compareOptions)
         {
-            RepositoryDescription = description;
-            var branches = new List<BranchSelectionViewModel>();
-            _repository = repositoryFactory.CreateRepository(description.Path)
-                .DisposeWith(_disposables);
             try
             {
-                foreach (var branch in _repository.Branches)
-                    branches.Add(new BranchSelectionViewModel(schedulers, branch, branch.IsCurrentRepositoryHead));
+                RepositoryDescription = description;
+                _repository = repositoryFactory.CreateRepository(description.Path)
+                    .DisposeWith(_disposables);
 
-                var branchesObservable = branches
-                    .Select(b => b.BranchSelectionObservable)
-                    .CombineLatest();
+                var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
+                RefreshCommand = refreshCommand;
 
-                Branches = branches;
+                IList<BranchSelectionViewModel> createBranchesVM(IList<BranchSelectionViewModel>? lastBranchSelection)
+                    => _repository.Branches
+                        .Select(branch => new BranchSelectionViewModel(branch, lastBranchSelection is null
+                            ? branch.IsCurrentRepositoryHead
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.BranchSelection.LongName == branch.CanonicalName)))
+                        .ToList();
+
+                var firstBranchVms = createBranchesVM(null);
+
+                var nextBranchVms = refreshCommand
+                    .Scan(firstBranchVms, (last, _) => createBranchesVM(last))
+                    .Publish();
+
+                var branchesVmObservable = Observable
+                    .Return(firstBranchVms)
+                    .Concat(nextBranchVms);
+
+                var branchesObservable = branchesVmObservable
+                    .Select(branches => branches
+                        .Select(b => b.BranchSelectionObservable)
+                        .CombineLatest())
+                    .Switch();
+
+                Branches = new ViewSubject<IList<BranchSelectionViewModel>>(firstBranchVms);
+
+                branchesVmObservable
+                    .Subscribe(Branches)
+                    .DisposeWith(_disposables);
+
                 BranchesObservable = branchesObservable;
 
                 Graph = new LogGraph(schedulers, _repository, branchesObservable)
+                    .DisposeWith(_disposables);
+            
+                var selectedCommit = Graph.SelectedNode
+                    .Select(node => node?.Commit);
+                var secondarySelectedCommit = Graph.SecondarySelectedNode
+                    .Select(node => node?.Commit);
+
+                Diff = new DiffViewModel(_repository, schedulers, _repository.Head, secondarySelectedCommit, selectedCommit, compareOptions)
+                    .DisposeWith(_disposables);
+
+                nextBranchVms
+                    .Connect()
                     .DisposeWith(_disposables);
             }
             catch (Exception)
@@ -106,13 +144,6 @@ namespace ProTagger
                 Dispose();
                 throw;
             }
-            var selectedCommit = Graph.SelectedNode
-                .Select(node => node?.Commit);
-            var secondarySelectedCommit = Graph.SecondarySelectedNode
-                .Select(node => node?.Commit);
-
-            Diff = new DiffViewModel(_repository, schedulers, _repository.Head, secondarySelectedCommit, selectedCommit, compareOptions)
-                .DisposeWith(_disposables);
         }
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();

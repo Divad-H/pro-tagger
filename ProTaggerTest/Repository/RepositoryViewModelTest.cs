@@ -46,10 +46,10 @@ namespace ProTaggerTest.Repository
                 Observable.Return(new CompareOptions()));
             Assert.IsTrue(res.Is<RepositoryViewModel>());
             using var repo = res.Get<RepositoryViewModel>();
-            Assert.AreEqual(2, repo.Branches.Count);
-            var master = repo.Branches.Find(b => b.PrettyName == "master")
+            Assert.AreEqual(2, repo.Branches.Value.Count);
+            var master = repo.Branches.Value.Where(b => b.PrettyName == "master").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch master not found.");
-            var work = repo.Branches.Find(b => b.PrettyName == "work")
+            var work = repo.Branches.Value.Where(b => b.PrettyName == "work").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch work not found.");
             Assert.IsTrue(master.Selected.Value, "Branch master (HEAD) should be selected.");
             Assert.IsFalse(work.Selected.Value, "Branch work should be selected.");

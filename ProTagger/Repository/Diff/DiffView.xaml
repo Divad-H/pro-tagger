@@ -167,7 +167,7 @@
                                                                 ClipToBounds="True"
                                                                 Height="{Binding Path=ActualHeight, RelativeSource={RelativeSource TemplatedParent}}">
                                                             <Border.RenderTransform>
-                                                                <TranslateTransform X="{Binding Path=CustomHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource negationConverter}}"/>
+                                                                <TranslateTransform X="{Binding Path=CustomHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource inversionConverter}}"/>
                                                             </Border.RenderTransform>
                                                             <ScrollContentPresenter CanHorizontallyScroll="False"
                                                                                     CanContentScroll="True"/>

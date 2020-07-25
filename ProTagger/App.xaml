@@ -8,7 +8,7 @@
     <Application.Resources>
         <custom:SubtractionConverter x:Key="subtractionConverter"/>
         <custom:AdditionConverter x:Key="additionConverter"/>
-        <custom:NegationConverter x:Key="negationConverter"/>
+        <custom:InversionConverter x:Key="inversionConverter"/>
         <custom:HideEqualSizesConverter x:Key="hideEqualSizesConverter"/>
         <custom:ChangeKindToIconConverter x:Key="changeKindToIconConverter"/>
         <custom:GetItemNumberConverter x:Key="getItemNumberConverter"/>

@@ -1,7 +1,5 @@
 ﻿using LibGit2Sharp;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ProTaggerTest.LibGit2Mocks
 {
@@ -11,6 +9,7 @@ namespace ProTaggerTest.LibGit2Mocks
         {
             _canonicalName = name;
             _target = target;
+            _reference = new ReferenceMock(this);
         }
 
         public override TagAnnotation Annotation => throw new NotImplementedException();
@@ -20,7 +19,8 @@ namespace ProTaggerTest.LibGit2Mocks
         public override string FriendlyName => _canonicalName;
         public override bool IsAnnotated => throw new NotImplementedException();
         public override GitObject PeeledTarget => throw new NotImplementedException();
-        public override Reference Reference => throw new NotImplementedException();
+        private readonly ReferenceMock _reference;
+        public override Reference Reference => _reference;
         private readonly CommitMock _target;
         public override GitObject Target => _target;
     }

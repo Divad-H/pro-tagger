@@ -12,6 +12,7 @@ namespace ProTaggerTest.LibGit2Mocks
             _remoteName = remoteName;
             _tip = tip;
             _canonicalName = canonicalName;
+            _reference = new ReferenceMock(this);
         }
 
         private readonly string _canonicalName;
@@ -26,7 +27,8 @@ namespace ProTaggerTest.LibGit2Mocks
         public override bool IsRemote => _isRemote;
 
         public override bool IsTracking => throw new NotImplementedException();
-        public override Reference Reference => throw new NotImplementedException();
+        private readonly ReferenceMock _reference;
+        public override Reference Reference => _reference;
 
         private readonly string? _remoteName;
         public override string? RemoteName => _remoteName;

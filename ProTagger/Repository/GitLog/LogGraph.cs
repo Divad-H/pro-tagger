@@ -119,25 +119,40 @@ namespace ProTagger.Repository.GitLog
 
         public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
         {
+            const int chunkSize = 1000;
+            
             var scrolledBottom = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
             ScrolledBottom = scrolledBottom;
 
             LogGraphNodes = new ViewSubject<Variant<GraphType, Unexpected>>(new Variant<GraphType, Unexpected>(new GraphType()))
                 .DisposeWith(_disposable);
 
+            SelectedNode = new ViewSubject<LogGraphNode?>(null)
+                .DisposeWith(_disposable);
+            SecondarySelectedNode = new ViewSubject<LogGraphNode?>(null)
+                .DisposeWith(_disposable);
+
             selectedBranches
                 .Select(branches => branches.Where(branch => branch.Selected))
-                .Select(branches
-                    => CreateGraph(repository, branches)
+                .WithLatestFrom(LogGraphNodes, (branches, oldNodes) =>
+                {
+                    var firstChunk = oldNodes.Visit(
+                        graph => Math.Max(chunkSize, graph.Count),
+                        _ => chunkSize);
+                    return CreateGraph(repository, branches!)
                         .ToObservable(schedulers.ThreadPool)
-                        .Buffer(1000)
-                        .Zip(Observable.Return<object?>(null).Concat(scrolledBottom), (data, _) => data)
+                        .Select((node, i) => new { node, i })
+                        .GroupBy(data => data.i < firstChunk)
+                        .Select(g => g.Buffer(g.Key ? firstChunk : chunkSize))
+                        .Switch()
+                        .Zip(Observable.Return<object?>(null).Concat(scrolledBottom), (data, _) => data.Select(data => data.node).ToList())
                         .Scan(
                             new NodesData() { Index = 0, Batch = new GraphType() },
                             (last, current) => new NodesData() { Index = last.Index + 1, Batch = current })
                         .Select(data => new Variant<NodesData, string>(data))
                         .Catch((Exception e) => Observable.Return(new Variant<NodesData, string>(e.Message)))
-                        .ObserveOn(schedulers.Dispatcher))
+                        .ObserveOn(schedulers.Dispatcher);
+                })
                 .Switch()
                 .Subscribe(var => var.Visit(
                     data =>
@@ -149,11 +164,6 @@ namespace ProTagger.Repository.GitLog
                                 LogGraphNodes.Value.First.Add(node);
                     },
                     error => LogGraphNodes.OnNext(new Variant<GraphType, Unexpected>(new Unexpected(error)))))
-                .DisposeWith(_disposable);
-
-            SelectedNode = new ViewSubject<LogGraphNode?>(null)
-                .DisposeWith(_disposable);
-            SecondarySelectedNode = new ViewSubject<LogGraphNode?>(null)
                 .DisposeWith(_disposable);
         }
 

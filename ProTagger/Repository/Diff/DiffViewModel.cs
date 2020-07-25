@@ -67,7 +67,7 @@ namespace ProTagger.Repository.Diff
             SelectionInfo = new ViewSubject<Variant<string, Commit>>(new Variant<string, Commit>(NoCommitSelectedMessage))
                 .DisposeWith(_disposables);
 
-            string toString(Variant<Commit, DiffTargets> variant)
+            static string toString(Variant<Commit, DiffTargets> variant)
                 => variant.Visit(commit => commit.Sha, diffTarget => diffTarget == DiffTargets.Index ? "index" : "working tree");
 
             Observable

@@ -17,14 +17,11 @@
         <StackPanel Orientation="Horizontal">
             <ToggleButton x:Name="PopupButton"
                           IsChecked="{Binding ElementName=Popup, Path=IsOpen}"
+                          Content="&#xE9D5;"
+                          FontFamily="Segoe MDL2 Assets"
+                          FontSize="15"
                           Width="20"
                           Height="20">
-                <ToggleButton.Content>
-                    <Canvas>
-                        <Path Canvas.Left="-7.5" Canvas.Top="-8" Fill="Black" Width="11" Height="14" Stretch="UniformToFill" Data="m 556.28569,312.3622 c -70.625,0 -128,57.344 -128,128 0,47.219 25.875,88.062 64,110.281 l -0.85715,47.14756 -255.14285,80.24058 0,-255.38814 c 38.156,-22.219 64,-63.062 64,-110.281 0,-70.656 -57.344,-128 -128,-128 -70.656,0 -128.000004,57.344 -128.000004,128 0,47.219 25.844,88.062 64.000004,110.281 l 0,372.32614 c -38.156004,22.188 -64.000004,63 -64.000004,110.25 0,70.625 57.344004,127.99996 128.000004,127.99996 70.656,0 128,-57.37496 128,-127.99996 0,-33.5 -13.188,-63.75 -34.25,-86.625 L 619.99997,680.79076 620.28569,550.6432 c 38.125,-22.219 64,-63.062 64,-110.281 0,-70.656 -57.375,-128 -128,-128 z m -384,-64 c 35.406,0 64,28.594 64,64 0,35.406 -28.594,64 -64,64 -35.406,0 -64,-28.594 -64,-64 0,-35.406 28.594,-64 64,-64 z m 0,720.85714 c -35.406,0 -64,-28.625 -64,-64 0,-35.312 28.594,-64 64,-64 35.406,0 64,28.688 64,64 0,35.375 -28.594,64 -64,64 z m 384,-464.85714 c -35.375,0 -64,-28.594 -64,-64 0,-35.406 28.625,-64 64,-64 35.375,0 64,28.594 64,64 0,35.406 -28.625,64 -64,64 z" />
-                        <TextBlock Text="⯆" Canvas.Left="-1" Canvas.Top="-4.5"/>
-                    </Canvas>
-                </ToggleButton.Content>
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
                         <Style.Triggers>
@@ -36,19 +33,63 @@
                 </ToggleButton.Style>
             </ToggleButton>
 
+
             <Popup x:Name="Popup" 
                    StaysOpen="False"
                    PlacementTarget="{Binding ElementName=PopupButton}" 
                    Placement="Bottom"
-                   Width="200">
-                <ItemsControl ItemsSource="{Binding Branches.Value}" Background="{StaticResource br_light}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <CheckBox Content="{Binding PrettyName}" 
-                                      IsChecked="{Binding Selected.Value}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                   MaxHeight="220"
+                   MaxWidth="500"
+                   AllowsTransparency="True">
+                <Border Margin="5" Background="{StaticResource br_light}" BorderThickness="1" BorderBrush="{StaticResource br_blue}">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Opacity="0.4" ShadowDepth="2"/>
+                    </Border.Effect>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition MinWidth="200"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition MinWidth="200"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <CheckBox Content="Branches" FontFamily="Consolas" Margin="5" FontWeight="Bold" IsThreeState="True"/>
+                            <ItemsControl ItemsSource="{Binding Branches.Value}" Background="{StaticResource br_light}" Grid.Row="2" Margin="5">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Selected.Value}"
+                                                  FontFamily="Consolas"
+                                                  ToolTip="{Binding PrettyName}"
+                                                  MaxWidth="250">
+                                            <TextBlock Text="{Binding PrettyName}" TextTrimming="CharacterEllipsis"/>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Rectangle Width="1" Fill="{StaticResource br_blue}" Grid.Column="1" Grid.RowSpan="4"/>
+                            <Rectangle Height="1" Fill="{StaticResource br_blue}" Grid.Row="1" Grid.ColumnSpan="3"/>
+
+                            <CheckBox Content="Tags" FontFamily="Consolas" Margin="5" FontWeight="Bold" Grid.Column="2" IsThreeState="True"/>
+                            <ItemsControl ItemsSource="{Binding Tags.Value}" Background="{StaticResource br_light}" Grid.Column="2" Grid.Row="2" Margin="5">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Selected.Value}"
+                                                  ToolTip="{Binding PrettyName}"
+                                                  FontFamily="Consolas"
+                                                  MaxWidth="250">
+                                            <TextBlock Text="{Binding PrettyName}" TextTrimming="CharacterEllipsis"/>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
             </Popup>
             <Button Command="{Binding RefreshCommand}"
                     Content="&#xE72C;"

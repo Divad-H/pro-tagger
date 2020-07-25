@@ -17,13 +17,13 @@ using System.Windows.Input;
 
 namespace ProTagger
 {
-    public class BranchSelection
+    public class RefSelection
     {
         public string LongName { get; }
         public string PrettyName { get; }
         public bool Selected { get; }
 
-        public BranchSelection (string longName, string prettyName, bool selected)
+        public RefSelection (string longName, string prettyName, bool selected)
         {
             LongName = longName;
             PrettyName = prettyName;
@@ -31,20 +31,28 @@ namespace ProTagger
         }
     }
 
-    public class BranchSelectionViewModel
+    public class RefSelectionViewModel
     {
-        public readonly BranchSelection BranchSelection;
+        public readonly RefSelection RefSelection;
         public ViewObservable<bool> Selected { get; }
-        public string PrettyName => BranchSelection.PrettyName;
+        public string PrettyName => RefSelection.PrettyName;
 
-        public IObservable<BranchSelection> BranchSelectionObservable { get; }
+        public IObservable<RefSelection> RefSelectionObservable { get; }
 
-        public BranchSelectionViewModel(Branch branch, bool selected)
+        public RefSelectionViewModel(Branch branch, bool selected)
         {
             Selected = new ViewObservable<bool>(selected);
-            BranchSelection = new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected);
-            BranchSelectionObservable = Selected
-                .Select(selected => new BranchSelection(branch.CanonicalName, branch.FriendlyName, selected));
+            RefSelection = new RefSelection(branch.CanonicalName, branch.FriendlyName, selected);
+            RefSelectionObservable = Selected
+                .Select(selected => new RefSelection(branch.CanonicalName, branch.FriendlyName, selected));
+        }
+
+        public RefSelectionViewModel(Tag tag, bool selected)
+        {
+            Selected = new ViewObservable<bool>(selected);
+            RefSelection = new RefSelection(tag.CanonicalName, tag.FriendlyName, selected);
+            RefSelectionObservable = Selected
+                .Select(selected => new RefSelection(tag.CanonicalName, tag.FriendlyName, selected));
         }
     }
 
@@ -52,8 +60,9 @@ namespace ProTagger
     {
         public LogGraph Graph { get; }
 
-        public ViewSubject<IList<BranchSelectionViewModel>> Branches { get; }
-        public IObservable<IList<BranchSelection>> BranchesObservable { get; }
+        public ViewSubject<IList<RefSelectionViewModel>> Branches { get; }
+        public ViewSubject<IList<RefSelectionViewModel>> Tags { get; }
+        public IObservable<IList<RefSelection>> RefsObservable { get; }
         public DiffViewModel Diff { get; }
         public RepositoryDescription RepositoryDescription { get; }
         public ICommand RefreshCommand { get; }
@@ -93,38 +102,54 @@ namespace ProTagger
                 var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
                 RefreshCommand = refreshCommand;
 
-                IList<BranchSelectionViewModel> createBranchesVM(IList<BranchSelectionViewModel>? lastBranchSelection)
+                IList<RefSelectionViewModel> createBranchesVM(IList<RefSelectionViewModel>? lastBranchSelection)
                     => _repository.Branches
-                        .Select(branch => new BranchSelectionViewModel(branch, lastBranchSelection is null
+                        .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
                             ? branch.IsCurrentRepositoryHead
-                            : lastBranchSelection.Any(b => b.Selected.Value && b.BranchSelection.LongName == branch.CanonicalName)))
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == branch.CanonicalName)))
+                        .ToList();
+
+                IList<RefSelectionViewModel> createTagsVM(IList<RefSelectionViewModel>? lastTagSelection)
+                    => _repository.Tags
+                        .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
+                            || lastTagSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == tag.CanonicalName)))
                         .ToList();
 
                 var firstBranchVms = createBranchesVM(null);
+                var firstTagVms = createTagsVM(null);
 
-                var nextBranchVms = refreshCommand
-                    .Scan(firstBranchVms, (last, _) => createBranchesVM(last))
+                var nextRefVms = refreshCommand
+                    .Scan(new { branchVMs = firstBranchVms, tagVMs = firstTagVms }, (last, _) => new { branchVMs = createBranchesVM(last.branchVMs), tagVMs = createTagsVM(last.tagVMs) })
                     .Publish();
 
-                var branchesVmObservable = Observable
-                    .Return(firstBranchVms)
-                    .Concat(nextBranchVms);
+                var refsVmObservable = Observable
+                    .Return(new { branchVMs = firstBranchVms, tagVMs = firstTagVms })
+                    .Concat(nextRefVms);
 
-                var branchesObservable = branchesVmObservable
-                    .Select(branches => branches
-                        .Select(b => b.BranchSelectionObservable)
+                var selectedRefsObservable = refsVmObservable
+                    .Select(d => d.branchVMs
+                        .Select(b => b.RefSelectionObservable)
+                        .Concat(d.tagVMs
+                            .Select(t => t.RefSelectionObservable))
                         .CombineLatest())
                     .Switch();
 
-                Branches = new ViewSubject<IList<BranchSelectionViewModel>>(firstBranchVms);
+                Branches = new ViewSubject<IList<RefSelectionViewModel>>(firstBranchVms);
+                Tags = new ViewSubject<IList<RefSelectionViewModel>>(firstTagVms);
 
-                branchesVmObservable
+                refsVmObservable
+                    .Select(refs => refs.branchVMs)
                     .Subscribe(Branches)
                     .DisposeWith(_disposables);
 
-                BranchesObservable = branchesObservable;
+                refsVmObservable
+                    .Select(refs => refs.tagVMs)
+                    .Subscribe(Tags)
+                    .DisposeWith(_disposables);
 
-                Graph = new LogGraph(schedulers, _repository, branchesObservable)
+                RefsObservable = selectedRefsObservable;
+
+                Graph = new LogGraph(schedulers, _repository, selectedRefsObservable)
                     .DisposeWith(_disposables);
             
                 var selectedCommit = Graph.SelectedNode
@@ -135,7 +160,7 @@ namespace ProTagger
                 Diff = new DiffViewModel(_repository, schedulers, _repository.Head, secondarySelectedCommit, selectedCommit, compareOptions)
                     .DisposeWith(_disposables);
 
-                nextBranchVms
+                nextRefVms
                     .Connect()
                     .DisposeWith(_disposables);
             }

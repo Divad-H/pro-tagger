@@ -18,10 +18,10 @@ namespace ProTaggerTest.Repository.GitLog
         {
             using var repository = new SimpleRepositoryFactoryMock().CreateRepository("./");
             var graph = LogGraph.CreateGraph(repository,
-                                             new List<BranchSelection> 
+                                             new List<RefSelection> 
                                              { 
-                                                 new BranchSelection("master", "master", true),
-                                                 new BranchSelection("work", "work", true)
+                                                 new RefSelection("master", "master", true),
+                                                 new RefSelection("work", "work", true)
                                              });
             var g = graph.ToList();
             Assert.AreEqual(7, g.Count);
@@ -126,9 +126,9 @@ namespace ProTaggerTest.Repository.GitLog
         {
             using var repository = new UnrelatedHistoryRepositoryMock().CreateRepository("./");
             var graph = LogGraph.CreateGraph(repository,
-                                             new List<BranchSelection>
+                                             new List<RefSelection>
                                              {
-                                                 new BranchSelection("master", "master", true),
+                                                 new RefSelection("master", "master", true),
                                              });
             var g = graph.ToList();
             Assert.AreEqual(5, g.Count);
@@ -214,11 +214,11 @@ namespace ProTaggerTest.Repository.GitLog
         {
             using var repository = new ThreeParentRepositoryFactoryMock().CreateRepository("./");
             var graph = LogGraph.CreateGraph(repository,
-                                             new List<BranchSelection>
+                                             new List<RefSelection>
                                              {
-                                                 new BranchSelection("master", "master", true),
-                                                 new BranchSelection("branch1", "branch1", true),
-                                                 new BranchSelection("branch2", "branch2", true),
+                                                 new RefSelection("master", "master", true),
+                                                 new RefSelection("branch1", "branch1", true),
+                                                 new RefSelection("branch2", "branch2", true),
                                              });
             var g = graph.ToList();
             Assert.AreEqual(8, g.Count);
@@ -338,9 +338,9 @@ namespace ProTaggerTest.Repository.GitLog
         {
             using var repository = new ReusedColumnRepositoryMock().CreateRepository("./");
             var graph = LogGraph.CreateGraph(repository,
-                                             new List<BranchSelection>
+                                             new List<RefSelection>
                                              {
-                                                 new BranchSelection("master", "master", true),
+                                                 new RefSelection("master", "master", true),
                                              });
             var g = graph.ToList();
             Assert.AreEqual(10, g.Count);
@@ -464,9 +464,9 @@ namespace ProTaggerTest.Repository.GitLog
         {
             using var repository = new SwitchingParentOrderRepositoryMock().CreateRepository("./");
             var graph = LogGraph.CreateGraph(repository,
-                                             new List<BranchSelection>
+                                             new List<RefSelection>
                                              {
-                                                 new BranchSelection("master", "master", true),
+                                                 new RefSelection("master", "master", true),
                                              });
             var g = graph.ToList();
             Assert.AreEqual(7, g.Count);

@@ -117,7 +117,7 @@ namespace ProTagger.Repository.GitLog
                 return node1.Sha == node2.Sha;
             };
 
-        public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<BranchSelection>> selectedBranches)
+        public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<RefSelection>> selectedBranches)
         {
             const int chunkSize = 1000;
             
@@ -173,7 +173,7 @@ namespace ProTagger.Repository.GitLog
 
         internal static IEnumerable<LogGraphNode> CreateGraph(
             IRepositoryWrapper repository, 
-            IEnumerable<BranchSelection> branches)
+            IEnumerable<RefSelection> Refs)
         {
             using var delayDispose = repository.TryAddRef();
             if (delayDispose != null)
@@ -181,21 +181,22 @@ namespace ProTagger.Repository.GitLog
                 if (repository.Head is null)
                     yield break;
 
-                var selectedBranches = branches
-                    .Select(branch => repository.Branches[branch.LongName])
-                    .Where(branch => !(branch is null))
+                var selectedRefs = Refs
+                    .Select(@ref => repository.References[@ref.LongName])
+                    .Where(@ref => !(@ref is null))
                     .ToList();
-                var tags = repository.Tags.ToList();
+                var allTags = repository.Tags.ToList();
                 var allBranches = repository.Branches.ToList();
 
                 var commitFilter = new CommitFilter()
                 {
                     SortBy = CommitSortStrategies.Topological,
-                    IncludeReachableFrom = selectedBranches
+                    IncludeReachableFrom = selectedRefs
                 };
                 var query = repository.QueryCommits(commitFilter);
 
-                bool headSelected = selectedBranches.Any(branch => branch.IsCurrentRepositoryHead);
+                var head = repository.Head;
+                bool headSelected = selectedRefs.Any(@ref => @ref.CanonicalName == head.CanonicalName);
                 var firstCommit = headSelected ? null : query.FirstOrDefault();
                 if (!headSelected && firstCommit is null)
                     throw new NoBranchSelected("No branch is selected.");
@@ -286,7 +287,7 @@ namespace ProTagger.Repository.GitLog
                             .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
                             .Select(CreateBranchInfo)
                             .ToList(),
-                        tags
+                        allTags
                             .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
                             .Select(CreateTagInfo)
                             .ToList());
@@ -304,7 +305,7 @@ namespace ProTagger.Repository.GitLog
                         .Where(branch => lastCommit.Is<Commit>() && branch.Tip == lastCommit.Get<Commit>())
                         .Select(CreateBranchInfo)
                         .ToList(),
-                    tags
+                    allTags
                         .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
                         .Select(CreateTagInfo)
                         .ToList());

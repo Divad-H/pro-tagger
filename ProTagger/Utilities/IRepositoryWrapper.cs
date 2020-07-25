@@ -16,6 +16,7 @@ namespace ProTagger.Utilities
 
         public BranchCollection Branches { get; }
         public TagCollection Tags { get; }
+        public ReferenceCollection References { get; }
 
         public Diff Diff { get; }
         public Branch? Head { get; }

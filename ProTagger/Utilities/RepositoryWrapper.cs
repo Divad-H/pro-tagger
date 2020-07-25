@@ -23,6 +23,7 @@ namespace ProTagger.Utilities
         public BranchCollection Branches => _repository.Branches;
 
         public TagCollection Tags => _repository.Tags;
+        public ReferenceCollection References => _repository.Refs;
 
         public Diff Diff => _repository.Diff;
 

@@ -142,6 +142,10 @@
             </Setter>
         </Style>
 
+        <Style TargetType="ToolTip">
+            <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+        
         <ControlTemplate x:Key="FlatHorizontalScrollBar"
                          TargetType="{x:Type ScrollBar}">
             <Grid>

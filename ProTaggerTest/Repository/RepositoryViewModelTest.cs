@@ -46,27 +46,27 @@ namespace ProTaggerTest.Repository
                 Observable.Return(new CompareOptions()));
             Assert.IsTrue(res.Is<RepositoryViewModel>());
             using var repo = res.Get<RepositoryViewModel>();
-            Assert.AreEqual(2, repo.Branches.Value.Count);
-            var master = repo.Branches.Value.Where(b => b.PrettyName == "master").FirstOrDefault()
+            Assert.AreEqual(2, repo.References.Value.Branches.Refs.Count);
+            var master = repo.References.Value.Branches.Refs.Where(b => b.PrettyName == "master").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch master not found.");
-            var work = repo.Branches.Value.Where(b => b.PrettyName == "work").FirstOrDefault()
+            var work = repo.References.Value.Branches.Refs.Where(b => b.PrettyName == "work").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch work not found.");
             Assert.IsTrue(master.Selected.Value, "Branch master (HEAD) should be selected.");
-            Assert.IsFalse(work.Selected.Value, "Branch work should be selected.");
+            Assert.IsFalse(work.Selected.Value, "Branch work should not be selected.");
             Assert.IsTrue(repo.Graph.LogGraphNodes.Value.VariantIndex == 0);
             var logGraphNodes = repo.Graph.LogGraphNodes.Value.First;
             using var _1 = repo.Graph.LogGraphNodes
                 .Subscribe(nodes => logGraphNodes = nodes.VariantIndex == 0
                         ? nodes.First : throw new InvalidOperationException(nodes.Second.Message));
             IList<RefSelection>? selectedBranches = null;
-            using var _2 = repo.RefsObservable
+            using var _2 = repo.References.Value.Branches.SelectedRefs
                 .Subscribe(sb => selectedBranches = sb);
             Assert.AreEqual(1, selectedBranches.Where(b => b.Selected).Count());
             Assert.AreEqual(7, logGraphNodes.Count); // The mock doesn't filter unreachable commits.
             var nodesWithBranch = logGraphNodes.Where(c => c.Branches.Any());
             Assert.AreEqual(2, nodesWithBranch.Count());
             Assert.AreEqual("master", nodesWithBranch.First().Branches.First().ShortName);
-            work.Selected.Value = true;
+            work.SelectCommand.Execute(true);
             Assert.AreEqual(2, logGraphNodes.Where(c => c.Branches.Any()).Count());
             _ = selectedBranches ?? throw new InvalidOperationException("Selected branches were not set.");
             Assert.AreEqual(2, selectedBranches.Where(b => b.Selected).Count());

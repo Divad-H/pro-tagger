@@ -31,38 +31,172 @@ namespace ProTagger
         }
     }
 
-    public class RefSelectionViewModel
+    public class RefSelectionViewModel : IDisposable
     {
         public readonly RefSelection RefSelection;
-        public ViewObservable<bool> Selected { get; }
+        public ViewSubject<bool> Selected { get; }
+        public ReactiveCommand<bool, bool> SelectCommand { get; }
         public string PrettyName => RefSelection.PrettyName;
 
         public IObservable<RefSelection> RefSelectionObservable { get; }
 
-        public RefSelectionViewModel(Branch branch, bool selected)
+        private RefSelectionViewModel(string friendlyName, string canonicalName, bool selected, ISchedulers schedulers)
         {
-            Selected = new ViewObservable<bool>(selected);
-            RefSelection = new RefSelection(branch.CanonicalName, branch.FriendlyName, selected);
-            RefSelectionObservable = Selected
-                .Select(selected => new RefSelection(branch.CanonicalName, branch.FriendlyName, selected));
+            Selected = new ViewSubject<bool>(selected)
+                .DisposeWith(_disposables);
+            RefSelection = new RefSelection(canonicalName, friendlyName, selected);
+            SelectCommand = ReactiveCommand.Create<bool, bool>(p => p, schedulers.Dispatcher)
+                .DisposeWith(_disposables);
+            RefSelectionObservable = SelectCommand
+                .Select(s => new RefSelection(canonicalName, friendlyName, s))
+                .StartWith(new RefSelection(canonicalName, friendlyName, selected));
+        }
+        public RefSelectionViewModel(Branch branch, bool selected, ISchedulers schedulers)
+            : this(branch.FriendlyName, branch.CanonicalName, selected, schedulers)
+        {}
+
+        public RefSelectionViewModel(Tag tag, bool selected, ISchedulers schedulers)
+            : this(tag.FriendlyName, tag.CanonicalName, selected, schedulers)
+        { }
+
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        public void Dispose()
+            => _disposables.Dispose();
+    }
+
+    public class RefsViewModel : IDisposable
+    {
+        public IList<RefSelectionViewModel> Refs { get; }
+
+        /// <summary>
+        /// View => ViewModel
+        /// </summary>
+        public ICommand SelectAllRefsCommand { get; }
+
+        /// <summary>
+        /// ViewModel => View
+        /// </summary>
+        public ViewSubject<bool?> AllRefsSelected { get; }
+
+        public IObservable<IList<RefSelection>> SelectedRefs { get; }
+
+        private enum SelectAllType
+        {
+            Undetermined,
+            AllSelected,
+            NoneSelected,
+            NoValue,
         }
 
-        public RefSelectionViewModel(Tag tag, bool selected)
+        public RefsViewModel(IList<RefSelectionViewModel> refs, ISchedulers schedulers)
         {
-            Selected = new ViewObservable<bool>(selected);
-            RefSelection = new RefSelection(tag.CanonicalName, tag.FriendlyName, selected);
-            RefSelectionObservable = Selected
-                .Select(selected => new RefSelection(tag.CanonicalName, tag.FriendlyName, selected));
+            Refs = refs;
+
+            var selectAllRefsCommand = ReactiveCommand.Create<bool?, bool?>(isChecked => isChecked, schedulers.Dispatcher);
+            SelectAllRefsCommand = selectAllRefsCommand;
+
+            AllRefsSelected = new ViewSubject<bool?>(refs.All(r => r.Selected.Value) ? true : (refs.Any(r => r.Selected.Value) ? null : (bool?)false));
+            static bool? allSelected(IList<RefSelection> s)
+                => s.All(r => r.Selected) ? true : (s.Any(r => r.Selected) ? null : (bool?)false);
+
+            var singleSelectionA = refs
+                .Select((r, i) => r.RefSelectionObservable
+                    .Select(rs => new { rs, i }))
+                .Merge();
+
+            var singleSelections = singleSelectionA
+                .Select(s => new Variant<Tuple<RefSelection, int>, SelectAllType>(Tuple.Create(s.rs, s.i)))
+                .Merge(selectAllRefsCommand
+                    .StartWith(AllRefsSelected.Value)
+                    .Select(sa => new Variant<Tuple<RefSelection, int>, SelectAllType>(!sa.HasValue ? SelectAllType.Undetermined : sa.Value ? SelectAllType.AllSelected : SelectAllType.NoneSelected)))
+                .Scan(
+                    Tuple.Create(refs
+                        .Select(_ => (RefSelection?)null)
+                        .ToList(), SelectAllType.NoValue),
+                    (last, current) =>
+                    {
+                        return current.Visit(
+                            newSelection =>
+                            {
+                                var res = last.Item2 == SelectAllType.AllSelected ? last.Item1.Select<RefSelection?, RefSelection?>(rs => new RefSelection(rs!.LongName, rs.PrettyName, true)).ToList()
+                                    : last.Item2 == SelectAllType.NoneSelected ? last.Item1.Select<RefSelection?, RefSelection?>(rs => new RefSelection(rs!.LongName, rs.PrettyName, false)).ToList()
+                                        : last.Item1.ToList();
+                                res[newSelection.Item2] = newSelection.Item1;
+                                return Tuple.Create(res, SelectAllType.NoValue);
+                            },
+                            sa =>
+                            {
+                                var isChecked = sa == SelectAllType.Undetermined && last.Item1.All(r => r!.Selected) ? SelectAllType.NoneSelected : sa;
+                                return Tuple.Create(last.Item1, isChecked);
+                            });
+                    })
+                .Select(x => x.Item1.ToList())
+                .Where(s => !s.Any(v => v is null))
+                .Select(s => s.Cast<RefSelection>().ToList());
+
+            var selections = singleSelections
+                .StartWith(refs
+                    .Select(r => new RefSelection(r.RefSelection.LongName, r.RefSelection.PrettyName, r.RefSelection.Selected))
+                    .ToList())
+                .Merge(selectAllRefsCommand
+                    .WithLatestFrom(singleSelections, (isChecked, refSelections) => new { isChecked, refSelections })
+                    .Select(d =>
+                    {
+                        var isChecked = (d.isChecked is bool) ? d.isChecked : (d.refSelections.All(r => r.Selected) ? false : d.isChecked);
+                        return d.refSelections.Select(@ref => new RefSelection(@ref.LongName, @ref.PrettyName, isChecked is null ? @ref.Selected : (bool)isChecked)).ToList();
+                    }));
+
+            selections
+                .Select(allSelected)
+                .Subscribe(AllRefsSelected)
+                .DisposeWith(_disposables);
+
+            SelectedRefs = selections;
+
+            foreach (var @ref in refs)
+                selections
+                    .Select(s => s
+                        .Where(r => r.LongName == @ref.RefSelection.LongName)
+                        .FirstOrDefault())
+                    .Distinct()
+                    .SkipNull()
+                    .Select(r => r.Selected)
+                    .Subscribe(@ref.Selected)
+                    .DisposeWith(_disposables);
         }
+
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        public void Dispose()
+        {
+            _disposables.Dispose();
+            foreach (var @ref in Refs)
+                @ref.Dispose();
+        }
+    }
+
+    public class AllRefsViewModel : IDisposable
+    {
+        public RefsViewModel Branches { get; }
+        public RefsViewModel Tags { get; }
+
+        public AllRefsViewModel(IList<RefSelectionViewModel> branches, IList<RefSelectionViewModel> tags, ISchedulers schedulers)
+        {
+            Branches = new RefsViewModel(branches, schedulers)
+                .DisposeWith(_disposables);
+            Tags = new RefsViewModel(tags, schedulers)
+                .DisposeWith(_disposables);
+        }
+
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        public void Dispose()
+            => _disposables.Dispose();
     }
 
     public class RepositoryViewModel : IDisposable
     {
         public LogGraph Graph { get; }
 
-        public ViewSubject<IList<RefSelectionViewModel>> Branches { get; }
-        public ViewSubject<IList<RefSelectionViewModel>> Tags { get; }
-        public IObservable<IList<RefSelection>> RefsObservable { get; }
+        public ViewSubject<AllRefsViewModel> References { get; }
         public DiffViewModel Diff { get; }
         public RepositoryDescription RepositoryDescription { get; }
         public ICommand RefreshCommand { get; }
@@ -102,52 +236,49 @@ namespace ProTagger
                 var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
                 RefreshCommand = refreshCommand;
 
-                IList<RefSelectionViewModel> createBranchesVM(IList<RefSelectionViewModel>? lastBranchSelection)
+
+                IList<RefSelectionViewModel> createBranchVMs(IList<RefSelectionViewModel>? lastBranchSelection)
                     => _repository.Branches
                         .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
                             ? branch.IsCurrentRepositoryHead
-                            : lastBranchSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == branch.CanonicalName)))
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == branch.CanonicalName), schedulers))
                         .ToList();
 
-                IList<RefSelectionViewModel> createTagsVM(IList<RefSelectionViewModel>? lastTagSelection)
+                IList<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
                     => _repository.Tags
                         .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
-                            || lastTagSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == tag.CanonicalName)))
+                            || lastTagSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == tag.CanonicalName), schedulers))
                         .ToList();
 
-                var firstBranchVms = createBranchesVM(null);
-                var firstTagVms = createTagsVM(null);
+                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null), createTagVMs(null), schedulers);
 
-                var nextRefVms = refreshCommand
-                    .Scan(new { branchVMs = firstBranchVms, tagVMs = firstTagVms }, (last, _) => new { branchVMs = createBranchesVM(last.branchVMs), tagVMs = createTagsVM(last.tagVMs) })
+                var nextRefVmsSource = refreshCommand
+                    .Scan(firstRefsVM, (last, _)
+                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs), createTagVMs(last.Tags.Refs), schedulers));
+
+                var nextRefVms = Observable
+                    .Create<AllRefsViewModel>(o =>
+                    {
+                        var serial = new SerialDisposable();
+                        return new CompositeDisposable(
+                            nextRefVmsSource.Do(x => serial.Disposable = x).Subscribe(o),
+                            serial);
+                    })
                     .Publish();
 
+                References = new ViewSubject<AllRefsViewModel>(firstRefsVM);
+                nextRefVms
+                    .Subscribe(References)
+                    .DisposeWith(_disposables);
+
                 var refsVmObservable = Observable
-                    .Return(new { branchVMs = firstBranchVms, tagVMs = firstTagVms })
+                    .Return(firstRefsVM)
                     .Concat(nextRefVms);
 
                 var selectedRefsObservable = refsVmObservable
-                    .Select(d => d.branchVMs
-                        .Select(b => b.RefSelectionObservable)
-                        .Concat(d.tagVMs
-                            .Select(t => t.RefSelectionObservable))
-                        .CombineLatest())
+                    .Select(d => d.Branches.SelectedRefs
+                        .CombineLatest(d.Tags.SelectedRefs, (bs, ts) => bs.Concat(ts).ToList()))
                     .Switch();
-
-                Branches = new ViewSubject<IList<RefSelectionViewModel>>(firstBranchVms);
-                Tags = new ViewSubject<IList<RefSelectionViewModel>>(firstTagVms);
-
-                refsVmObservable
-                    .Select(refs => refs.branchVMs)
-                    .Subscribe(Branches)
-                    .DisposeWith(_disposables);
-
-                refsVmObservable
-                    .Select(refs => refs.tagVMs)
-                    .Subscribe(Tags)
-                    .DisposeWith(_disposables);
-
-                RefsObservable = selectedRefsObservable;
 
                 Graph = new LogGraph(schedulers, _repository, selectedRefsObservable)
                     .DisposeWith(_disposables);

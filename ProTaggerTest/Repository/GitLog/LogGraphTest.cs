@@ -39,7 +39,7 @@ namespace ProTaggerTest.Repository.GitLog
             AssertFromToCount(node, 1, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("master", node.Branches.First().LongName);
+            Assert.AreEqual("master", node.Branches.First().CanonicalName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
@@ -48,7 +48,7 @@ namespace ProTaggerTest.Repository.GitLog
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.IsTrue(node.Directions[1].Next.Contains(0));
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("work", node.Branches.First().LongName);
+            Assert.AreEqual("work", node.Branches.First().CanonicalName);
 
             node = g[3];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
@@ -146,7 +146,7 @@ namespace ProTaggerTest.Repository.GitLog
             AssertFromToCount(node, 1, 1);
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("master", node.Branches.First().LongName);
+            Assert.AreEqual("master", node.Branches.First().CanonicalName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 2", node.MessageShort);
@@ -237,7 +237,7 @@ namespace ProTaggerTest.Repository.GitLog
             AssertFromToCount(node, 1, 1);
             Assert.AreEqual(0, node.Directions.First().Next.First());
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("master", node.Branches.First().LongName);
+            Assert.AreEqual("master", node.Branches.First().CanonicalName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 5", node.MessageShort);
@@ -246,7 +246,7 @@ namespace ProTaggerTest.Repository.GitLog
             Assert.AreEqual(0, node.Directions[0].Next.First());
             Assert.AreEqual(1, node.Directions[1].Next.First());
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("branch1", node.Branches.First().LongName);
+            Assert.AreEqual("branch1", node.Branches.First().CanonicalName);
 
             node = g[3];
             Assert.AreEqual("MessageShort 4", node.MessageShort);
@@ -256,7 +256,7 @@ namespace ProTaggerTest.Repository.GitLog
             Assert.AreEqual(0, node.Directions[1].Next.First());
             Assert.AreEqual(0, node.Directions[2].Next.First());
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("branch2", node.Branches.First().LongName);
+            Assert.AreEqual("branch2", node.Branches.First().CanonicalName);
 
             node = g[4];
             Assert.AreEqual("MessageShort 3", node.MessageShort);
@@ -358,7 +358,7 @@ namespace ProTaggerTest.Repository.GitLog
             AssertFromToCount(node, 1, 1);
             Assert.IsTrue(node.Directions[0].Next.Contains(0));
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("master", node.Branches.First().LongName);
+            Assert.AreEqual("master", node.Branches.First().CanonicalName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 7", node.MessageShort);
@@ -485,7 +485,7 @@ namespace ProTaggerTest.Repository.GitLog
             Assert.IsTrue(node.Directions.First().Next.Contains(0));
             Assert.IsTrue(node.Directions.First().Next.Contains(1));
             Assert.AreEqual(1, node.Branches.Count);
-            Assert.AreEqual("master", node.Branches.First().LongName);
+            Assert.AreEqual("master", node.Branches.First().CanonicalName);
 
             node = g[2];
             Assert.AreEqual("MessageShort 4", node.MessageShort);

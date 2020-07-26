@@ -226,9 +226,9 @@ namespace ProTagger.Wpf
             double offset = 0;
 
             foreach (var branch in Content.Branches)
-                offset += DrawLabel(drawingContext, "⟨⟨ " + branch.ShortName, left + offset, ColumnDefinitions[2].ActualWidth - offset, branch.IsHead ? HeadBrush : LabelBrush);
+                offset += DrawLabel(drawingContext, "⟨⟨ " + branch.FirendlyName, left + offset, ColumnDefinitions[2].ActualWidth - offset, branch.IsHead ? HeadBrush : LabelBrush);
             foreach (var tag in Content.Tags)
-                offset += DrawLabel(drawingContext, "🏷 " + tag.ShortName, left + offset, ColumnDefinitions[2].ActualWidth - offset, LabelBrush);
+                offset += DrawLabel(drawingContext, "🏷 " + tag.FirendlyName, left + offset, ColumnDefinitions[2].ActualWidth - offset, LabelBrush);
 
             if (ColumnDefinitions[2].ActualWidth - offset > 0)
             {

@@ -19,22 +19,22 @@ namespace ProTagger
 {
     public class RefSelection
     {
-        public string LongName { get; }
-        public string PrettyName { get; }
+        public string CanonicalName { get; }
+        public string FriendlyName { get; }
         public bool Selected { get; }
 
-        public RefSelection (string longName, string prettyName, bool selected)
+        public RefSelection (string canonicalName, string friendlyName, bool selected)
         {
-            LongName = longName;
-            PrettyName = prettyName;
+            CanonicalName = canonicalName;
+            FriendlyName = friendlyName;
             Selected = selected;
         }
     }
 
     public class RefSelectionViewModel : IDisposable
     {
-        public string LongName { get; }
-        public string PrettyName { get; }
+        public string CanonicalName { get; }
+        public string FriendlyName { get; }
         public ViewSubject<bool> Selected { get; }
         public ReactiveCommand<bool, bool> SelectCommand { get; }
 
@@ -44,8 +44,8 @@ namespace ProTagger
         {
             Selected = new ViewSubject<bool>(selected)
                 .DisposeWith(_disposables);
-            LongName = canonicalName;
-            PrettyName = friendlyName;
+            CanonicalName = canonicalName;
+            FriendlyName = friendlyName;
             SelectCommand = ReactiveCommand.Create<bool, bool>(p => p, schedulers.Dispatcher)
                 .DisposeWith(_disposables);
             RefSelectionObservable = SelectCommand
@@ -111,7 +111,7 @@ namespace ProTagger
                         newSelection =>
                         {
                             var res = last.Item2 == SelectAllType.Undetermined ? last.Item1.ToList()
-                                : last.Item1.Select(rs => rs is null ? null : new RefSelection(rs.LongName, rs.PrettyName, last.Item2 == SelectAllType.AllSelected)).ToList();
+                                : last.Item1.Select(rs => rs is null ? null : new RefSelection(rs.CanonicalName, rs.FriendlyName, last.Item2 == SelectAllType.AllSelected)).ToList();
                             res[newSelection.Item2] = newSelection.Item1;
                             return Tuple.Create(res, SelectAllType.Undetermined);
                         },
@@ -121,14 +121,14 @@ namespace ProTagger
 
             var selections = singleSelections
                 .StartWith(refs
-                    .Select(r => new RefSelection(r.LongName, r.PrettyName, r.Selected.Value))
+                    .Select(r => new RefSelection(r.CanonicalName, r.FriendlyName, r.Selected.Value))
                     .ToList())
                 .Merge(selectAllRefsCommand
                     .WithLatestFrom(singleSelections, (isChecked, refSelections) => new { isChecked, refSelections })
                     .Select(d =>
                     {
                         var isChecked = (d.isChecked is bool) ? d.isChecked : (d.refSelections.All(r => r.Selected) ? false : d.isChecked);
-                        return d.refSelections.Select(@ref => new RefSelection(@ref.LongName, @ref.PrettyName, isChecked is null ? @ref.Selected : (bool)isChecked)).ToList();
+                        return d.refSelections.Select(@ref => new RefSelection(@ref.CanonicalName, @ref.FriendlyName, isChecked is null ? @ref.Selected : (bool)isChecked)).ToList();
                     }));
 
             static bool? allSelected(IList<RefSelection> s)
@@ -144,7 +144,7 @@ namespace ProTagger
             foreach (var @ref in refs)
                 selections
                     .Select(s => s
-                        .Where(r => r.LongName == @ref.LongName)
+                        .Where(r => r.CanonicalName == @ref.CanonicalName)
                         .FirstOrDefault())
                     .Distinct()
                     .SkipNull()
@@ -224,18 +224,17 @@ namespace ProTagger
                 var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
                 RefreshCommand = refreshCommand;
 
-
                 IList<RefSelectionViewModel> createBranchVMs(IList<RefSelectionViewModel>? lastBranchSelection)
                     => _repository.Branches
                         .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
                             ? branch.IsCurrentRepositoryHead
-                            : lastBranchSelection.Any(b => b.Selected.Value && b.LongName == branch.CanonicalName), schedulers))
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.CanonicalName == branch.CanonicalName), schedulers))
                         .ToList();
 
                 IList<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
                     => _repository.Tags
                         .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
-                            || lastTagSelection.Any(b => b.Selected.Value && b.LongName == tag.CanonicalName), schedulers))
+                            || lastTagSelection.Any(b => b.Selected.Value && b.CanonicalName == tag.CanonicalName), schedulers))
                         .ToList();
 
                 var firstRefsVM = new AllRefsViewModel(createBranchVMs(null), createTagVMs(null), schedulers);

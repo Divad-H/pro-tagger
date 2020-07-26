@@ -47,9 +47,9 @@ namespace ProTaggerTest.Repository
             Assert.IsTrue(res.Is<RepositoryViewModel>());
             using var repo = res.Get<RepositoryViewModel>();
             Assert.AreEqual(2, repo.References.Value.Branches.Refs.Count);
-            var master = repo.References.Value.Branches.Refs.Where(b => b.PrettyName == "master").FirstOrDefault()
+            var master = repo.References.Value.Branches.Refs.Where(b => b.FriendlyName == "master").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch master not found.");
-            var work = repo.References.Value.Branches.Refs.Where(b => b.PrettyName == "work").FirstOrDefault()
+            var work = repo.References.Value.Branches.Refs.Where(b => b.FriendlyName == "work").FirstOrDefault()
                 ?? throw new InvalidOperationException("Branch work not found.");
             Assert.IsTrue(master.Selected.Value, "Branch master (HEAD) should be selected.");
             Assert.IsFalse(work.Selected.Value, "Branch work should not be selected.");
@@ -65,7 +65,7 @@ namespace ProTaggerTest.Repository
             Assert.AreEqual(7, logGraphNodes.Count); // The mock doesn't filter unreachable commits.
             var nodesWithBranch = logGraphNodes.Where(c => c.Branches.Any());
             Assert.AreEqual(2, nodesWithBranch.Count());
-            Assert.AreEqual("master", nodesWithBranch.First().Branches.First().ShortName);
+            Assert.AreEqual("master", nodesWithBranch.First().Branches.First().FirendlyName);
             work.SelectCommand.Execute(true);
             Assert.AreEqual(2, logGraphNodes.Where(c => c.Branches.Any()).Count());
             _ = selectedBranches ?? throw new InvalidOperationException("Selected branches were not set.");

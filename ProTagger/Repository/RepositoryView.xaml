@@ -71,11 +71,11 @@
                                     <DataTemplate>
                                         <CheckBox IsChecked="{Binding Selected.Value, Mode=TwoWay}"
                                                   FontFamily="Consolas"
-                                                  ToolTip="{Binding PrettyName}"
+                                                  ToolTip="{Binding FriendlyName}"
                                                   MaxWidth="250"
                                                   Command="{Binding SelectCommand}"
                                                   CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}">
-                                            <TextBlock Text="{Binding PrettyName}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding FriendlyName}" TextTrimming="CharacterEllipsis"/>
                                         </CheckBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -97,12 +97,12 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <CheckBox IsChecked="{Binding Selected.Value}"
-                                                  ToolTip="{Binding PrettyName}"
+                                                  ToolTip="{Binding FriendlyName}"
                                                   FontFamily="Consolas"
                                                   MaxWidth="250"
                                                   Command="{Binding SelectCommand}"
                                                   CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}">
-                                            <TextBlock Text="{Binding PrettyName}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding FriendlyName}" TextTrimming="CharacterEllipsis"/>
                                         </CheckBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

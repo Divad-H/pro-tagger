@@ -35,22 +35,22 @@ namespace ProTagger.Repository.GitLog
 
         public readonly struct BranchInfo
         {
-            public BranchInfo(string longName, string shortName, bool isRemote, bool isHead) =>
-                (LongName, ShortName, IsRemote, IsHead) = (longName, shortName, isRemote, isHead);
+            public BranchInfo(string canonicalName, string friendlyName, bool isRemote, bool isHead) =>
+                (CanonicalName, FirendlyName, IsRemote, IsHead) = (canonicalName, friendlyName, isRemote, isHead);
             
-            public string LongName { get; }
-            public string ShortName { get; }
+            public string CanonicalName { get; }
+            public string FirendlyName { get; }
             public bool IsRemote { get; }
             public bool IsHead { get; }
         }
 
         public readonly struct TagInfo
         {
-            public TagInfo(string longName, string shortName)
-                => (LongName, ShortName) = (longName, shortName);
+            public TagInfo(string canonicalName, string friendlyName)
+                => (CanonicalName, FirendlyName) = (canonicalName, friendlyName);
 
-            public string LongName { get; }
-            public string ShortName { get; }
+            public string CanonicalName { get; }
+            public string FirendlyName { get; }
         }
 
         public LogGraphNode(
@@ -182,7 +182,7 @@ namespace ProTagger.Repository.GitLog
                     yield break;
 
                 var selectedRefs = Refs
-                    .Select(@ref => repository.References[@ref.LongName])
+                    .Select(@ref => repository.References[@ref.CanonicalName])
                     .Where(@ref => !(@ref is null))
                     .ToList();
                 var allTags = repository.Tags.ToList();

@@ -24,10 +24,10 @@ namespace ProTagger.Utilities
 
         public TagCollection Tags => _repository.Tags;
         public ReferenceCollection References => _repository.Refs;
+        public Branch Head => _repository.Head;
+        public RepositoryInformation Info => _repository.Info;
 
         public Diff Diff => _repository.Diff;
-
-        public Branch? Head => _repository.Head;
 
         public RepositoryStatus RetrieveStatus(StatusOptions options)
             => _repository.RetrieveStatus(options);

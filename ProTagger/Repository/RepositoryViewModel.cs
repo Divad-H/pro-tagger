@@ -40,7 +40,7 @@ namespace ProTagger
 
         public IObservable<RefSelection> RefSelectionObservable { get; }
 
-        private RefSelectionViewModel(string friendlyName, string canonicalName, bool selected, ISchedulers schedulers)
+        public RefSelectionViewModel(string friendlyName, string canonicalName, bool selected, ISchedulers schedulers)
         {
             Selected = new ViewSubject<bool>(selected)
                 .DisposeWith(_disposables);
@@ -78,6 +78,7 @@ namespace ProTagger
         /// ViewModel => View
         /// </summary>
         public ViewSubject<bool?> AllRefsSelected { get; }
+        public bool HeadSelected { get; private set; }
 
         public IObservable<IList<RefSelection>> SelectedRefs { get; }
 
@@ -88,7 +89,7 @@ namespace ProTagger
             NoneSelected,
         }
 
-        public RefsViewModel(IList<RefSelectionViewModel> refs, ISchedulers schedulers)
+        public RefsViewModel(List<RefSelectionViewModel> refs, string? headCanonicalName, bool detachedHead, ISchedulers schedulers)
         {
             Refs = refs;
 
@@ -139,6 +140,15 @@ namespace ProTagger
                 .Subscribe(AllRefsSelected)
                 .DisposeWith(_disposables);
 
+            selections
+                .Select(l => l
+                    .Where(r => r.CanonicalName == headCanonicalName)
+                    .FirstOrDefault())
+                .Where(r => !(r is null))
+                .Select(r => r.Selected)
+                .Subscribe(s => HeadSelected = s)
+                .DisposeWith(_disposables);
+
             SelectedRefs = selections;
 
             foreach (var @ref in refs)
@@ -167,11 +177,11 @@ namespace ProTagger
         public RefsViewModel Branches { get; }
         public RefsViewModel Tags { get; }
 
-        public AllRefsViewModel(IList<RefSelectionViewModel> branches, IList<RefSelectionViewModel> tags, ISchedulers schedulers)
+        public AllRefsViewModel(List<RefSelectionViewModel> branches, List<RefSelectionViewModel> tags, string? headCanonicalName, bool detachedHead, ISchedulers schedulers)
         {
-            Branches = new RefsViewModel(branches, schedulers)
+            Branches = new RefsViewModel(branches, headCanonicalName, detachedHead, schedulers)
                 .DisposeWith(_disposables);
-            Tags = new RefsViewModel(tags, schedulers)
+            Tags = new RefsViewModel(tags, null, detachedHead, schedulers)
                 .DisposeWith(_disposables);
         }
 
@@ -224,24 +234,26 @@ namespace ProTagger
                 var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
                 RefreshCommand = refreshCommand;
 
-                IList<RefSelectionViewModel> createBranchVMs(IList<RefSelectionViewModel>? lastBranchSelection)
+                List<RefSelectionViewModel> createBranchVMs(IList<RefSelectionViewModel>? lastBranchSelection, bool lastHeadSelected)
                     => _repository.Branches
                         .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
                             ? branch.IsCurrentRepositoryHead
                             : lastBranchSelection.Any(b => b.Selected.Value && b.CanonicalName == branch.CanonicalName), schedulers))
+                        .Concat(_repository.Head.Yield().Where(b => _repository.Info.IsHeadDetached && !(b is null))
+                            .Select(head => new RefSelectionViewModel("Detached HEAD", head!.Reference.CanonicalName, lastHeadSelected, schedulers)))
                         .ToList();
 
-                IList<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
+                List<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
                     => _repository.Tags
                         .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
                             || lastTagSelection.Any(b => b.Selected.Value && b.CanonicalName == tag.CanonicalName), schedulers))
                         .ToList();
 
-                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null), createTagVMs(null), schedulers);
+                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null, true), createTagVMs(null), _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName, _repository.Info.IsHeadDetached, schedulers);
 
                 var nextRefVmsSource = refreshCommand
                     .Scan(firstRefsVM, (last, _)
-                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs), createTagVMs(last.Tags.Refs), schedulers));
+                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs, last.Branches.HeadSelected), createTagVMs(last.Tags.Refs), _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName, _repository.Info.IsHeadDetached, schedulers));
 
                 var nextRefVms = Observable
                     .Create<AllRefsViewModel>(o =>

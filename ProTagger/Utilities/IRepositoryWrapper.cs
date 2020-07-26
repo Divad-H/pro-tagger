@@ -20,6 +20,7 @@ namespace ProTagger.Utilities
 
         public Diff Diff { get; }
         public Branch? Head { get; }
+        public RepositoryInformation Info { get; }
         public RepositoryStatus RetrieveStatus(StatusOptions options);
     }
 }

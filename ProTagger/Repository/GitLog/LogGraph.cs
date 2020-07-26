@@ -59,7 +59,8 @@ namespace ProTagger.Repository.GitLog
             Variant<Commit, DiffTargets> commit, 
             bool isMerge, 
             IList<BranchInfo> branches,
-            IList<TagInfo> tags)
+            IList<TagInfo> tags,
+            bool isDetachedHead)
         {
             GraphPosition = graphPosition;
             Directions = directions;
@@ -67,6 +68,7 @@ namespace ProTagger.Repository.GitLog
             Branches = branches;
             Tags = tags;
             Commit = commit;
+            IsDetachedHead = isDetachedHead;
         }
 
         public TGraphPos GraphPosition { get; }
@@ -83,6 +85,7 @@ namespace ProTagger.Repository.GitLog
         public IList<BranchInfo> Branches { get; }
         public IList<TagInfo> Tags { get; }
         public Variant<Commit, DiffTargets> Commit;
+        public bool IsDetachedHead { get; }
     }
 
     public class LogGraph : IDisposable
@@ -187,6 +190,7 @@ namespace ProTagger.Repository.GitLog
                     .ToList();
                 var allTags = repository.Tags.ToList();
                 var allBranches = repository.Branches.ToList();
+                var detachedHead = repository.Info.IsHeadDetached ? repository.Head : null;
 
                 var commitFilter = new CommitFilter()
                 {
@@ -290,7 +294,8 @@ namespace ProTagger.Repository.GitLog
                         allTags
                             .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
                             .Select(CreateTagInfo)
-                            .ToList());
+                            .ToList(),
+                        !(detachedHead is null) && lastCommit.Is<Commit>() && lastCommit.Get<Commit>() == detachedHead.Tip);
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
                     lastCommit = new Variant<Commit, DiffTargets>(c);
@@ -308,7 +313,8 @@ namespace ProTagger.Repository.GitLog
                     allTags
                         .Where(tag => lastCommit.Is<Commit>() && tag.Target == lastCommit.Get<Commit>())
                         .Select(CreateTagInfo)
-                        .ToList());
+                        .ToList(),
+                    !(detachedHead is null) && lastCommit.Is<Commit>() && lastCommit.Get<Commit>() == detachedHead.Tip);
             }
         }
 

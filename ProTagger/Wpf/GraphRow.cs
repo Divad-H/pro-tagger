@@ -197,7 +197,7 @@ namespace ProTagger.Wpf
             {
                 MaxTextWidth = Math.Max(0.0, maxWidth),
                 MaxLineCount = 1,
-               Trimming = textTrimming,
+                Trimming = textTrimming,
             };
 
         private void Render(DrawingContext drawingContext)
@@ -225,6 +225,8 @@ namespace ProTagger.Wpf
             double left = ColumnDefinitions[0].ActualWidth + ColumnDefinitions[1].ActualWidth;
             double offset = 0;
 
+            if (Content.IsDetachedHead)
+                offset += DrawLabel(drawingContext, "😠 detached HEAD", left + offset, ColumnDefinitions[2].ActualWidth - offset, HeadBrush);
             foreach (var branch in Content.Branches)
                 offset += DrawLabel(drawingContext, "⟨⟨ " + branch.FirendlyName, left + offset, ColumnDefinitions[2].ActualWidth - offset, branch.IsHead ? HeadBrush : LabelBrush);
             foreach (var tag in Content.Tags)

@@ -33,10 +33,10 @@ namespace ProTagger
 
     public class RefSelectionViewModel : IDisposable
     {
-        public readonly RefSelection RefSelection;
+        public string LongName { get; }
+        public string PrettyName { get; }
         public ViewSubject<bool> Selected { get; }
         public ReactiveCommand<bool, bool> SelectCommand { get; }
-        public string PrettyName => RefSelection.PrettyName;
 
         public IObservable<RefSelection> RefSelectionObservable { get; }
 
@@ -44,7 +44,8 @@ namespace ProTagger
         {
             Selected = new ViewSubject<bool>(selected)
                 .DisposeWith(_disposables);
-            RefSelection = new RefSelection(canonicalName, friendlyName, selected);
+            LongName = canonicalName;
+            PrettyName = friendlyName;
             SelectCommand = ReactiveCommand.Create<bool, bool>(p => p, schedulers.Dispatcher)
                 .DisposeWith(_disposables);
             RefSelectionObservable = SelectCommand
@@ -124,19 +125,14 @@ namespace ProTagger
                                 res[newSelection.Item2] = newSelection.Item1;
                                 return Tuple.Create(res, SelectAllType.NoValue);
                             },
-                            sa =>
-                            {
-                                var isChecked = sa == SelectAllType.Undetermined && last.Item1.All(r => r!.Selected) ? SelectAllType.NoneSelected : sa;
-                                return Tuple.Create(last.Item1, isChecked);
-                            });
+                            sa => Tuple.Create(last.Item1, sa == SelectAllType.Undetermined && last.Item1.All(r => r!.Selected) ? SelectAllType.NoneSelected : sa));
                     })
                 .Select(x => x.Item1.ToList())
-                .Where(s => !s.Any(v => v is null))
-                .Select(s => s.Cast<RefSelection>().ToList());
+                .SkipManyNull<RefSelection, List<RefSelection?>, List<RefSelection>>();
 
             var selections = singleSelections
                 .StartWith(refs
-                    .Select(r => new RefSelection(r.RefSelection.LongName, r.RefSelection.PrettyName, r.RefSelection.Selected))
+                    .Select(r => new RefSelection(r.LongName, r.PrettyName, r.Selected.Value))
                     .ToList())
                 .Merge(selectAllRefsCommand
                     .WithLatestFrom(singleSelections, (isChecked, refSelections) => new { isChecked, refSelections })
@@ -156,7 +152,7 @@ namespace ProTagger
             foreach (var @ref in refs)
                 selections
                     .Select(s => s
-                        .Where(r => r.LongName == @ref.RefSelection.LongName)
+                        .Where(r => r.LongName == @ref.LongName)
                         .FirstOrDefault())
                     .Distinct()
                     .SkipNull()
@@ -241,13 +237,13 @@ namespace ProTagger
                     => _repository.Branches
                         .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
                             ? branch.IsCurrentRepositoryHead
-                            : lastBranchSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == branch.CanonicalName), schedulers))
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.LongName == branch.CanonicalName), schedulers))
                         .ToList();
 
                 IList<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
                     => _repository.Tags
                         .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
-                            || lastTagSelection.Any(b => b.Selected.Value && b.RefSelection.LongName == tag.CanonicalName), schedulers))
+                            || lastTagSelection.Any(b => b.Selected.Value && b.LongName == tag.CanonicalName), schedulers))
                         .ToList();
 
                 var firstRefsVM = new AllRefsViewModel(createBranchVMs(null), createTagVMs(null), schedulers);

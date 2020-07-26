@@ -86,7 +86,6 @@ namespace ProTagger
             Undetermined,
             AllSelected,
             NoneSelected,
-            NoValue,
         }
 
         public RefsViewModel(IList<RefSelectionViewModel> refs, ISchedulers schedulers)
@@ -97,36 +96,26 @@ namespace ProTagger
             SelectAllRefsCommand = selectAllRefsCommand;
 
             AllRefsSelected = new ViewSubject<bool?>(refs.All(r => r.Selected.Value) ? true : (refs.Any(r => r.Selected.Value) ? null : (bool?)false));
-            static bool? allSelected(IList<RefSelection> s)
-                => s.All(r => r.Selected) ? true : (s.Any(r => r.Selected) ? null : (bool?)false);
-
-            var singleSelectionA = refs
+            
+            var singleSelections = refs
                 .Select((r, i) => r.RefSelectionObservable
                     .Select(rs => new { rs, i }))
-                .Merge();
-
-            var singleSelections = singleSelectionA
+                .Merge()
                 .Select(s => new Variant<Tuple<RefSelection, int>, SelectAllType>(Tuple.Create(s.rs, s.i)))
                 .Merge(selectAllRefsCommand
                     .StartWith(AllRefsSelected.Value)
                     .Select(sa => new Variant<Tuple<RefSelection, int>, SelectAllType>(!sa.HasValue ? SelectAllType.Undetermined : sa.Value ? SelectAllType.AllSelected : SelectAllType.NoneSelected)))
                 .Scan(
-                    Tuple.Create(refs
-                        .Select(_ => (RefSelection?)null)
-                        .ToList(), SelectAllType.NoValue),
-                    (last, current) =>
-                    {
-                        return current.Visit(
-                            newSelection =>
-                            {
-                                var res = last.Item2 == SelectAllType.AllSelected ? last.Item1.Select<RefSelection?, RefSelection?>(rs => new RefSelection(rs!.LongName, rs.PrettyName, true)).ToList()
-                                    : last.Item2 == SelectAllType.NoneSelected ? last.Item1.Select<RefSelection?, RefSelection?>(rs => new RefSelection(rs!.LongName, rs.PrettyName, false)).ToList()
-                                        : last.Item1.ToList();
-                                res[newSelection.Item2] = newSelection.Item1;
-                                return Tuple.Create(res, SelectAllType.NoValue);
-                            },
-                            sa => Tuple.Create(last.Item1, sa == SelectAllType.Undetermined && last.Item1.All(r => r!.Selected) ? SelectAllType.NoneSelected : sa));
-                    })
+                    Tuple.Create(refs.Select(_ => (RefSelection?)null).ToList(), SelectAllType.Undetermined),
+                    (last, current) =>  current.Visit(
+                        newSelection =>
+                        {
+                            var res = last.Item2 == SelectAllType.Undetermined ? last.Item1.ToList()
+                                : last.Item1.Select(rs => rs is null ? null : new RefSelection(rs.LongName, rs.PrettyName, last.Item2 == SelectAllType.AllSelected)).ToList();
+                            res[newSelection.Item2] = newSelection.Item1;
+                            return Tuple.Create(res, SelectAllType.Undetermined);
+                        },
+                        sa => Tuple.Create(last.Item1, sa == SelectAllType.Undetermined && last.Item1.All(r => r?.Selected ?? false) ? SelectAllType.NoneSelected : sa)))
                 .Select(x => x.Item1.ToList())
                 .SkipManyNull<RefSelection, List<RefSelection?>, List<RefSelection>>();
 
@@ -141,6 +130,9 @@ namespace ProTagger
                         var isChecked = (d.isChecked is bool) ? d.isChecked : (d.refSelections.All(r => r.Selected) ? false : d.isChecked);
                         return d.refSelections.Select(@ref => new RefSelection(@ref.LongName, @ref.PrettyName, isChecked is null ? @ref.Selected : (bool)isChecked)).ToList();
                     }));
+
+            static bool? allSelected(IList<RefSelection> s)
+                => s.All(r => r.Selected) ? true : (s.Any(r => r.Selected) ? null : (bool?)false);
 
             selections
                 .Select(allSelected)

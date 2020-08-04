@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace ProTagger.Repository.Diff
 {
+    using TSelectionInfo = Variant<string, Unexpected, List<TreeEntryChanges>, Commit>;
     public class CancellableChanges
     {
         public TreeEntryChanges TreeEntryChanges { get; }
@@ -52,7 +53,7 @@ namespace ProTagger.Repository.Diff
 
         public ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>> TreeDiff { get; }
 
-        public ViewSubject<Variant<string, Commit>> SelectionInfo { get; }
+        public ViewSubject<TSelectionInfo> SelectionInfo { get; }
 
         public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
@@ -64,21 +65,29 @@ namespace ProTagger.Repository.Diff
             TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>>(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))
                 .DisposeWith(_disposables);
 
-            SelectionInfo = new ViewSubject<Variant<string, Commit>>(new Variant<string, Commit>(NoCommitSelectedMessage))
+            SelectionInfo = new ViewSubject<TSelectionInfo>(
+                new TSelectionInfo(NoCommitSelectedMessage))
                 .DisposeWith(_disposables);
 
             static string toString(Variant<Commit, DiffTargets> variant)
                 => variant.Visit(commit => commit.Sha, diffTarget => diffTarget == DiffTargets.Index ? "index" : "working tree");
 
+            static async Task<TSelectionInfo> cast(Task<Variant<List<TreeEntryChanges>, Unexpected>> task)
+            {
+                var res = await task;
+                return res.Visit(r => new TSelectionInfo(r), u => new TSelectionInfo(u));
+            }
+
             Observable
-                .CombineLatest(newCommitObservable, oldCommitObservable,
-                    (newCommit, oldCommit) => newCommit is null ?
-                        new Variant<string, Commit>(NoCommitSelectedMessage) :
+                .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
+                    (newCommit, oldCommit, co) => Observable.FromAsync(ct => newCommit is null ?
+                        Task.FromResult(new TSelectionInfo(NoCommitSelectedMessage)) :
                         oldCommit is null ?
                             newCommit.Visit(
-                                commit => new Variant<string, Commit>(commit),
-                                _ => new Variant<string, Commit>("Displaying changes of the working tree.")) :
-                            new Variant<string, Commit>($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))
+                                commit => Task.FromResult(new TSelectionInfo(commit)),
+                                _ => cast(Diff.TreeDiff.CreateDiff(repo, ct, head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
+                            Task.FromResult(new TSelectionInfo($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))))
+                .Switch()
                 .Subscribe(SelectionInfo)
                 .DisposeWith(_disposables);
 

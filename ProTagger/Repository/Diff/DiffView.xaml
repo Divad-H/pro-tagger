@@ -7,6 +7,63 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid x:Name="ParentGrid">
+        <Grid.Resources>
+            <Style TargetType="{x:Type ListBoxItem}" x:Key="treeDiffItemStyle">
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Padding" Value="4,1"/>
+                <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource br_black}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                                <TextBlock x:Name="Label" Height="16" Foreground="{TemplateBinding Foreground}">
+                                                        <Run Text="{Binding Status, Converter={StaticResource changeKindToIconConverter}, Mode=OneTime}"
+                                                             BaselineAlignment="Center"
+                                                             FontFamily="Segoe MDL2 Assets"
+                                                             FontWeight="Bold"
+                                                             ToolTip="{Binding Status, Mode=OneTime}"/>
+                                                        <Run Text=" " />
+                                                        <Run Text="{Binding Path, Mode=OneTime}" FontFamily="Consolas"/>
+                                </TextBlock>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_lightblue}"/>
+                                </MultiTrigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                                        <Condition Property="IsSelected" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                </MultiTrigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="Selector.IsSelectionActive" Value="True"/>
+                                        <Condition Property="IsSelected" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_gray}"/>
+                                    <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
@@ -18,7 +75,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <custom:VariantPresenter VariantContent="{Binding SelectionInfo.Value}">
+            <custom:VariantPresenter VariantContent="{Binding SelectionInfo.Value}" Style="{StaticResource DefaultErrorView}">
                 <custom:VariantPresenter.Variant0Template>
                     <DataTemplate>
                         <FlowDocumentScrollViewer VerticalScrollBarVisibility="Auto">
@@ -30,7 +87,18 @@
                         </FlowDocumentScrollViewer>
                     </DataTemplate>
                 </custom:VariantPresenter.Variant0Template>
-                <custom:VariantPresenter.Variant1Template>
+                <custom:VariantPresenter.Variant2Template>
+                    <DataTemplate>
+                        <custom:ListBoxKeepSelection Style="{StaticResource noBorderListBoxStyle}"
+                                                     ItemsSource="{Binding}" 
+                                                     SelectionMode="Extended" 
+                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                     custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedIndexFiles, ElementName=ParentGrid}"
+                                                     KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}"
+                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}"/>
+                    </DataTemplate>
+                </custom:VariantPresenter.Variant2Template>
+                <custom:VariantPresenter.Variant3Template>
                     <DataTemplate>
                         <FlowDocumentScrollViewer VerticalScrollBarVisibility="Auto">
                             <FlowDocument FontSize="12" FontFamily="Consolas" PagePadding="5" TextAlignment="Left">
@@ -47,7 +115,7 @@
                             </FlowDocument>
                         </FlowDocumentScrollViewer>
                     </DataTemplate>
-                </custom:VariantPresenter.Variant1Template>
+                </custom:VariantPresenter.Variant3Template>
             </custom:VariantPresenter>
             <Rectangle Height="1" Grid.Row="1" Fill="{StaticResource br_blue}"/>
             <custom:VariantPresenter VariantContent="{Binding TreeDiff.Value}"
@@ -60,65 +128,8 @@
                                                      SelectionMode="Extended" 
                                                      VirtualizingPanel.VirtualizationMode="Recycling"
                                                      custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"
-                                                     KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}">
-                            <custom:ListBoxKeepSelection.ItemContainerStyle>
-                                <Style TargetType="{x:Type ListBoxItem}">
-                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
-                                    <Setter Property="Padding" Value="4,1"/>
-                                    <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-                                    <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderBrush" Value="Transparent"/>
-                                    <Setter Property="Foreground" Value="{StaticResource br_black}"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                                <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                                    <TextBlock x:Name="Label" Height="16" Foreground="{TemplateBinding Foreground}">
-                                                        <Run Text="{Binding Status, Converter={StaticResource changeKindToIconConverter}, Mode=OneTime}"
-                                                             BaselineAlignment="Center"
-                                                             FontFamily="Segoe MDL2 Assets"
-                                                             FontWeight="Bold"
-                                                             ToolTip="{Binding Status, Mode=OneTime}"/>
-                                                        <Run Text=" " />
-                                                        <Run Text="{Binding Path, Mode=OneTime}" FontFamily="Consolas"/>
-                                                    </TextBlock>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="IsMouseOver" Value="True"/>
-                                                        </MultiTrigger.Conditions>
-                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_lightblue}"/>
-                                                    </MultiTrigger>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="Selector.IsSelectionActive" Value="False"/>
-                                                            <Condition Property="IsSelected" Value="True"/>
-                                                        </MultiTrigger.Conditions>
-                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
-                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                    </MultiTrigger>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="Selector.IsSelectionActive" Value="True"/>
-                                                            <Condition Property="IsSelected" Value="True"/>
-                                                        </MultiTrigger.Conditions>
-                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
-                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                    </MultiTrigger>
-                                                    <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_gray}"/>
-                                                        <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </custom:ListBoxKeepSelection.ItemContainerStyle>
-                        </custom:ListBoxKeepSelection>
+                                                     KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}"
+                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}"/>
                     </DataTemplate>
                 </custom:VariantPresenter.Variant0Template>
             </custom:VariantPresenter>

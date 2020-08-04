@@ -40,7 +40,8 @@ namespace ProTagger.Repository.Diff
                                dt =>
                                {
                                    var changedFiles = repo.RetrieveStatus(new StatusOptions()
-                                    { DetectRenamesInIndex = true, DetectRenamesInWorkDir = true, IncludeUntracked = true, Show = StatusShowOption.WorkDirOnly })
+                                    { DetectRenamesInIndex = true, DetectRenamesInWorkDir = true, IncludeUntracked = true,
+                                            Show = dt == DiffTargets.WorkingDirectory ? StatusShowOption.WorkDirOnly : StatusShowOption.IndexOnly })
                                        .Select(s => s.FilePath);
                                    if (oldTree != null && repo.Head?.Tip.Tree != oldTree)
                                        changedFiles = changedFiles.Concat(repo.Diff.Compare<TreeChanges>(oldTree, head?.Tip.Tree, compareOptions).Select(tc => tc.Path));

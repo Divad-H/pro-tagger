@@ -114,12 +114,13 @@ namespace ProTagger
                         if (validationCallback(dialog.SelectedPath))
                             return dialog.SelectedPath;
                         dialog.RootFolder = Environment.SpecialFolder.Recent;
-                        MessageBox.Show(
-                            _dialogOwnerWindow,
-                            "The selected folder is not a valid git repository, please select a git repository.",
-                            "Invalid Folder",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Exclamation);
+                        if (MessageBox.Show(_dialogOwnerWindow,
+                                            "The selected folder is not a valid git repository, please select a git repository.",
+                                            "Invalid Folder",
+                                            MessageBoxButton.OKCancel,
+                                            MessageBoxImage.Exclamation)
+                                == MessageBoxResult.Cancel)
+                            return null;
                     }
                     else
                     {

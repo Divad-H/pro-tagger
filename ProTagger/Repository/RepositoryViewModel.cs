@@ -202,12 +202,13 @@ namespace ProTagger
         public static async Task<Variant<RepositoryViewModel, RepositoryError>> Create(ISchedulers schedulers,
             CancellationToken ct, 
             IRepositoryFactory repositoryFactory,
+            IFileSystem fileSystem,
             RepositoryDescription description, 
             IObservable<CompareOptions> compareOptions)
         {
             try
             {
-                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, description, compareOptions));
+                var repositoryViewModel = await Task.Run(() => new RepositoryViewModel(schedulers, repositoryFactory, fileSystem, description, compareOptions));
                 if (ct.IsCancellationRequested)
                 {
                     repositoryViewModel?.Dispose();
@@ -223,7 +224,7 @@ namespace ProTagger
 
         private readonly IRepositoryWrapper _repository;
 
-        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, RepositoryDescription description, IObservable<CompareOptions> compareOptions)
+        public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, IFileSystem fileSystem, RepositoryDescription description, IObservable<CompareOptions> compareOptions)
         {
             try
             {
@@ -254,7 +255,12 @@ namespace ProTagger
                     _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName,
                     schedulers);
 
+                var refsFileSystemObservable
+                    = new RefFileSystemObservable(RepositoryDescription.Path, fileSystem);
+
                 var nextRefVmsSource = refreshCommand
+                    .Merge(refsFileSystemObservable
+                        .Throttle(TimeSpan.FromMilliseconds(100), schedulers.Dispatcher))
                     .Scan(firstRefsVM, (last, _)
                         => new AllRefsViewModel(createBranchVMs(last.Branches.Refs, last.Branches.HeadSelected),
                             createTagVMs(last.Tags.Refs),

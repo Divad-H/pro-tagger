@@ -25,6 +25,7 @@ namespace ProTaggerTest.Repository
                 schedulers,
                 CancellationToken.None,
                 repositoryFactory,
+                new TestFileSystem(),
                 repositoryDescription,
                 Observable.Return(new CompareOptions()));
             Assert.IsTrue(res.Is<RepositoryViewModel>());
@@ -42,6 +43,7 @@ namespace ProTaggerTest.Repository
                 schedulers,
                 CancellationToken.None,
                 repositoryFactory,
+                new TestFileSystem(),
                 repositoryDescription,
                 Observable.Return(new CompareOptions()));
             Assert.IsTrue(res.Is<RepositoryViewModel>());

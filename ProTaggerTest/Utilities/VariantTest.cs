@@ -31,7 +31,31 @@ namespace ProTaggerTest
             Assert.IsTrue(variant.Is<int>());
             Assert.IsFalse(variant.Is<string>());
             Assert.AreEqual(intVal, variant.Get<int>());
-            Assert.AreEqual(3, variant.Second);
+            Assert.AreEqual(intVal, variant.Second);
+        }
+
+        [TestMethod]
+        public void CanCreateThreeVariantsVariant()
+        {
+            const int intVal = 3;
+            var variant = new Variant<string, int, double>(intVal);
+            Assert.IsTrue(variant.Is<int>());
+            Assert.IsFalse(variant.Is<string>());
+            Assert.IsFalse(variant.Is<double>());
+            Assert.AreEqual(intVal, variant.Get<int>());
+            Assert.AreEqual(intVal, variant.Second);
+        }
+
+        [TestMethod]
+        public void CanCreateFourVariantsVariant()
+        {
+            const int intVal = 3;
+            var variant = new Variant<string, bool, double, int>(intVal);
+            Assert.IsTrue(variant.Is<int>());
+            Assert.IsFalse(variant.Is<string>());
+            Assert.IsFalse(variant.Is<double>());
+            Assert.AreEqual(intVal, variant.Get<int>());
+            Assert.AreEqual(intVal, variant.Fourth);
         }
 
         [TestMethod]
@@ -76,6 +100,25 @@ namespace ProTaggerTest
             Assert.AreNotEqual(first, second);
             Assert.IsFalse(first == second);
             Assert.IsTrue(first != second);
+        }
+
+        [TestMethod]
+        public void CanCompareNestedVariants()
+        {
+            const string strVal = "rat";
+            var first = new Variant<string, Variant<int, string, bool>>(new Variant<int, string, bool>(strVal));
+            var second = new Variant<string, bool>(strVal);
+            Assert.AreNotEqual(first, second);
+            Assert.IsFalse(first == second);
+            Assert.IsTrue(first != second);
+            var third = new Variant<int, string, bool>(strVal);
+            Assert.AreNotEqual(first, third);
+            Assert.IsFalse(first == third);
+            Assert.IsTrue(first != third);
+            var fourth = new Variant<bool, int, double, Variant<bool, string>>(new Variant<bool, string>(strVal));
+            Assert.AreEqual(first, fourth);
+            Assert.IsTrue(first == fourth);
+            Assert.IsFalse(first != fourth);
         }
 
         [TestMethod]

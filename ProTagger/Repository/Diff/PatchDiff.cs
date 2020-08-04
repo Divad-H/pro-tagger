@@ -32,9 +32,9 @@ namespace ProTagger.Repository.Diff
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
                     return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
 
-                if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                     (oldCommit, newCommit) = (newCommit, oldCommit);
-                if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                     return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
 
                 var oldTree = oldCommit?.Get<Commit>().Tree;

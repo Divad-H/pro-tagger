@@ -86,7 +86,7 @@ namespace ProTagger.Repository.Diff
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o => Observable.FromAsync(ct =>
-                    o.newCommit != null ?
+                    !(o.newCommit is null) ?
                         Diff.TreeDiff.CreateDiff(repo, ct, head, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))))
                 .Switch()

@@ -26,9 +26,9 @@ namespace ProTagger.Repository.Diff
                     {
                         if (ct.IsCancellationRequested)
                             return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("The operation was cancelled."));
-                        if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                        if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                             (oldCommit, newCommit) = (newCommit, oldCommit);
-                        if (oldCommit != null && oldCommit.Is<DiffTargets>())
+                        if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                             return new Variant<List<TreeEntryChanges>, Unexpected>(new List<TreeEntryChanges>());
                         if (newCommit.Is<DiffTargets>() && head is null)
                             return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("Did not get HEAD"));

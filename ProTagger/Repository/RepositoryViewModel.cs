@@ -89,7 +89,7 @@ namespace ProTagger
             NoneSelected,
         }
 
-        public RefsViewModel(List<RefSelectionViewModel> refs, string? headCanonicalName, bool detachedHead, ISchedulers schedulers)
+        public RefsViewModel(List<RefSelectionViewModel> refs, string? headCanonicalName, ISchedulers schedulers)
         {
             Refs = refs;
 
@@ -177,11 +177,11 @@ namespace ProTagger
         public RefsViewModel Branches { get; }
         public RefsViewModel Tags { get; }
 
-        public AllRefsViewModel(List<RefSelectionViewModel> branches, List<RefSelectionViewModel> tags, string? headCanonicalName, bool detachedHead, ISchedulers schedulers)
+        public AllRefsViewModel(List<RefSelectionViewModel> branches, List<RefSelectionViewModel> tags, string? headCanonicalName, ISchedulers schedulers)
         {
-            Branches = new RefsViewModel(branches, headCanonicalName, detachedHead, schedulers)
+            Branches = new RefsViewModel(branches, headCanonicalName, schedulers)
                 .DisposeWith(_disposables);
-            Tags = new RefsViewModel(tags, null, detachedHead, schedulers)
+            Tags = new RefsViewModel(tags, null, schedulers)
                 .DisposeWith(_disposables);
         }
 
@@ -249,11 +249,17 @@ namespace ProTagger
                             || lastTagSelection.Any(b => b.Selected.Value && b.CanonicalName == tag.CanonicalName), schedulers))
                         .ToList();
 
-                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null, true), createTagVMs(null), _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName, _repository.Info.IsHeadDetached, schedulers);
+                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null, true),
+                    createTagVMs(null),
+                    _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName,
+                    schedulers);
 
                 var nextRefVmsSource = refreshCommand
                     .Scan(firstRefsVM, (last, _)
-                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs, last.Branches.HeadSelected), createTagVMs(last.Tags.Refs), _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName, _repository.Info.IsHeadDetached, schedulers));
+                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs, last.Branches.HeadSelected),
+                            createTagVMs(last.Tags.Refs),
+                            _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName,
+                            schedulers));
 
                 var nextRefVms = Observable
                     .Create<AllRefsViewModel>(o =>

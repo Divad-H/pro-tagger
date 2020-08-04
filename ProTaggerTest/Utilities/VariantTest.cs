@@ -58,6 +58,27 @@ namespace ProTaggerTest
         }
 
         [TestMethod]
+        public void VariantsWithSameValueAreEqual()
+        {
+            const string strVal = "rat";
+            var first = new Variant<string, int>(strVal);
+            var second = new Variant<string, bool>(strVal);
+            Assert.AreEqual(first, second);
+            Assert.IsTrue(first == second);
+            Assert.IsFalse(first != second);
+        }
+
+        [TestMethod]
+        public void VariantsWithDifferentValuesAreNotEqual()
+        {
+            var first = new Variant<string, int>(0);
+            var second = new Variant<string, bool>(false);
+            Assert.AreNotEqual(first, second);
+            Assert.IsFalse(first == second);
+            Assert.IsTrue(first != second);
+        }
+
+        [TestMethod]
         public void ObservableMerge()
         {
             var first = new Subject<int>();

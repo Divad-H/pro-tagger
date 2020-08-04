@@ -13,8 +13,14 @@ namespace ProTagger.Wpf
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
             if (_variantPresenter.VariantContent is Variant variant)
-                if (variant.VariantIndex == 0)
-                    return _variantPresenter.Variant0Template;
+                return variant.VariantIndex switch
+                {
+                    0 => _variantPresenter.Variant0Template,
+                    1 => _variantPresenter.Variant1Template,
+                    2 => _variantPresenter.Variant2Template,
+                    3 => _variantPresenter.Variant3Template,
+                    _ => _variantPresenter.Variant1Template,
+                };
             return _variantPresenter.Variant1Template;
         }
     }
@@ -62,5 +68,23 @@ namespace ProTagger.Wpf
 
         public static readonly DependencyProperty Variant1TemplateProperty = DependencyProperty.Register(
           nameof(Variant1Template), typeof(DataTemplate), typeof(VariantPresenter));
+
+        public DataTemplate Variant2Template
+        {
+            get => (DataTemplate)GetValue(Variant2TemplateProperty);
+            set => SetValue(Variant2TemplateProperty, value);
+        }
+
+        public static readonly DependencyProperty Variant2TemplateProperty = DependencyProperty.Register(
+          nameof(Variant2Template), typeof(DataTemplate), typeof(VariantPresenter));
+
+        public DataTemplate Variant3Template
+        {
+            get => (DataTemplate)GetValue(Variant3TemplateProperty);
+            set => SetValue(Variant3TemplateProperty, value);
+        }
+
+        public static readonly DependencyProperty Variant3TemplateProperty = DependencyProperty.Register(
+          nameof(Variant3Template), typeof(DataTemplate), typeof(VariantPresenter));
     }
 }

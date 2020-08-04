@@ -299,7 +299,7 @@ namespace ProTagger
                 var secondarySelectedCommit = Graph.SecondarySelectedNode
                     .Select(node => node?.Commit);
 
-                Diff = new DiffViewModel(_repository, schedulers, _repository.Head, secondarySelectedCommit, selectedCommit, compareOptions)
+                Diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit, compareOptions)
                     .DisposeWith(_disposables);
 
                 nextRefVms

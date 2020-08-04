@@ -57,7 +57,6 @@ namespace ProTagger.Repository.Diff
 
         public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
-            Branch? head,
             IObservable<Variant<Commit, DiffTargets>?> oldCommitObservable, 
             IObservable<Variant<Commit, DiffTargets>?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
@@ -85,7 +84,7 @@ namespace ProTagger.Repository.Diff
                         oldCommit is null ?
                             newCommit.Visit(
                                 commit => Task.FromResult(new TSelectionInfo(commit)),
-                                _ => cast(Diff.TreeDiff.CreateDiff(repo, ct, head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
+                                _ => cast(Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
                             Task.FromResult(new TSelectionInfo($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))))
                 .Switch()
                 .Subscribe(SelectionInfo)
@@ -96,7 +95,7 @@ namespace ProTagger.Repository.Diff
                     (newCommit, oldCommit, compareOptions) => new { newCommit, oldCommit, compareOptions })
                 .Select(o => Observable.FromAsync(ct =>
                     !(o.newCommit is null) ?
-                        Diff.TreeDiff.CreateDiff(repo, ct, head, o.oldCommit, o.newCommit, o.compareOptions) :
+                        Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, o.oldCommit, o.newCommit, o.compareOptions) :
                         Task.FromResult(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))))
                 .Switch()
                 .Subscribe(TreeDiff)
@@ -166,7 +165,7 @@ namespace ProTagger.Repository.Diff
                         data.newCommit is null ?
                         new Variant<IList<PatchDiff>, CancellableChangesWithError>(
                             new CancellableChangesWithError(cancellableChanges, NoFilesSelectedMessage)) :
-                        Diff.PatchDiff.CreateDiff(repo.Diff, repo.TryAddRef(), head, data.oldCommit, data.newCommit, cancellableChanges
+                        Diff.PatchDiff.CreateDiff(repo.Diff, repo.TryAddRef(), repo.Head, data.oldCommit, data.newCommit, cancellableChanges
                             .Yield()
                             .SelectMany(o => o.TreeEntryChanges.Path
                                 .Yield()

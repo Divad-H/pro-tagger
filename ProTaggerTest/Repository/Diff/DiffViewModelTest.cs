@@ -27,7 +27,7 @@ namespace ProTaggerTest.Repository.Diff
             var compareOptions = Observable.Return(new CompareOptions()).Concat(Observable.Never<CompareOptions>());
             var repo = new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()), null, diff);
 
-            var vm = new DiffViewModel(repo, new TestSchedulers(), null, oldCommit, newCommit, compareOptions);
+            var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptions);
             Variant<List<TreeEntryChanges>, Unexpected>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
             if (value is null)
@@ -59,7 +59,7 @@ namespace ProTaggerTest.Repository.Diff
             var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
 
             Variant<List<TreeEntryChanges>, Unexpected>? value = null;
-            var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
+            var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
             using var _ = vm.TreeDiff
                 .Subscribe(val =>
                 {
@@ -90,8 +90,8 @@ namespace ProTaggerTest.Repository.Diff
             var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
             using var oldCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
             using var newCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
-            using var vm = new DiffViewModel(repo, new TestSchedulers(), head, oldCommit, newCommit, compareOptionsObs);
-            var selectionInfo = new List<Variant<string, Commit>>();
+            using var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
+            var selectionInfo = new List<Variant<string, Unexpected, List<TreeEntryChanges>, Commit>>();
             using var _ = vm.SelectionInfo
                 .Subscribe(info => selectionInfo.Add(info));
             newCommit.OnNext(new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory));

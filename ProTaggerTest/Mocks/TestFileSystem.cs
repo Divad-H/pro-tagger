@@ -7,6 +7,9 @@ namespace ProTaggerTest.Mocks
     {
         public event EventHandler<object?>? Changed;
 
+        public void TriggerChangedEvent()
+            => Changed?.Invoke(this, null);
+
         public void Dispose()
         {}
     }

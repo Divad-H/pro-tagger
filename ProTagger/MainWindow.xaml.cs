@@ -50,12 +50,50 @@ namespace ProTagger
             }
         }
 
+        private class FileSystemWatcherWrapper : IFileSystemWatcher
+        {
+            private readonly FileSystemWatcher _fileSystemWatcher;
+            public FileSystemWatcherWrapper(string directory, string filter)
+            {
+                _fileSystemWatcher = new FileSystemWatcher(directory, filter)
+                {
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime | NotifyFilters.DirectoryName,
+                    EnableRaisingEvents = true,
+                };
+                _fileSystemWatcher.Changed += OnChanged;
+                _fileSystemWatcher.Deleted += OnChanged;
+                _fileSystemWatcher.Created += OnChanged;
+                _fileSystemWatcher.Renamed += OnRenamed;
+            }
+
+            private void OnRenamed(object sender, RenamedEventArgs e)
+                => Changed?.Invoke(this, null);
+
+            private void OnChanged(object sender, FileSystemEventArgs e)
+                => Changed?.Invoke(this, null);
+
+            public event EventHandler<object?>? Changed;
+
+            public void Dispose()
+            {
+                _fileSystemWatcher.Changed -= OnChanged;
+                _fileSystemWatcher.Deleted -= OnChanged;
+                _fileSystemWatcher.Created -= OnChanged;
+                _fileSystemWatcher.Renamed -= OnRenamed;
+                _fileSystemWatcher.Dispose();
+            }
+        }
+
         private class FileSystemService : IFileSystem
         {
-            Window _dialogOwnerWindow;
+            readonly Window _dialogOwnerWindow;
 
             public FileSystemService(Window dialogOwnerWindow)
                 => _dialogOwnerWindow = dialogOwnerWindow;
+
+            public IFileSystemWatcher CreateFileSystemWatcher(string directory, string filter)
+                => new FileSystemWatcherWrapper(directory, filter);
 
             public string? SelectGitRepositoryDialog(string description, Func<string, bool> validationCallback)
             {

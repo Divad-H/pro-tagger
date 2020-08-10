@@ -83,7 +83,7 @@ namespace ProTaggerTest.Repository.Diff
             var shaGenerator = new PseudoShaGenerator();
             var firstCommit = CommitMock.GenerateCommit(shaGenerator, null, 0);
             var secondCommit = CommitMock.GenerateCommit(shaGenerator, firstCommit.Yield(), 1);
-            var diff = new DiffMock(null, null);
+            var diff = new DiffMock(null, (_1, _2, _3) => new TreeChangesMock(new List<TreeEntryChanges>()));
             var head = new BranchMock(true, false, null, secondCommit, "HEAD");
             var compareOptions = new CompareOptions();
             var compareOptionsObs = Observable.Return(compareOptions);
@@ -92,20 +92,30 @@ namespace ProTaggerTest.Repository.Diff
             using var newCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
             using var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
             var selectionInfo = new List<Variant<string, Unexpected, List<TreeEntryChanges>, Commit>>();
+            var resetEvent = new AutoResetEvent(false);
             using var _ = vm.SelectionInfo
-                .Subscribe(info => selectionInfo.Add(info));
+                .Subscribe(info =>
+                {
+                    selectionInfo.Add(info);
+                    resetEvent.Set();
+                });
+            resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             newCommit.OnNext(new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory));
+            resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             oldCommit.OnNext(new Variant<Commit, DiffTargets>(secondCommit));
+            resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             newCommit.OnNext(new Variant<Commit, DiffTargets>(firstCommit));
+            resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             oldCommit.OnNext(null);
+            resetEvent.WaitOne(TimeSpan.FromSeconds(5));
 
             Assert.AreEqual(5, selectionInfo.Count);
             Assert.AreEqual(0, selectionInfo[0].VariantIndex);
-            Assert.AreEqual(0, selectionInfo[1].VariantIndex);
+            Assert.AreEqual(2, selectionInfo[1].VariantIndex);
             Assert.AreEqual(0, selectionInfo[2].VariantIndex);
             Assert.AreEqual(0, selectionInfo[3].VariantIndex);
-            Assert.AreEqual(1, selectionInfo[4].VariantIndex);
-            Assert.AreEqual(firstCommit, selectionInfo[4].Second);
+            Assert.AreEqual(3, selectionInfo[4].VariantIndex);
+            Assert.AreEqual(firstCommit, selectionInfo[4].Fourth);
         }
     }
 }

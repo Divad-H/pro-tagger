@@ -71,11 +71,8 @@ namespace ProTagger.Repository.Diff
             static string toString(Variant<Commit, DiffTargets> variant)
                 => variant.Visit(commit => commit.Sha, diffTarget => diffTarget == DiffTargets.Index ? "index" : "working tree");
 
-            static async Task<TSelectionInfo> cast(Task<Variant<List<TreeEntryChanges>, Unexpected>> task)
-            {
-                var res = await task;
-                return res.Visit(r => new TSelectionInfo(r), u => new TSelectionInfo(u));
-            }
+            static async Task<TSelectionInfo> castVariant(Task<Variant<List<TreeEntryChanges>, Unexpected>> task)
+                => (await task).Visit(r => new TSelectionInfo(r), u => new TSelectionInfo(u));
 
             Observable
                 .CombineLatest(newCommitObservable, oldCommitObservable, compareOptions,
@@ -84,7 +81,7 @@ namespace ProTagger.Repository.Diff
                         oldCommit is null ?
                             newCommit.Visit(
                                 commit => Task.FromResult(new TSelectionInfo(commit)),
-                                _ => cast(Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
+                                _ => castVariant(Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
                             Task.FromResult(new TSelectionInfo($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))))
                 .Switch()
                 .Subscribe(SelectionInfo)

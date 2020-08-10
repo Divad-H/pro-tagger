@@ -103,13 +103,13 @@ namespace ProTagger.Utilities
                 {
                     if (currentNewLines.Count > 0 || currentOldLines.Count > 0)
                     {
-                        result.Add(new Variant<WordDiff, UnchangedLine>(AnalyzeWordDiff(currentNewLines, newLine, currentOldLines, oldLine)));
+                        result.Add(AnalyzeWordDiff(currentNewLines, newLine, currentOldLines, oldLine));
                         newLine += currentNewLines.Count;
                         oldLine += currentOldLines.Count;
                         currentNewLines.Clear();
                         currentOldLines.Clear();
                     }
-                    result.Add(new Variant<WordDiff, UnchangedLine>(new UnchangedLine(oldLine++, newLine++, line.Any() ? line.Substring(1) : line)));
+                    result.Add(new UnchangedLine(oldLine++, newLine++, line.Any() ? line.Substring(1) : line));
                 }
                 else if (line.ElementAt(0) == '-')
                 {
@@ -122,7 +122,7 @@ namespace ProTagger.Utilities
                 }
             }
             if (currentNewLines.Count > 0 || currentOldLines.Count > 0)
-                result.Add(new Variant<WordDiff, UnchangedLine>(AnalyzeWordDiff(currentNewLines, newLine, currentOldLines, oldLine)));
+                result.Add(AnalyzeWordDiff(currentNewLines, newLine, currentOldLines, oldLine));
             return result;
         }
 

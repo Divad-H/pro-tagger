@@ -20,18 +20,18 @@ namespace ProTagger.Repository.Diff
                 CompareOptions compareOptions)
         {
             using var delayDispose = repo.AddRef();
-            return Task.Run(() =>
+            return Task.Run<Variant<List<TreeEntryChanges>, Unexpected>>(() =>
                 {
                     try
                     {
                         if (ct.IsCancellationRequested)
-                            return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("The operation was cancelled."));
+                            return new Unexpected("The operation was cancelled.");
                         if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                             (oldCommit, newCommit) = (newCommit, oldCommit);
                         if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
-                            return new Variant<List<TreeEntryChanges>, Unexpected>(new List<TreeEntryChanges>());
+                            return new List<TreeEntryChanges>();
                         if (newCommit.Is<DiffTargets>() && head is null)
-                            return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected("Did not get HEAD"));
+                            return new Unexpected("Did not get HEAD");
                         
                         var oldTree = oldCommit?.Get<Commit>().Tree;
                         using var treeChanges =
@@ -50,11 +50,11 @@ namespace ProTagger.Repository.Diff
                                        return null;
                                    return repo.Diff.Compare<TreeChanges>(oldTree ?? head?.Tip.Tree, dt, changedFiles, null, compareOptions);
                                });
-                        return new Variant<List<TreeEntryChanges>, Unexpected>(treeChanges?.ToList() ?? new List<TreeEntryChanges>());
+                        return treeChanges?.ToList() ?? new List<TreeEntryChanges>();
                     }
                     catch (Exception e)
                     {
-                        return new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(e.Message));
+                        return new Unexpected(e.Message);
                     }
                 });
         }

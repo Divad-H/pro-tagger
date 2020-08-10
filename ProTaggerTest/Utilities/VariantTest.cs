@@ -112,7 +112,8 @@ namespace ProTaggerTest
             Assert.IsFalse(first == second);
             Assert.IsTrue(first != second);
             var third = new Variant<int, string, bool>(strVal);
-            Assert.AreNotEqual(first, third);
+            Assert.IsFalse(third.Equals(first));
+            Assert.IsFalse(first.Equals(third));
             Assert.IsFalse(first == third);
             Assert.IsTrue(first != third);
             var fourth = new Variant<bool, int, double, Variant<bool, string>>(new Variant<bool, string>(strVal));
@@ -154,10 +155,10 @@ namespace ProTaggerTest
         {
             var obs = Observable.Create<Variant<int, string>>(o =>
             {
-                o.OnNext(new Variant<int, string>(1));
-                o.OnNext(new Variant<int, string>(2));
-                o.OnNext(new Variant<int, string>("3"));
-                o.OnNext(new Variant<int, string>(4));
+                o.OnNext(1);
+                o.OnNext(2);
+                o.OnNext("3");
+                o.OnNext(4);
                 o.OnCompleted();
                 return Disposable.Empty;
             });

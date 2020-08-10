@@ -25,17 +25,16 @@ namespace ProTagger.Repository.Diff
                 CancellableChanges cancellableChanges)
         {
             if (delayDisposeRepository is null)
-                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
-                    new CancellableChangesWithError(cancellableChanges, "Repository was disposed."));
+                return new CancellableChangesWithError(cancellableChanges, "Repository was disposed.");
             try
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
-                    return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
+                    return new List<PatchDiff>();
 
                 if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
                     (oldCommit, newCommit) = (newCommit, oldCommit);
                 if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
-                    return new Variant<IList<PatchDiff>, CancellableChangesWithError>(new List<PatchDiff>());
+                    return new List<PatchDiff>();
 
                 var oldTree = oldCommit?.Get<Commit>().Tree;
                 using var patch =
@@ -43,17 +42,16 @@ namespace ProTagger.Repository.Diff
                        c => diff.Compare<Patch>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, paths, options),
                        dt => diff.Compare<Patch>(oldTree ?? head?.Tip.Tree, dt, paths, null, options));
                 
-                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(patch
+                return patch
                         .Select(patchEntry => new PatchDiff(
                             DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token),
                             patchEntry,
                             cancellableChanges))
-                        .ToList());
+                        .ToList();
             }
             catch (Exception e)
             {
-                return new Variant<IList<PatchDiff>, CancellableChangesWithError>(
-                    new CancellableChangesWithError(cancellableChanges, e.Message));
+                return new CancellableChangesWithError(cancellableChanges, e.Message);
             }
             finally
             {

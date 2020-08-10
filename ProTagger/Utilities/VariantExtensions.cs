@@ -10,8 +10,8 @@ namespace ProTagger.Utilities
             where TError : notnull
         {
             if (variant.Is<TError>())
-                return new Variant<TResult, TError>(variant.Get<TError>());
-            return new Variant<TResult, TError>(func(variant.Get<TIn>()));
+                return variant.Get<TError>();
+            return func(variant.Get<TIn>());
         }
     }
 }

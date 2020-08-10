@@ -74,6 +74,12 @@ namespace ProTagger
 
         public override int VariantIndex
             => _value switch { T1 _ => 0, T2 _ => 1, _ => throw new InvalidOperationException() };
+
+        public static implicit operator Variant<T1, T2>(T1 value)
+            => new Variant<T1, T2>(value);
+
+        public static implicit operator Variant<T1, T2>(T2 value)
+            => new Variant<T1, T2>(value);
     }
 
     public class Variant<T1, T2, T3> : Variant
@@ -120,6 +126,15 @@ namespace ProTagger
 
         public override int VariantIndex
             => _value switch { T1 _ => 0, T2 _ => 1, T3 _ => 2, _ => throw new InvalidOperationException() };
+
+        public static implicit operator Variant<T1, T2, T3>(T1 value)
+            => new Variant<T1, T2, T3>(value);
+
+        public static implicit operator Variant<T1, T2, T3>(T2 value)
+            => new Variant<T1, T2, T3>(value);
+
+        public static implicit operator Variant<T1, T2, T3>(T3 value)
+            => new Variant<T1, T2, T3>(value);
     }
 
     public class Variant<T1, T2, T3, T4> : Variant
@@ -175,6 +190,18 @@ namespace ProTagger
 
         public override int VariantIndex
             => _value switch { T1 _ => 0, T2 _ => 1, T3 _ => 2, T4 _ => 3, _ => throw new InvalidOperationException() };
+
+        public static implicit operator Variant<T1, T2, T3, T4>(T1 value)
+            => new Variant<T1, T2, T3, T4>(value);
+
+        public static implicit operator Variant<T1, T2, T3, T4>(T2 value)
+            => new Variant<T1, T2, T3, T4>(value);
+
+        public static implicit operator Variant<T1, T2, T3, T4>(T3 value)
+            => new Variant<T1, T2, T3, T4>(value);
+
+        public static implicit operator Variant<T1, T2, T3, T4>(T4 value)
+            => new Variant<T1, T2, T3, T4>(value);
     }
 
 }

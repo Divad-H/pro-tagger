@@ -100,11 +100,11 @@ namespace ProTaggerTest.Repository.Diff
                     resetEvent.Set();
                 });
             resetEvent.WaitOne(TimeSpan.FromSeconds(5));
-            newCommit.OnNext(new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory));
+            newCommit.OnNext(DiffTargets.WorkingDirectory);
             resetEvent.WaitOne(TimeSpan.FromSeconds(5));
-            oldCommit.OnNext(new Variant<Commit, DiffTargets>(secondCommit));
+            oldCommit.OnNext(secondCommit);
             resetEvent.WaitOne(TimeSpan.FromSeconds(5));
-            newCommit.OnNext(new Variant<Commit, DiffTargets>(firstCommit));
+            newCommit.OnNext(firstCommit);
             resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             oldCommit.OnNext(null);
             resetEvent.WaitOne(TimeSpan.FromSeconds(5));

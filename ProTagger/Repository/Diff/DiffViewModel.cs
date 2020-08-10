@@ -61,7 +61,7 @@ namespace ProTagger.Repository.Diff
             IObservable<Variant<Commit, DiffTargets>?> newCommitObservable,
             IObservable<CompareOptions> compareOptions)
         {
-            TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>>(new Variant<List<TreeEntryChanges>, Unexpected>(new Unexpected(NoCommitSelectedMessage)))
+            TreeDiff = new ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>>(new Unexpected(NoCommitSelectedMessage))
                 .DisposeWith(_disposables);
 
             SelectionInfo = new ViewSubject<TSelectionInfo>(
@@ -81,7 +81,7 @@ namespace ProTagger.Repository.Diff
                         oldCommit is null ?
                             newCommit.Visit(
                                 commit => Task.FromResult(new TSelectionInfo(commit)),
-                                _ => castVariant(Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, null, new Variant<Commit, DiffTargets>(DiffTargets.Index), co))) :
+                                _ => castVariant(Diff.TreeDiff.CreateDiff(repo, ct, repo.Head, null, DiffTargets.Index, co))) :
                             Task.FromResult(new TSelectionInfo($"Displaying changes between {toString(oldCommit)} and {toString(newCommit)}."))))
                 .Switch()
                 .Subscribe(SelectionInfo)
@@ -177,12 +177,12 @@ namespace ProTagger.Repository.Diff
                         {
                             foreach (var item in newFiles)
                                 if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                    PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(item));
+                                    PatchDiff.Add(item);
                         },
                         error =>
                         {
                             if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                PatchDiff.Add(new Variant<PatchDiff, CancellableChangesWithError>(error));
+                                PatchDiff.Add(error);
                         }))
                 .DisposeWith(_disposables);
 

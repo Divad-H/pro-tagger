@@ -127,7 +127,7 @@ namespace ProTagger.Repository.GitLog
             var scrolledBottom = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
             ScrolledBottom = scrolledBottom;
 
-            LogGraphNodes = new ViewSubject<Variant<GraphType, Unexpected>>(new Variant<GraphType, Unexpected>(new GraphType()))
+            LogGraphNodes = new ViewSubject<Variant<GraphType, Unexpected>>(new GraphType())
                 .DisposeWith(_disposable);
 
             SelectedNode = new ViewSubject<LogGraphNode?>(null)
@@ -161,12 +161,12 @@ namespace ProTagger.Repository.GitLog
                     data =>
                     {
                         if (data.Index == 1)
-                            LogGraphNodes.OnNext(new Variant<GraphType, Unexpected>(new GraphType(data.Batch)));
+                            LogGraphNodes.OnNext(new GraphType(data.Batch));
                         else
                             foreach (var node in data.Batch)
                                 LogGraphNodes.Value.First.Add(node);
                     },
-                    error => LogGraphNodes.OnNext(new Variant<GraphType, Unexpected>(new Unexpected(error)))))
+                    error => LogGraphNodes.OnNext(new Unexpected(error))))
                 .DisposeWith(_disposable);
         }
 
@@ -213,7 +213,7 @@ namespace ProTagger.Repository.GitLog
                 var lastDirections = new List<List<TGraphPos>>();
 
                 TGraphPos lastPosition = 0;
-                Variant<Commit, DiffTargets> lastCommit = firstCommit is null ? new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory) : new Variant<Commit, DiffTargets>(firstCommit);
+                var lastCommit = firstCommit is null ? new Variant<Commit, DiffTargets>(DiffTargets.WorkingDirectory) : new Variant<Commit, DiffTargets>(firstCommit);
                 bool lastMerge = expectedIds.Count > 1;
 
                 foreach (Commit c in query.Skip(headSelected ? 0 : 1))
@@ -298,7 +298,7 @@ namespace ProTagger.Repository.GitLog
                         !(detachedHead is null) && lastCommit.Is<Commit>() && lastCommit.Get<Commit>() == detachedHead.Tip);
                     lastDirections = currentDirections;
                     lastPosition = nextPosition;
-                    lastCommit = new Variant<Commit, DiffTargets>(c);
+                    lastCommit = c;
                     lastMerge = parents.Count > 1;
                 }
                 yield return new LogGraphNode(

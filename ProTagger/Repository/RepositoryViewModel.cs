@@ -212,13 +212,13 @@ namespace ProTagger
                 if (ct.IsCancellationRequested)
                 {
                     repositoryViewModel?.Dispose();
-                    return new Variant<RepositoryViewModel, RepositoryError>(new RepositoryError("Cancelled", description));
+                    return new RepositoryError("Cancelled", description);
                 }
-                return new Variant<RepositoryViewModel, RepositoryError>(repositoryViewModel);
+                return repositoryViewModel;
             }
             catch (Exception e)
             {
-                return new Variant<RepositoryViewModel, RepositoryError>(new RepositoryError(e.Message, description));
+                return new RepositoryError(e.Message, description);
             }
         }
 

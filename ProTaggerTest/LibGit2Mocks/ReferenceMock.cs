@@ -9,10 +9,10 @@ namespace ProTaggerTest.LibGit2Mocks
         private readonly Variant<BranchMock, TagMock> _data;
 
         public ReferenceMock(BranchMock branch)
-            => _data = new Variant<BranchMock, TagMock>(branch);
+            => _data = branch;
 
         public ReferenceMock(TagMock tag)
-            => _data = new Variant<BranchMock, TagMock>(tag);
+            => _data = tag;
 
         public override string CanonicalName
             => _data.Visit(b => b.CanonicalName, t => t.CanonicalName);

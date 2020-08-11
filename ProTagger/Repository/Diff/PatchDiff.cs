@@ -30,24 +30,31 @@ namespace ProTagger.Repository.Diff
             {
                 if (cancellableChanges.Cancellation.Token.IsCancellationRequested)
                     return new List<PatchDiff>();
-
-                if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
-                    (oldCommit, newCommit) = (newCommit, oldCommit);
-                if (!(oldCommit is null) && oldCommit.Is<DiffTargets>())
+                if (newCommit == oldCommit)
                     return new List<PatchDiff>();
 
-                var oldTree = oldCommit?.Get<Commit>().Tree;
+                var oldTarget = oldCommit is null
+                    ? new Variant<Tree, DiffTargets, bool>(false)
+                    : oldCommit.Visit<Variant<Tree, DiffTargets, bool>>(c => c.Tree, t => t);
                 using var patch =
-                   newCommit.Visit(
-                       c => diff.Compare<Patch>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, paths, options),
-                       dt => diff.Compare<Patch>(oldTree ?? head?.Tip.Tree, dt, paths, null, options));
+                    newCommit.Visit(
+                        c => oldTarget.Visit(
+                            oldTree => diff.Compare<Patch>(oldTree, c.Tree, paths, options),
+                            oldDiffTarget => diff.Compare<Patch>(c.Tree, oldDiffTarget, paths, null, options),
+                            _ => diff.Compare<Patch>(c.Parents.FirstOrDefault()?.Tree, c.Tree, paths, options)),
+                        dt => oldTarget.Visit(
+                            oldTree => diff.Compare<Patch>(oldTree, dt, paths, null, options),
+                            oldDiffTarget => dt == DiffTargets.WorkingDirectory
+                                ? diff.Compare<Patch>(paths, true)
+                                : diff.Compare<Patch>(head?.Tip?.Tree, dt, paths, null, options),
+                            _ => diff.Compare<Patch>(paths, true)));
                 
                 return patch
-                        .Select(patchEntry => new PatchDiff(
-                            DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token),
-                            patchEntry,
-                            cancellableChanges))
-                        .ToList();
+                    .Select(patchEntry => new PatchDiff(
+                        DiffAnalyzer.SplitIntoHunks(patchEntry.Patch, cancellableChanges.Cancellation.Token),
+                        patchEntry,
+                        cancellableChanges))
+                    .ToList();
             }
             catch (Exception e)
             {

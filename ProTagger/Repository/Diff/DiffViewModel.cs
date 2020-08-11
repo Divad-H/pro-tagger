@@ -4,12 +4,14 @@ using ReacitveMvvm;
 using ReactiveMvvm;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ProTagger.Repository.Diff
 {
@@ -47,13 +49,20 @@ namespace ProTagger.Repository.Diff
         public BatchList<Variant<PatchDiff, CancellableChangesWithError>> PatchDiff { get; }
             = new BatchList<Variant<PatchDiff, CancellableChangesWithError>>();
 
+        public BatchList<Variant<PatchDiff, CancellableChangesWithError>> IndexPatchDiff { get; }
+            = new BatchList<Variant<PatchDiff, CancellableChangesWithError>>();
+
         public BatchList<TreeEntryChanges> SelectedFiles { get; } = new BatchList<TreeEntryChanges>();
+        public BatchList<TreeEntryChanges> SelectedIndexFiles { get; } = new BatchList<TreeEntryChanges>();
 
         public IEqualityComparer<object> KeepTreeDiffChangesSelectedRule { get; } = new KeepSelectionComparer();
 
         public ViewSubject<Variant<List<TreeEntryChanges>, Unexpected>> TreeDiff { get; }
 
         public ViewSubject<TSelectionInfo> SelectionInfo { get; }
+
+        public ViewSubject<bool> IndexSelected { get; }
+        public ICommand FocusChangedCommand { get; }
 
         public DiffViewModel(IRepositoryWrapper repo,
             ISchedulers schedulers,
@@ -66,6 +75,24 @@ namespace ProTagger.Repository.Diff
 
             SelectionInfo = new ViewSubject<TSelectionInfo>(
                 new TSelectionInfo(NoCommitSelectedMessage))
+                .DisposeWith(_disposables);
+
+            IndexSelected = new ViewSubject<bool>(false)
+                .DisposeWith(_disposables);
+
+            var focusChangedCommand = ReactiveCommand
+                .Create<bool, bool>(indexSelected => indexSelected, schedulers.Dispatcher)
+                .DisposeWith(_disposables);
+            FocusChangedCommand = focusChangedCommand;
+
+            focusChangedCommand
+                .Merge(oldCommitObservable
+                    .Where(oldCommit => oldCommit is null)
+                    .Select(_ => false))
+                .Merge(newCommitObservable
+                    .Where(newCommit => newCommit is null || !newCommit.Is<DiffTargets>())
+                    .Select(_ => false))
+                .Subscribe(IndexSelected)
                 .DisposeWith(_disposables);
 
             static string toString(Variant<Commit, DiffTargets> variant)
@@ -98,15 +125,50 @@ namespace ProTagger.Repository.Diff
                 .Subscribe(TreeDiff)
                 .DisposeWith(_disposables);
 
-            var changedFilesSelectedObservable = SelectedFiles
+            ComputePatchDiff(repo,
+                     schedulers,
+                     SelectedFiles,
+                     oldCommitObservable,
+                     newCommitObservable,
+                     compareOptions,
+                     PatchDiff)
+                .DisposeWith(_disposables);
+
+            ComputePatchDiff(repo,
+                     schedulers,
+                     SelectedIndexFiles,
+                     oldCommitObservable
+                         .Where(v => v is null)
+                         .Select(_ => repo.Head is null ? null : new Variant<Commit, DiffTargets>(repo.Head.Tip)),
+                     newCommitObservable
+                         .SkipNull()
+                         .Where(v => v.Visit(c => false, d => true))
+                         .Select(_ => new Variant<Commit, DiffTargets>(DiffTargets.Index)),
+                     compareOptions,
+                     IndexPatchDiff)
+                .DisposeWith(_disposables);
+        }
+
+        private static IDisposable ComputePatchDiff(IRepositoryWrapper repo,
+            ISchedulers schedulers,
+            BatchList<TreeEntryChanges> selectedFiles,
+            IObservable<Variant<Commit, DiffTargets>?> oldCommitObservable,
+            IObservable<Variant<Commit, DiffTargets>?> newCommitObservable,
+            IObservable<CompareOptions> compareOptions,
+            BatchList<Variant<PatchDiff, CancellableChangesWithError>> patchDiff)
+        {
+            var disposables = new CompositeDisposable();
+
+            var changedFilesSelectedObservable = selectedFiles
                 .MakeObservable();
+
 
             var changedDiffSelection = changedFilesSelectedObservable
                 .Select(args => args.NewItems?.Cast<TreeEntryChanges>())
                 .SkipNull()
-                .WithLatestFrom(compareOptions, (treeChanges, options) => new { treeChanges , options })
+                .WithLatestFrom(compareOptions, (treeChanges, options) => new { treeChanges, options })
                 .Merge(compareOptions
-                    .Select(options => new { treeChanges = (IEnumerable<TreeEntryChanges>)SelectedFiles, options }))
+                    .Select(options => new { treeChanges = (IEnumerable<TreeEntryChanges>)selectedFiles, options }))
                 .DistinctUntilChanged()
                 .WithLatestFrom(oldCommitObservable, (changes, oldCommit) => new { changes, oldCommit })
                 .WithLatestFrom(newCommitObservable, (data, newCommit) => new { data.changes, data.oldCommit, newCommit })
@@ -127,20 +189,26 @@ namespace ProTagger.Repository.Diff
                         .Cast<TreeEntryChanges>())
                     .SkipNull()
                     .Merge(compareOptions
-                        .Select(_ => (IEnumerable<TreeEntryChanges>)SelectedFiles)))
-                .Scan(new { activeCalculations = new HashSet<CancellableChanges>(), removedCalculations = new HashSet<CancellableChanges>() }, 
+                        .Select(_ => (IEnumerable<TreeEntryChanges>)selectedFiles)))
+                .Scan(new { activeCalculations = new HashSet<CancellableChanges>(), removedCalculations = new HashSet<CancellableChanges>() },
                     (acc, var) => var.Visit(
-                        added => new { activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToHashSet(),
-                            removedCalculations = new HashSet<CancellableChanges>() },
+                        added => new {
+                            activeCalculations = acc.activeCalculations.Concat(added.cancellableChanges).ToHashSet(),
+                            removedCalculations = new HashSet<CancellableChanges>()
+                        },
                         removed =>
                         {
                             var removedSet = removed.ToHashSet();
                             var removedCalculations = acc.activeCalculations
                                 .Where(activeCalculation => removedSet.Contains(activeCalculation.TreeEntryChanges))
                                 .ToHashSet();
-                            return new { activeCalculations = acc.activeCalculations
+                            return new
+                            {
+                                activeCalculations = acc.activeCalculations
                                 .Where(active => !removedCalculations.Contains(active))
-                                .ToHashSet(), removedCalculations };
+                                .ToHashSet(),
+                                removedCalculations
+                            };
                         }
                     ))
                 .Select(calculations => calculations.removedCalculations)
@@ -149,11 +217,11 @@ namespace ProTagger.Repository.Diff
                     foreach (var calculation in removed)
                     {
                         calculation.Cancellation.Cancel();
-                        PatchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == calculation,
+                        patchDiff.RemoveAll(old => old.Visit(s => s.CancellableChanges == calculation,
                             e => e.CancellableChanges == calculation), false);
                     }
                 })
-                .DisposeWith(_disposables);
+                .DisposeWith(disposables);
 
             changedDiffSelection
                 .ObserveOn(schedulers.ThreadPool)
@@ -173,22 +241,24 @@ namespace ProTagger.Repository.Diff
                 .ObserveOn(schedulers.Dispatcher)
                 .Subscribe(added => added
                     .Visit(
-                        newFiles => 
+                        newFiles =>
                         {
                             foreach (var item in newFiles)
                                 if (!item.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                    PatchDiff.Add(item);
+                                    patchDiff.Add(item);
                         },
                         error =>
                         {
                             if (!error.CancellableChanges.Cancellation.Token.IsCancellationRequested)
-                                PatchDiff.Add(error);
+                                patchDiff.Add(error);
                         }))
-                .DisposeWith(_disposables);
+                .DisposeWith(disposables);
 
             changedDiffSelection
                 .Connect()
-                .DisposeWith(_disposables);
+                .DisposeWith(disposables);
+
+            return disposables;
         }
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();

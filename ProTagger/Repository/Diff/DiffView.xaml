@@ -3,11 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:s="clr-namespace:System;assembly=mscorlib"
              xmlns:custom="clr-namespace:ProTagger.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid x:Name="ParentGrid">
         <Grid.Resources>
+            <s:Boolean x:Key="True">True</s:Boolean>
+            <s:Boolean x:Key="False">False</s:Boolean>
             <Style TargetType="{x:Type ListBoxItem}" x:Key="treeDiffItemStyle">
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="Padding" Value="4,1"/>
@@ -43,7 +47,7 @@
                                         <Condition Property="Selector.IsSelectionActive" Value="False"/>
                                         <Condition Property="IsSelected" Value="True"/>
                                     </MultiTrigger.Conditions>
-                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                    <Setter Property="Background" TargetName="Bd" Value="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type custom:ListBoxKeepSelection}}}"/>
                                     <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
                                 </MultiTrigger>
                                 <MultiTrigger>
@@ -51,7 +55,7 @@
                                         <Condition Property="Selector.IsSelectionActive" Value="True"/>
                                         <Condition Property="IsSelected" Value="True"/>
                                     </MultiTrigger.Conditions>
-                                    <Setter Property="Background" TargetName="Bd" Value="{StaticResource br_blue}"/>
+                                    <Setter Property="Background" TargetName="Bd" Value="{Binding Tag, RelativeSource={RelativeSource AncestorType={x:Type custom:ListBoxKeepSelection}}}"/>
                                     <Setter Property="Foreground" TargetName="Label" Value="{StaticResource br_light}"/>
                                 </MultiTrigger>
                                 <Trigger Property="IsEnabled" Value="False">
@@ -89,13 +93,31 @@
                 </custom:VariantPresenter.Variant0Template>
                 <custom:VariantPresenter.Variant2Template>
                     <DataTemplate>
-                        <custom:ListBoxKeepSelection Style="{StaticResource noBorderListBoxStyle}"
-                                                     ItemsSource="{Binding}" 
+                        <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
                                                      SelectionMode="Extended" 
                                                      VirtualizingPanel.VirtualizationMode="Recycling"
                                                      custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedIndexFiles, ElementName=ParentGrid}"
                                                      KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}"
-                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}"/>
+                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}">
+                            <custom:ListBoxKeepSelection.Style>
+                                <Style TargetType="{x:Type custom:ListBoxKeepSelection}" BasedOn="{StaticResource noBorderListBoxStyle}">
+                                    <Setter Property="Tag" Value="{StaticResource br_darkgray}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IndexSelected.Value, ElementName=ParentGrid}" Value="True">
+                                            <Setter Property="Tag" Value="{StaticResource br_blue}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </custom:ListBoxKeepSelection.Style>
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="GotFocus">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.FocusChangedCommand, ElementName=ParentGrid}" CommandParameter="{StaticResource True}"/>
+                                </i:EventTrigger>
+                                <i:EventTrigger EventName="GotKeyboardFocus">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.FocusChangedCommand, ElementName=ParentGrid}" CommandParameter="{StaticResource True}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </custom:ListBoxKeepSelection>
                     </DataTemplate>
                 </custom:VariantPresenter.Variant2Template>
                 <custom:VariantPresenter.Variant3Template>
@@ -123,24 +145,53 @@
                                      Grid.Row="2">
                 <custom:VariantPresenter.Variant0Template>
                     <DataTemplate>
-                        <custom:ListBoxKeepSelection Style="{StaticResource noBorderListBoxStyle}"
-                                                     ItemsSource="{Binding}" 
-                                                     SelectionMode="Extended" 
+                        <custom:ListBoxKeepSelection ItemsSource="{Binding}" 
+                                                     SelectionMode="Extended"
                                                      VirtualizingPanel.VirtualizationMode="Recycling"
                                                      custom:ListViewSelectionBinder.SelectedItems="{Binding DataContext.SelectedFiles, ElementName=ParentGrid}"
                                                      KeepSelectionRule="{Binding DataContext.KeepTreeDiffChangesSelectedRule, ElementName=ParentGrid}"
-                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}"/>
+                                                     ItemContainerStyle="{StaticResource treeDiffItemStyle}">
+                            <custom:ListBoxKeepSelection.Style>
+                                <Style TargetType="{x:Type custom:ListBoxKeepSelection}" BasedOn="{StaticResource noBorderListBoxStyle}">
+                                    <Setter Property="Tag" Value="{StaticResource br_blue}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IndexSelected.Value, ElementName=ParentGrid}" Value="True">
+                                            <Setter Property="Tag" Value="{StaticResource br_darkgray}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </custom:ListBoxKeepSelection.Style>
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="GotFocus">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.FocusChangedCommand, ElementName=ParentGrid}" CommandParameter="{StaticResource False}"/>
+                                </i:EventTrigger>
+                                <i:EventTrigger EventName="GotKeyboardFocus">
+                                    <i:InvokeCommandAction Command="{Binding DataContext.FocusChangedCommand, ElementName=ParentGrid}" CommandParameter="{StaticResource False}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </custom:ListBoxKeepSelection>
                     </DataTemplate>
                 </custom:VariantPresenter.Variant0Template>
             </custom:VariantPresenter>
         </Grid>
 
         <ItemsControl Margin="0,-2,0,0"
-                      ItemsSource="{Binding PatchDiff}"
                       VirtualizingStackPanel.IsVirtualizing="True"
                       VirtualizingPanel.ScrollUnit="Pixel"
                       custom:WidthCollectorScrollViewer.CanContentScroll="True"
                       Grid.Column="2">
+            <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IndexSelected.Value}" Value="True">
+                            <Setter Property="ItemsSource" Value="{Binding IndexPatchDiff}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IndexSelected.Value}" Value="False">
+                            <Setter Property="ItemsSource" Value="{Binding PatchDiff}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.Style>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <VirtualizingStackPanel/>

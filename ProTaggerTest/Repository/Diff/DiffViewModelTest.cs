@@ -26,8 +26,11 @@ namespace ProTaggerTest.Repository.Diff
             var newCommit = Observable.Return((Variant<Commit, DiffTargets>?)null).Concat(Observable.Never<Variant<Commit, DiffTargets>?>());
             var compareOptions = Observable.Return(new CompareOptions()).Concat(Observable.Never<CompareOptions>());
             var repo = new RepositoryMock(new List<CommitMock>(), new BranchCollectionMock(new List<BranchMock>()), null, diff);
+            var repoObservable = Observable.Return(repo).Concat(Observable.Never<IRepositoryWrapper>());
+            var input = Observable
+                .CombineLatest(oldCommit, newCommit, compareOptions, repoObservable, (o, n, c, r) => new DiffViewModelInput(r, o, n, c));
 
-            var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptions);
+            var vm = new DiffViewModel(new TestSchedulers(), input);
             Variant<List<TreeEntryChanges>, Unexpected>? value = null;
             using var subscription = vm.TreeDiff.Subscribe(treeDiff => value = treeDiff);
             if (value is null)
@@ -57,9 +60,12 @@ namespace ProTaggerTest.Repository.Diff
             var head = new BranchMock(true, false, null, secondCommit, "HEAD");
             var compareOptionsObs = Observable.Return(compareOptions);
             var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
+            var repoObservable = Observable.Return(repo).Concat(Observable.Never<IRepositoryWrapper>());
+            var input = Observable
+                .CombineLatest(oldCommit, newCommit, compareOptionsObs, repoObservable, (o, n, c, r) => new DiffViewModelInput(r, o, n, c));
 
             Variant<List<TreeEntryChanges>, Unexpected>? value = null;
-            var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
+            var vm = new DiffViewModel(new TestSchedulers(), input);
             using var _ = vm.TreeDiff
                 .Subscribe(val =>
                 {
@@ -90,7 +96,10 @@ namespace ProTaggerTest.Repository.Diff
             var repo = new RepositoryMock(new CommitMock[] { firstCommit, secondCommit }, new BranchCollectionMock(head.Yield().ToList()), null, diff);
             using var oldCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
             using var newCommit = new BehaviorSubject<Variant<Commit, DiffTargets>?>(null);
-            using var vm = new DiffViewModel(repo, new TestSchedulers(), oldCommit, newCommit, compareOptionsObs);
+            var repoObservable = Observable.Return(repo).Concat(Observable.Never<IRepositoryWrapper>());
+            var input = Observable
+                .CombineLatest(oldCommit, newCommit, compareOptionsObs, repoObservable, (o, n, c, r) => new DiffViewModelInput(r, o, n, c));
+            using var vm = new DiffViewModel(new TestSchedulers(), input);
             var selectionInfo = new List<Variant<string, Unexpected, List<TreeEntryChanges>, Commit>>();
             var resetEvent = new AutoResetEvent(false);
             using var _ = vm.SelectionInfo

@@ -88,6 +88,15 @@ namespace ProTagger.Repository.GitLog
         public bool IsDetachedHead { get; }
     }
 
+    public struct LogGraphInput
+    {
+        public LogGraphInput(IRepositoryWrapper repository, IList<RefSelection> selectedBranches)
+            => (Repository, SelectedBranches) = (repository, selectedBranches);
+
+        public readonly IRepositoryWrapper Repository;
+        public readonly IList<RefSelection> SelectedBranches;
+    }
+
     public class LogGraph : IDisposable
     {
         public class NoBranchSelected : Exception
@@ -120,7 +129,7 @@ namespace ProTagger.Repository.GitLog
                 return node1.Sha == node2.Sha;
             };
 
-        public LogGraph(ISchedulers schedulers, IRepositoryWrapper repository, IObservable<IList<RefSelection>> selectedBranches)
+        public LogGraph(ISchedulers schedulers, IObservable<LogGraphInput> input)
         {
             const int chunkSize = 1000;
             
@@ -135,14 +144,14 @@ namespace ProTagger.Repository.GitLog
             SecondarySelectedNode = new ViewSubject<LogGraphNode?>(null)
                 .DisposeWith(_disposable);
 
-            selectedBranches
-                .Select(branches => branches.Where(branch => branch.Selected))
-                .WithLatestFrom(LogGraphNodes, (branches, oldNodes) =>
+            input
+                .Select(d => new LogGraphInput(d.Repository, d.SelectedBranches.Where(branch => branch.Selected).ToList()))
+                .WithLatestFrom(LogGraphNodes, (d, oldNodes) =>
                 {
                     var firstChunk = oldNodes.Visit(
                         graph => Math.Max(chunkSize, graph.Count),
                         _ => chunkSize);
-                    return CreateGraph(repository, branches!)
+                    return CreateGraph(d.Repository, d.SelectedBranches!)
                         .ToObservable(schedulers.ThreadPool)
                         .Select((node, i) => new { node, i })
                         .GroupBy(data => data.i < firstChunk)

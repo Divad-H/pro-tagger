@@ -194,7 +194,7 @@ namespace ProTagger
     {
         public LogGraph Graph { get; }
 
-        public ViewSubject<AllRefsViewModel> References { get; }
+        public ViewSubject<AllRefsViewModel?> References { get; }
         public DiffViewModel Diff { get; }
         public RepositoryDescription RepositoryDescription { get; }
         public ICommand RefreshCommand { get; }
@@ -222,76 +222,83 @@ namespace ProTagger
             }
         }
 
-        private readonly IRepositoryWrapper _repository;
-
         public RepositoryViewModel(ISchedulers schedulers, IRepositoryFactory repositoryFactory, IFileSystem fileSystem, RepositoryDescription description, IObservable<CompareOptions> compareOptions)
         {
             try
             {
                 RepositoryDescription = description;
-                _repository = repositoryFactory.CreateRepository(description.Path)
-                    .DisposeWith(_disposables);
 
                 var refreshCommand = ReactiveCommand.Create<object?, object?>(p => p, schedulers.Dispatcher);
                 RefreshCommand = refreshCommand;
 
-                List<RefSelectionViewModel> createBranchVMs(IList<RefSelectionViewModel>? lastBranchSelection, bool lastHeadSelected)
-                    => _repository.Branches
-                        .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
-                            ? branch.IsCurrentRepositoryHead
-                            : lastBranchSelection.Any(b => b.Selected.Value && b.CanonicalName == branch.CanonicalName), schedulers))
-                        .Concat(_repository.Head.Yield().Where(b => _repository.Info.IsHeadDetached && !(b is null))
-                            .Select(head => new RefSelectionViewModel("Detached HEAD", head!.Reference.CanonicalName, lastHeadSelected, schedulers)))
-                        .ToList();
-
-                List<RefSelectionViewModel> createTagVMs(IList<RefSelectionViewModel>? lastTagSelection)
-                    => _repository.Tags
-                        .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
-                            || lastTagSelection.Any(b => b.Selected.Value && b.CanonicalName == tag.CanonicalName), schedulers))
-                        .ToList();
-
-                var firstRefsVM = new AllRefsViewModel(createBranchVMs(null, true),
-                    createTagVMs(null),
-                    _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName,
-                    schedulers);
-
-                var refsFileSystemObservable
-                    = new RefFileSystemObservable(RepositoryDescription.Path, fileSystem);
-
-                var nextRefVmsSource = refreshCommand
-                    .Merge(refsFileSystemObservable
-                        .Throttle(TimeSpan.FromMilliseconds(100), schedulers.Dispatcher))
-                    .Scan(firstRefsVM, (last, _)
-                        => new AllRefsViewModel(createBranchVMs(last.Branches.Refs, last.Branches.HeadSelected),
-                            createTagVMs(last.Tags.Refs),
-                            _repository.Info.IsHeadDetached ? _repository.Head?.Reference.CanonicalName : _repository.Head?.CanonicalName,
-                            schedulers));
-
-                var nextRefVms = Observable
-                    .Create<AllRefsViewModel>(o =>
+                var repositoryObservable = Observable
+                    .Create<IRepositoryWrapper>(o =>
                     {
                         var serial = new SerialDisposable();
                         return new CompositeDisposable(
-                            nextRefVmsSource.Do(x => serial.Disposable = x).Subscribe(o),
+                            refreshCommand
+                                .StartWith((object?)null)
+                                .Merge(new RefFileSystemObservable(RepositoryDescription.Path, fileSystem)
+                                    .Throttle(TimeSpan.FromMilliseconds(100), schedulers.Dispatcher))
+                                .Select(_ => repositoryFactory.CreateRepository(description.Path))
+                                .Do(x => serial.Disposable = x)
+                                .Subscribe(o),
                             serial);
                     })
                     .Publish();
 
-                References = new ViewSubject<AllRefsViewModel>(firstRefsVM);
-                nextRefVms
+                List<RefSelectionViewModel> createBranchVMs(IRepositoryWrapper repository, IList<RefSelectionViewModel>? lastBranchSelection, bool lastHeadSelected)
+                    => repository.Branches
+                        .Select(branch => new RefSelectionViewModel(branch, lastBranchSelection is null
+                            ? branch.IsCurrentRepositoryHead
+                            : lastBranchSelection.Any(b => b.Selected.Value && b.CanonicalName == branch.CanonicalName), schedulers))
+                        .Concat(repository.Head.Yield().Where(b => repository.Info.IsHeadDetached && !(b is null))
+                            .Select(head => new RefSelectionViewModel("Detached HEAD", head!.Reference.CanonicalName, lastHeadSelected, schedulers)))
+                        .ToList();
+
+                List<RefSelectionViewModel> createTagVMs(IRepositoryWrapper repository, IList<RefSelectionViewModel>? lastTagSelection)
+                    => repository.Tags
+                        .Select(tag => new RefSelectionViewModel(tag, lastTagSelection is null
+                            || lastTagSelection.Any(b => b.Selected.Value && b.CanonicalName == tag.CanonicalName), schedulers))
+                        .ToList();
+
+                var refVmsSource = repositoryObservable
+                    .Select(repository => new { repository, refs = new AllRefsViewModel(createBranchVMs(repository, null, true),
+                        createTagVMs(repository, null),
+                        repository.Info.IsHeadDetached ? repository.Head?.Reference.CanonicalName : repository.Head?.CanonicalName,
+                        schedulers)
+                    })
+                    .Scan((last, current)
+                        => new {
+                            current.repository,
+                            refs = new AllRefsViewModel(createBranchVMs(current.repository, last.refs?.Branches?.Refs, last?.refs?.Branches?.HeadSelected ?? true),
+                               createTagVMs(current.repository, last?.refs?.Tags?.Refs),
+                               current.repository.Info.IsHeadDetached ? current.repository.Head?.Reference.CanonicalName : current.repository.Head?.CanonicalName,
+                               schedulers) })
+                    .Select(current => current.refs);
+
+                var refVms = Observable
+                    .Create<AllRefsViewModel>(o =>
+                    {
+                        var serial = new SerialDisposable();
+                        return new CompositeDisposable(
+                            refVmsSource.Do(x => serial.Disposable = x).Subscribe(o),
+                            serial);
+                    })
+                    .Publish();
+
+                References = new ViewSubject<AllRefsViewModel?>(null);
+                refVms
                     .Subscribe(References)
                     .DisposeWith(_disposables);
 
-                var refsVmObservable = Observable
-                    .Return(firstRefsVM)
-                    .Concat(nextRefVms);
-
-                var selectedRefsObservable = refsVmObservable
+                var logGraphInput = refVms
                     .Select(d => d.Branches.SelectedRefs
                         .CombineLatest(d.Tags.SelectedRefs, (bs, ts) => bs.Concat(ts).ToList()))
-                    .Switch();
+                    .Switch()
+                    .WithLatestFrom(repositoryObservable, (refSelection, repository) => new LogGraphInput(repository, refSelection));
 
-                Graph = new LogGraph(schedulers, _repository, selectedRefsObservable)
+                Graph = new LogGraph(schedulers, logGraphInput)
                     .DisposeWith(_disposables);
             
                 var selectedCommit = Graph.SelectedNode
@@ -299,10 +306,18 @@ namespace ProTagger
                 var secondarySelectedCommit = Graph.SecondarySelectedNode
                     .Select(node => node?.Commit);
 
-                Diff = new DiffViewModel(_repository, schedulers, secondarySelectedCommit, selectedCommit, compareOptions)
+                var diffViewModelInput = Observable
+                    .CombineLatest(repositoryObservable, secondarySelectedCommit, selectedCommit, compareOptions,
+                        (repo, oldCommit, newCommit, co) => new DiffViewModelInput(repo, oldCommit, newCommit, co));
+
+                Diff = new DiffViewModel(schedulers, diffViewModelInput)
                     .DisposeWith(_disposables);
 
-                nextRefVms
+                refVms
+                    .Connect()
+                    .DisposeWith(_disposables);
+
+                repositoryObservable
                     .Connect()
                     .DisposeWith(_disposables);
             }

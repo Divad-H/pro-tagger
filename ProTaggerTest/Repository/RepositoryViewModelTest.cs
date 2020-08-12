@@ -63,7 +63,8 @@ namespace ProTaggerTest.Repository
                 .Subscribe(nodes => logGraphNodes = nodes.VariantIndex == 0
                         ? nodes.First : throw new InvalidOperationException(nodes.Second.Message));
             IList<RefSelection>? selectedBranches = null;
-            using var _2 = repo.References.Value.Branches.SelectedRefs
+            refs = repo.References.Value;
+            using var _2 = refs!.Branches.SelectedRefs
                 .Subscribe(sb => selectedBranches = sb);
             Assert.AreEqual(1, selectedBranches.Where(b => b.Selected).Count());
             Assert.AreEqual(7, logGraphNodes.Count); // The mock doesn't filter unreachable commits.

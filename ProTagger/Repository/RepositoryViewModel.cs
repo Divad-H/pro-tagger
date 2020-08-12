@@ -238,8 +238,8 @@ namespace ProTagger
                         return new CompositeDisposable(
                             refreshCommand
                                 .StartWith((object?)null)
-                                .Merge(new RefFileSystemObservable(RepositoryDescription.Path, fileSystem)
-                                    .Throttle(TimeSpan.FromMilliseconds(100), schedulers.Dispatcher))
+                                .Merge(new FileSystemObservable(System.IO.Directory.GetParent(RepositoryDescription.Path).FullName, "", fileSystem)
+                                    .Throttle(TimeSpan.FromMilliseconds(250), schedulers.Dispatcher))
                                 .Select(_ => repositoryFactory.CreateRepository(description.Path))
                                 .Do(x => serial.Disposable = x)
                                 .Subscribe(o),

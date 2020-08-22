@@ -19,9 +19,11 @@ namespace ProTagger.Repository.Diff
                 Variant<Commit, DiffTargets> newCommit,
                 CompareOptions compareOptions)
         {
-            using var delayDispose = repo.AddRef();
             return Task.Run<Variant<List<TreeEntryChanges>, Unexpected>>(() =>
                 {
+                    using var delayDispose = repo.TryAddRef();
+                    if (delayDispose is null)
+                        return new Unexpected("The repository was disposed.");
                     try
                     {
                         if (ct.IsCancellationRequested)
@@ -32,16 +34,21 @@ namespace ProTagger.Repository.Diff
                             return new List<TreeEntryChanges>();
                         if (newCommit.Is<DiffTargets>() && head is null)
                             return new Unexpected("Did not get HEAD");
-                        
+
                         var oldTree = oldCommit?.Get<Commit>().Tree;
                         using var treeChanges =
                            newCommit.Visit(
                                c => repo.Diff.Compare<TreeChanges>(oldTree ?? c.Parents.FirstOrDefault()?.Tree, c.Tree, compareOptions),
                                dt =>
                                {
-                                   var changedFiles = repo.RetrieveStatus(new StatusOptions()
-                                    { DetectRenamesInIndex = true, DetectRenamesInWorkDir = true, IncludeUntracked = true,
-                                            Show = dt == DiffTargets.WorkingDirectory ? StatusShowOption.WorkDirOnly : StatusShowOption.IndexOnly })
+                                   var changedFiles = repo
+                                       .RetrieveStatus(new StatusOptions()
+                                       {
+                                           DetectRenamesInIndex = true,
+                                           DetectRenamesInWorkDir = true,
+                                           IncludeUntracked = true,
+                                           Show = dt == DiffTargets.WorkingDirectory ? StatusShowOption.WorkDirOnly : StatusShowOption.IndexOnly
+                                       })
                                        .Select(s => s.FilePath);
                                    if (oldTree != null && repo.Head?.Tip.Tree != oldTree)
                                        changedFiles = changedFiles.Concat(repo.Diff.Compare<TreeChanges>(oldTree, head?.Tip.Tree, compareOptions).Select(tc => tc.Path));

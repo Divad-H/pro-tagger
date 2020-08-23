@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -49,7 +50,8 @@ namespace ProTagger.Wpf
                 return new Run(str + "\n");
             }
 
-            List<Run> lineEndings = new List<Run>();
+            Run? rightmostLineEnd = null;
+            int longestLineSize = 0;
             var currentIndex = 0;
 
             void addRun(Run run)
@@ -57,12 +59,15 @@ namespace ProTagger.Wpf
                 currentIndex += run.Text.Length;
                 paragraph.Inlines.Add(run);
             }
-            void endLine()
+            void endLine(int lineSize)
             {
                 var newLine = new Run("\n");
                 paragraph.Inlines.Add(newLine);
-                lineEndings.Add(newLine);
-                var s = newLine.ContentStart.GetTextInRun(LogicalDirection.Forward);
+                if (lineSize > longestLineSize)
+                {
+                    longestLineSize = lineSize;
+                    rightmostLineEnd = newLine;
+                }
             }
 
             foreach (var variant in content.Value.Diff)
@@ -76,7 +81,9 @@ namespace ProTagger.Wpf
                         addedLineParagraph.Inlines.Add(new Run("\n"));
                         foreach (var token in oldLine.Text)
                             addRun(new Run(token.Text) { Background = token.Unchanged ? OldNormalBrush : OldHighlightBrush });
-                        endLine();
+                        endLine(oldLine.Text
+                            .Select(t => t.Text.Length)
+                            .Sum());
                     }
                     foreach (var newLine in wordDiff.NewText)
                     {
@@ -86,7 +93,9 @@ namespace ProTagger.Wpf
                         addedLineParagraph.Inlines.Add(lineNumberFormatted);
                         foreach (var token in newLine.Text)
                             addRun(new Run(token.Text) { Background = token.Unchanged ? NewNormalBrush : NewHighlightBrush });
-                        endLine();
+                        endLine(newLine.Text
+                            .Select(t => t.Text.Length)
+                            .Sum());
                     }
                 },
                 unchangedLine =>
@@ -94,7 +103,7 @@ namespace ProTagger.Wpf
                     removedLineParagraph.Inlines.Add(formatLineNumber(unchangedLine.OldLineNumber));
                     addedLineParagraph.Inlines.Add(new Run(unchangedLine.NewLineNumber.ToString() + "\n"));
                     addRun(new Run(unchangedLine.Text));
-                    endLine();
+                    endLine(unchangedLine.Text.Length);
                 });
 
             var tableRow = new TableRow();
@@ -106,10 +115,10 @@ namespace ProTagger.Wpf
             table.RowGroups.Add(tableRowGroup);
             Blocks.Add(table);
 
-            LineEndings = lineEndings;
+            RightmostLineEnding = rightmostLineEnd;
         }
 
-        public List<Run>? LineEndings;
+        public Run? RightmostLineEnding;
         public TableCell? ContentTableCell;
 
         static readonly Brush OldHighlightBrush = new SolidColorBrush(Color.FromArgb(125, 255, 0, 0));

@@ -35,15 +35,13 @@ namespace ProTagger.Wpf
         {
             if (!(Document is PatchDiffFormatter document))
                 return;
-            if (document.LineEndings is null)
+            if (document.RightmostLineEnding is null)
                 return;
             if (document.ContentTableCell is null)
                 return;
 
-            ContentWidth = document.LineEndings
-                .Select(lineEnding => lineEnding.ContentStart.GetCharacterRect(LogicalDirection.Forward).Right)
-                .Max()
-                  + Padding.Left + Padding.Right;
+            ContentWidth = document.RightmostLineEnding.ContentStart.GetCharacterRect(LogicalDirection.Forward).Right
+              + Padding.Left + Padding.Right;
         }
     }
 }
